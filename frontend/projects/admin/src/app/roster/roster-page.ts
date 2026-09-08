@@ -57,7 +57,12 @@ export class RosterPage {
     // applies to this freshly rendered input; focus it explicitly once the view reflects the new issuance.
     afterNextRender(() => this.codeInput()?.nativeElement.focus(), { injector: this.injector });
   }
-  openRename(entry: RosterEntry) { this.panel()?.beginRename(entry); this.renameDialog()?.nativeElement.showModal(); }
+  openRename(entry: RosterEntry) {
+    this.panel()?.beginRename(entry);
+    afterNextRender(() => {
+      if (this.panel()?.renameTarget()?.id === entry.id && this.session()?.state()) this.renameDialog()?.nativeElement.showModal();
+    }, { injector: this.injector });
+  }
   cancelRename() { if (this.panel()?.renameBusy()) return; this.panel()?.cancelRename(); this.renameDialog()?.nativeElement.close(); }
   renamed(_entry: RosterEntry) { this.renameDialog()?.nativeElement.close(); }
   openDeactivate(entry: RosterEntry) { this.panel()?.beginDeactivate(entry); this.deactivateDialog()?.nativeElement.showModal(); }
