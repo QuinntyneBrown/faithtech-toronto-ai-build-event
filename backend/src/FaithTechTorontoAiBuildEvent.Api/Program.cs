@@ -1,5 +1,7 @@
 using FaithTechTorontoAiBuildEvent.Api.Access;
 using FaithTechTorontoAiBuildEvent.Infrastructure;
+using FaithTechTorontoAiBuildEvent.Infrastructure.Access;
+using FaithTechTorontoAiBuildEvent.Application.Access;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace FaithTechTorontoAiBuildEvent.Api;
@@ -18,6 +20,11 @@ public partial class Program
             options.Cookie.SameSite = SameSiteMode.Strict;
         });
         builder.Services.AddEventInfrastructure(builder.Configuration);
+        builder.Services.AddOptions<SecurityOptions>().ValidateOnStart();
+        builder.Services.AddHttpContextAccessor();
+        builder.Services.AddScoped<IRequestSource, HttpRequestSource>();
+        builder.Services.AddProblemDetails();
+        builder.Services.AddExceptionHandler<ApiExceptionHandler>();
         builder.Services.AddScoped<AdministratorCookieEvents>();
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
         {
@@ -31,6 +38,7 @@ public partial class Program
         });
         builder.Services.AddAuthorization();
         var app = builder.Build();
+        app.UseExceptionHandler();
         app.Use(async (context, next) =>
         {
             context.Response.Headers.CacheControl = "no-store";

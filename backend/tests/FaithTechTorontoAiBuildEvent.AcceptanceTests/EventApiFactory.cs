@@ -20,6 +20,7 @@ public sealed class EventApiFactory : WebApplicationFactory<Program>, IAsyncLife
             "Server=.\\SQLEXPRESS;Integrated Security=true;TrustServerCertificate=true");
         connection.InitialCatalog = database;
         builder.UseSetting("ConnectionStrings:EventDatabase", connection.ConnectionString);
+        builder.UseSetting("Security:DigestKey", Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)));
         builder.UseSetting("Logging:LogLevel:Default", "Warning");
     }
 

@@ -5,11 +5,11 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace FaithTechTorontoAiBuildEvent.AcceptanceTests;
 
-public sealed class AdministratorAccessTests : IClassFixture<WebApplicationFactory<Program>>
+public sealed class AdministratorAccessTests : IClassFixture<EventApiFactory>
 {
     private readonly HttpClient client;
 
-    public AdministratorAccessTests(WebApplicationFactory<Program> factory)
+    public AdministratorAccessTests(EventApiFactory factory)
     {
         client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
     }

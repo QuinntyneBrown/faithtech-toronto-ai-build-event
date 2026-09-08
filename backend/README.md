@@ -17,6 +17,10 @@ test account needs permission to create and drop its isolated test databases.
 Set `ConnectionStrings__EventDatabase` through the deployment's secret/configuration
 provider. Development API settings use Windows authentication against local SQL
 Express. The CLI reads environment configuration and has no default credentials.
+The API also requires `Security__DigestKey`: at least 32 cryptographically random
+bytes encoded as base64, supplied by the secret provider and shared by all API
+instances. Preserve it across restarts so authentication budgets keep their keys.
+Do not commit it. Tests generate isolated ephemeral keys automatically.
 
 ```powershell
 dotnet run --project backend/src/FaithTechTorontoAiBuildEvent.Provisioning -- migrate

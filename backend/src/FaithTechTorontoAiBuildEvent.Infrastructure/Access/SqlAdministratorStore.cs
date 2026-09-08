@@ -6,15 +6,23 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FaithTechTorontoAiBuildEvent.Infrastructure.Access;
 
-public sealed class SqlAdministratorStore(EventDbContext db, UserManager<AdministratorAccount> users)
+public sealed class SqlAdministratorStore(EventDbContext db, UserManager<AdministratorAccount> users, AuthenticationBudget budget)
     : IAdministratorStore
 {
-    public async Task<Guid?> VerifyCredentials(string username, string password, CancellationToken cancellationToken)
-    {
+    private static readonly string UnassignedPasswordHash = new PasswordHasher<AdministratorAccount>()
+        .HashPassword(new AdministratorAccount(), Guid.NewGuid().ToString());
+
+    public Task<Guid?> VerifyCredentials(string username, string password, string source, CancellationToken cancellationToken) =>
+        budget.Verify(username, source, async () => {
         var account = await users.FindByNameAsync(username.Trim());
-        if (account is null || !await users.CheckPasswordAsync(account, password)) return null;
+        if (account is null)
+        {
+            users.PasswordHasher.VerifyHashedPassword(new AdministratorAccount(), UnassignedPasswordHash, password);
+            return null;
+        }
+        if (!await users.CheckPasswordAsync(account, password)) return null;
         return account.Enabled && await users.IsInRoleAsync(account, "Administrator") ? account.Id : null;
-    }
+    }, cancellationToken);
 
     public async Task<bool> IsEnabledAdministrator(Guid id, CancellationToken cancellationToken)
     {

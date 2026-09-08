@@ -18,6 +18,10 @@ public static class ServiceCollectionExtensions
         services.AddIdentityCore<AdministratorAccount>().AddRoles<IdentityRole<Guid>>().AddEntityFrameworkStores<EventDbContext>();
         services.AddScoped<IAdministratorStore, SqlAdministratorStore>();
         services.AddScoped<IAdministratorProvisioner, SqlAdministratorProvisioner>();
+        services.AddScoped<AuthenticationBudget>();
+        services.AddScoped<IRequestSource, OperatorRequestSource>();
+        services.AddOptions<SecurityOptions>().Bind(configuration.GetSection("Security"))
+            .Validate(options => options.HasValidDigestKey(), "Configure Security:DigestKey with at least 32 random bytes encoded as base64.");
         return services;
     }
 }
