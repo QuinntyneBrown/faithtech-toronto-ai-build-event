@@ -44,5 +44,6 @@ public sealed class ReadinessTests(EventApiFactory factory) : IClassFixture<Even
         var body = await response.Content.ReadFromJsonAsync<JsonElement>();
         Assert.True(body.GetProperty("ready").GetBoolean());
         Assert.NotEmpty(body.GetProperty("revision").GetString()!);
+        Assert.True(Guid.TryParse(body.GetProperty("instance").GetString(), out _));
     }
 }
