@@ -31,7 +31,7 @@ export async function api(directory, environment) {
       const invalid = await session.post('/api/admin/events', { title: 'a'.repeat(201) }); expect(invalid.status()).toBe(422);
       const problem = await invalid.json();
       const after = await (await session.client.get('/api/admin/events')).json(); expect(after).toEqual(before);
-      await terminal.result(`HTTP 422 Unprocessable Entity\n${JSON.stringify({ code: problem.code, errors: problem.errors }, null, 2)}\n\nGET /api/admin/events: unchanged (${after.length} event)`); await say(3, 'Reject invalid input');
+      await terminal.result(`HTTP 422 Unprocessable Entity\ncode: ${problem.code}\ntitle: ${problem.errors.title.join(' ')}\n\nGET /api/admin/events: unchanged (${after.length} event)`); await say(3, 'Reject invalid input');
       await terminal.command('DELETE /api/admin/session\nGET /api/admin/events');
       expect((await session.signOut()).status()).toBe(204); const denied = await session.client.get('/api/admin/events'); expect(denied.status()).toBe(401);
       await terminal.result('DELETE: HTTP 204 No Content\nGET:    HTTP 401 Unauthorized'); await say(4, 'Enforce access'); await say(5, 'Related workflows');
