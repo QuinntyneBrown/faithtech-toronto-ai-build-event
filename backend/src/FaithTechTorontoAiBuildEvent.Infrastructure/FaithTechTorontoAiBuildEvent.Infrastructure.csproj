@@ -2,6 +2,8 @@
   <ItemGroup>
     <ProjectReference Include="../FaithTechTorontoAiBuildEvent.Application/FaithTechTorontoAiBuildEvent.Application.csproj" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
   </ItemGroup>
 </Project>

@@ -25,7 +25,7 @@ public sealed class SqlEventStore(EventDbContext db) : IEventStore
             if (receipt.PayloadHash != hash) throw new OperationConflictException();
             return JsonSerializer.Deserialize<EventDetail>(receipt.Result)!;
         }
-        var current = Detail(item);
+        var current = await Detail(item, cancellationToken);
         if (current.Version != command.Version) throw new StaleVersionException(current);
         var input = command.Input;
         item.Title = input.Title; item.VenueName = input.VenueName; item.Address = input.Address;
@@ -35,7 +35,7 @@ public sealed class SqlEventStore(EventDbContext db) : IEventStore
         item.StartOffsetMinutes = input.Start?.OffsetMinutes; item.EndOffsetMinutes = input.End?.OffsetMinutes;
         item.StartsAtUtc = input.Start?.ToUtc(); item.EndsAtUtc = input.End?.ToUtc();
         await db.SaveChangesAsync(cancellationToken);
-        var result = Detail(item);
+        var result = await Detail(item, cancellationToken);
         var now = await db.Database.SqlQuery<DateTimeOffset>($"SELECT TODATETIMEOFFSET(SYSUTCDATETIME(), '+00:00') AS Value").SingleAsync(cancellationToken);
         db.OperationReceipts.Add(new() { ActorId = command.ActorId, EventId = item.Id, OperationId = command.OperationId,
             Target = target, PayloadHash = hash, Result = JsonSerializer.Serialize(result), CommittedAtUtc = now });
@@ -45,16 +45,18 @@ public sealed class SqlEventStore(EventDbContext db) : IEventStore
         return result;
     }
 
-    private EventDetail Detail(BuildEvent item) => new(item.Id, item.Title, item.Published, item.UseLiturgy,
+    private async Task<EventDetail> Detail(BuildEvent item, CancellationToken cancellationToken) => new(item.Id, item.Title, item.Published, item.UseLiturgy,
         Convert.ToBase64String(db.Entry(item).Property<byte[]>("Version").CurrentValue!), item.VenueName, item.Address,
         item.Latitude, item.Longitude, item.WaitingContent, item.ClosingContent, item.DirectionsUrl, item.Timezone,
         item.StartLocal is { } start ? new(start, item.StartOffsetMinutes) : null,
-        item.EndLocal is { } end ? new(end, item.EndOffsetMinutes) : null, item.StartsAtUtc, item.EndsAtUtc);
+        item.EndLocal is { } end ? new(end, item.EndOffsetMinutes) : null, item.StartsAtUtc, item.EndsAtUtc,
+        item.LogoId is null ? null : await db.Logos.Where(x => x.Id == item.LogoId)
+            .Select(x => new LogoMetadata(x.Id, x.MediaType, x.Width, x.Height)).SingleAsync(cancellationToken));
 
     public async Task<EventDetail?> GetEvent(Guid eventId, CancellationToken cancellationToken)
     {
         var item = await db.Events.SingleOrDefaultAsync(x => x.Id == eventId, cancellationToken);
-        return item is null ? null : Detail(item);
+        return item is null ? null : await Detail(item, cancellationToken);
     }
 
     public async Task<EventSummary> CreateDraft(Guid actorId, Guid operationId, string? title, CancellationToken cancellationToken)

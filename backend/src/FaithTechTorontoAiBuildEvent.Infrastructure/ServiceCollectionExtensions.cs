@@ -23,6 +23,8 @@ public static class ServiceCollectionExtensions
         services.AddIdentityCore<AdministratorAccount>().AddRoles<IdentityRole<Guid>>().AddEntityFrameworkStores<EventDbContext>();
         services.AddScoped<IAdministratorStore, SqlAdministratorStore>();
         services.AddScoped<IEventStore, SqlEventStore>();
+        services.AddScoped<IEventLogoStore, SqlEventLogoStore>();
+        services.AddSingleton<ILogoDecoder, SkiaLogoDecoder>();
         services.AddScoped<IAdministratorProvisioner, SqlAdministratorProvisioner>();
         services.AddScoped<AuthenticationBudget>();
         services.AddScoped<IRequestSource, OperatorRequestSource>();

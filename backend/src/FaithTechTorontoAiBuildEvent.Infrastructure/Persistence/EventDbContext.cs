@@ -14,6 +14,7 @@ public sealed class EventDbContext(DbContextOptions<EventDbContext> options)
     public DbSet<AdministratorSession> AdministratorSessions => Set<AdministratorSession>();
     public DbSet<AuthenticationFailure> AuthenticationFailures => Set<AuthenticationFailure>();
     public DbSet<BuildEvent> Events => Set<BuildEvent>();
+    public DbSet<LogoAsset> Logos => Set<LogoAsset>();
     public DbSet<OperationReceipt> OperationReceipts => Set<OperationReceipt>();
     public DbSet<AuditRecord> AuditRecords => Set<AuditRecord>();
 
@@ -21,6 +22,8 @@ public sealed class EventDbContext(DbContextOptions<EventDbContext> options)
     {
         base.OnModelCreating(builder);
         builder.Entity<BuildEvent>().Property(x => x.Title).HasMaxLength(400);
+        builder.Entity<BuildEvent>().HasOne<LogoAsset>().WithMany().HasForeignKey(x => x.LogoId).OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<LogoAsset>().Property(x => x.MediaType).HasMaxLength(50);
         builder.Entity<BuildEvent>().Property(x => x.Timezone).HasMaxLength(400);
         builder.Entity<BuildEvent>().Property(x => x.VenueName).HasMaxLength(400);
         builder.Entity<BuildEvent>().Property(x => x.Address).HasMaxLength(10000);

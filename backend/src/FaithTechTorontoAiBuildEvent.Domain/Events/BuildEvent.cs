@@ -4,6 +4,7 @@ public sealed class BuildEvent
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public string? Title { get; set; }
+    public Guid? LogoId { get; set; }
     public string? VenueName { get; set; }
     public string? Address { get; set; }
     public double? Latitude { get; set; }
