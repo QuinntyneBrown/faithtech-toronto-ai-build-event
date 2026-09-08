@@ -1,0 +1,17 @@
+{
+  "name": "faithtech-event-design-artifacts",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "build": "node scripts/build.mjs",
+    "build:mocks": "node scripts/build.mjs --mocks",
+    "test": "playwright test parity.spec.js gallery.spec.js",
+    "test:mocks": "playwright test"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.12.1",
+    "@playwright/test": "1.61.1"
+  }
+}

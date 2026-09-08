@@ -1,0 +1,197 @@
+
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  font-family: var(--cs-font-body);
+  color: var(--cs-ink);
+  background: var(--cs-paper);
+}
+body {
+  margin: 0;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+a {
+  color: inherit;
+}
+:focus-visible {
+  outline: var(--cs-rule) solid var(--cs-focus);
+  outline-offset: var(--cs-focus-offset);
+}
+.cs-visually-hidden {
+  position: absolute !important;
+  width: var(--cs-line) !important;
+  height: var(--cs-line) !important;
+  padding: 0 !important;
+  margin: var(--cs-hidden-offset) !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+.cs-button {
+  min-block-size: var(--cs-control-size);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cs-space-2);
+  border: var(--cs-line) solid transparent;
+  border-radius: var(--cs-radius-pill);
+  padding: var(--cs-button-padding);
+  cursor: pointer;
+  font-weight: var(--cs-weight-medium);
+  background: var(--cs-lime);
+  color: var(--cs-on-lime);
+}
+.cs-button--secondary {
+  border-color: var(--cs-border-strong);
+  background: transparent;
+  color: var(--cs-ink);
+}
+.cs-button--ghost,
+.cs-button--subtle {
+  background: transparent;
+  color: var(--cs-ink);
+}
+.cs-button--danger {
+  background: var(--cs-error);
+  color: Canvas;
+}
+.cs-button--small {
+  min-block-size: var(--cs-space-6);
+  padding: var(--cs-button-small-padding);
+  font-size: var(--cs-text-sm);
+}
+.cs-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.cs-field {
+  display: grid;
+  gap: var(--cs-space-2);
+}
+.cs-label {
+  font-weight: var(--cs-weight-medium);
+}
+.cs-hint {
+  color: var(--cs-ink-muted);
+  font-size: var(--cs-text-sm);
+}
+.cs-error {
+  color: var(--cs-error);
+  font-size: var(--cs-text-sm);
+}
+.cs-input,
+.cs-select,
+.cs-textarea {
+  inline-size: var(--cs-full);
+  min-block-size: var(--cs-control-size);
+  border: var(--cs-line) solid var(--cs-border-strong);
+  border-radius: var(--cs-radius-sm);
+  padding: var(--cs-control-padding);
+  background: var(--cs-paper);
+  color: var(--cs-ink);
+}
+.cs-card {
+  display: block;
+  border: var(--cs-line) solid var(--cs-border);
+  border-radius: var(--cs-radius-md);
+  padding: var(--cs-space-5);
+  background: var(--cs-surface-raised);
+}
+.cs-card--raised {
+  box-shadow: var(--cs-shadow-md);
+}
+.cs-card--interactive {
+  cursor: pointer;
+  transition: box-shadow var(--cs-duration);
+}
+.cs-card--interactive:hover {
+  box-shadow: var(--cs-shadow-lg);
+}
+.cs-badge,
+.cs-pill {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--cs-space-5);
+  border-radius: var(--cs-radius-pill);
+  padding: var(--cs-pill-padding);
+  font-size: var(--cs-text-xs);
+  font-weight: var(--cs-weight-semibold);
+  background: var(--cs-surface);
+}
+.cs-alert {
+  border-inline-start: var(--cs-space-1) solid currentColor;
+  border-radius: var(--cs-radius-sm);
+  padding: var(--cs-space-4);
+  background: var(--cs-surface);
+}
+.cs-tone--success {
+  color: var(--cs-success);
+}
+.cs-tone--warning {
+  color: var(--cs-warning);
+}
+.cs-tone--error {
+  color: var(--cs-error);
+}
+.cs-tone--info {
+  color: var(--cs-info);
+}
+.cs-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-gap, var(--cs-space-4));
+}
+.cs-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cs-gap, var(--cs-space-4));
+}
+.cs-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    var(--cs-columns, auto-fit),
+    minmax(min(var(--cs-full), var(--cs-grid-min, var(--cs-grid-min))), 1fr)
+  );
+  gap: var(--cs-gap, var(--cs-space-4));
+}
+.cs-table-container {
+  max-inline-size: var(--cs-full);
+  overflow: auto;
+  border: var(--cs-line) solid var(--cs-border);
+  border-radius: var(--cs-radius-md);
+}
+.cs-table {
+  width: var(--cs-full);
+  border-collapse: collapse;
+}
+.cs-table th,
+.cs-table td {
+  padding: var(--cs-space-3);
+  border-block-end: var(--cs-line) solid var(--cs-border);
+  text-align: start;
+}
+.cs-skeleton {
+  display: block;
+  min-block-size: var(--cs-space-4);
+  border-radius: var(--cs-radius-sm);
+  background: var(--cs-shimmer-fill);
+  background-size: var(--cs-shimmer-size);
+  animation: cs-shimmer var(--cs-shimmer-duration) infinite;
+}
+@keyframes cs-shimmer {
+  to {
+    background-position: var(--cs-shimmer-end);
+  }
+}
+
