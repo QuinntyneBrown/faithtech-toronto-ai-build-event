@@ -1,0 +1,86 @@
+name: CI and production deployment
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: faithtech-${{ github.event_name == 'push' && 'production' || github.ref }}
+  queue: max
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: '**/package-lock.json'
+      - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          global-json-file: global.json
+      - name: Install locked dependencies and audit
+        run: |
+          npm install --global npm@10.9.4
+          for project in frontend e2e design-system; do
+            npm --prefix "$project" ci
+            npm --prefix "$project" audit --audit-level=high
+          done
+          dotnet restore backend/FaithTechTorontoAiBuildEvent.slnx --locked-mode
+      - name: Build production applications
+        run: |
+          npm --prefix frontend run build
+          npm --prefix design-system run build
+          dotnet build backend/FaithTechTorontoAiBuildEvent.slnx -c Release --no-restore
+      - name: Start disposable SQL Server
+        run: |
+          password="Ft9!$(openssl rand -hex 24)"
+          echo "::add-mask::$password"
+          echo "MSSQL_SA_PASSWORD=$password" >> "$GITHUB_ENV"
+          echo "FAITHTECH_TEST_SQL=Server=localhost,1433;User ID=sa;Password=$password;TrustServerCertificate=True;Encrypt=True" >> "$GITHUB_ENV"
+          export MSSQL_SA_PASSWORD="$password"
+          docker run -d --name faithtech-ci-sql -p 127.0.0.1:1433:1433 -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD mcr.microsoft.com/mssql/server:2022-latest
+          for attempt in {1..60}; do
+            if docker exec -e SQLCMDPASSWORD="$password" faithtech-ci-sql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -Q 'SELECT 1' >/dev/null 2>&1; then exit 0; fi
+            sleep 2
+          done
+          exit 1
+      - name: API acceptance tests
+        run: dotnet test backend/FaithTechTorontoAiBuildEvent.slnx -c Release --no-build --logger trx --results-directory artifacts/test-results
+      - name: Browser and recording-helper acceptance tests
+        run: |
+          cd e2e
+          npx playwright install --with-deps chrome
+          npx playwright test --reporter=list,html
+          cd ../design-system
+          npm test
+          cd ..
+          node --test e2e/demo/*.test.mjs
+      - name: Package immutable release
+        shell: pwsh
+        run: ./eng/scripts/package-release.ps1 -Revision '${{ github.sha }}'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-${{ github.sha }}
+          path: |
+            artifacts/release/web.zip
+            artifacts/release/release.json
+            artifacts/release/provisioning/
+          retention-days: 90
+          if-no-files-found: error
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: verification-${{ github.run_id }}
+          path: |
+            artifacts/test-results/
+            e2e/playwright-report/
+            design-system/playwright-report/
+          retention-days: 90
+      - name: Remove disposable SQL Server
+        if: always()
+        run: docker rm -f faithtech-ci-sql || true
