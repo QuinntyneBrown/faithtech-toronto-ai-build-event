@@ -1,0 +1,42 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+ BorderColor #344054
+ FontColor #101828
+ BackgroundColor #F9FAFB
+}
+title Import an event seed without losing event history - types
+class EventSeedEnvelope {
+ +EventPatch? Event
+ +ScheduleInput? Schedule
+ +Dictionary<string, string> Metadata
+}
+class ImportEventSeedIntent {
+ +Guid OperationId
+ +Guid EventId
+ +bool Create
+ +string? ExpectedVersion
+ +EventSeedEnvelope Envelope
+}
+class SeedEnvelopeReader {
+ +Read(utf8: byte[]): EventSeedEnvelope
+}
+class ImportEventSeedHandler {
+ +Handle(intent: ImportEventSeedIntent): Task<OperatorResult>
+}
+class SqlEventMaintenanceStore {
+ +Import(intent: ImportEventSeedIntent): Task<OperatorResult>
+}
+ImportEventSeedIntent *-- EventSeedEnvelope
+SeedEnvelopeReader ..> EventSeedEnvelope
+ImportEventSeedHandler ..> ImportEventSeedIntent
+interface IEventMaintenanceStore {
+ +Import(intent: ImportEventSeedIntent): Task<OperatorResult>
+}
+ImportEventSeedHandler --> IEventMaintenanceStore
+SqlEventMaintenanceStore ..|> IEventMaintenanceStore
+@enduml
