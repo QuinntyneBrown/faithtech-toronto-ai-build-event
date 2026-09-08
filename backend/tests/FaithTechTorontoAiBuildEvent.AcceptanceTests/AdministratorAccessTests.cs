@@ -8,10 +8,21 @@ namespace FaithTechTorontoAiBuildEvent.AcceptanceTests;
 public sealed class AdministratorAccessTests : IClassFixture<EventApiFactory>
 {
     private readonly HttpClient client;
+    private readonly EventApiFactory factory;
 
     public AdministratorAccessTests(EventApiFactory factory)
     {
+        this.factory = factory;
         client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+    }
+
+    [Fact, Trait("Requirement", "L2-041/AC2")]
+    public async Task Given_plain_http_when_requesting_authentication_material_then_it_is_rejected()
+    {
+        using var insecure = factory.CreateClient(new() { BaseAddress = new Uri("http://localhost"), AllowAutoRedirect = false });
+        var response = await insecure.GetAsync("/api/admin/antiforgery");
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.False(response.Headers.Contains("Set-Cookie"));
     }
 
     [Fact]

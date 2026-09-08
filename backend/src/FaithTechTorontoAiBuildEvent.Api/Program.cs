@@ -38,13 +38,24 @@ public partial class Program
         });
         builder.Services.AddAuthorization();
         var app = builder.Build();
-        app.UseExceptionHandler();
+        if (!app.Environment.IsDevelopment()) app.UseHsts();
         app.Use(async (context, next) =>
         {
-            context.Response.Headers.CacheControl = "no-store";
-            context.Response.Headers.XContentTypeOptions = "nosniff";
+            context.Response.OnStarting(() =>
+            {
+                context.Response.Headers.CacheControl = "no-store";
+                context.Response.Headers.XContentTypeOptions = "nosniff";
+                return Task.CompletedTask;
+            });
+            if (!context.Request.IsHttps)
+            {
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsJsonAsync(new { code = "https-required", correlationId = context.TraceIdentifier });
+                return;
+            }
             await next();
         });
+        app.UseExceptionHandler();
         app.UseAuthentication();
         app.UseAuthorization();
         app.MapControllers();
