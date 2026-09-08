@@ -41,6 +41,7 @@ export async function mux(raw, cues, target, offset = 0) {
   const filters = cues.map((c, i) => `[${i + 1}:a]adelay=${Math.round(c.start * 1000)}:all=1[a${i}]`);
   filters.push(cues.map((_, i) => `[a${i}]`).join('') + `amix=inputs=${cues.length}:normalize=0,apad[audio]`);
   args.push('-filter_complex', filters.join(';'), '-map', '0:v', '-map', '[audio]', '-c:v', 'libvpx',
+    '-vf', 'drawbox=x=0:y=0:w=16:h=16:color=0xfffdf4:t=fill',
     '-deadline', 'realtime', '-cpu-used', '6', '-crf', '12', '-b:v', '2M',
     '-c:a', 'libopus', '-b:a', '96k', '-shortest', target);
   await run(process.env.FFMPEG || 'ffmpeg', args);
