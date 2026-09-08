@@ -8,6 +8,8 @@ export class AdminEventEditorPage {
   }
   async uploadLogo() { await this.page.getByRole('button', { name: 'Upload logo', exact: true }).click(); }
   async retryLogo() { await this.page.getByRole('button', { name: 'Retry logo upload', exact: true }).click(); }
+  async retryLogoPreview() { await this.page.getByRole('button', { name: 'Retry logo display', exact: true }).click(); }
+  async expectLogoFallback() { await expect(this.page.getByText('The saved logo could not be displayed.', { exact: false })).toBeVisible(); }
   async loadLatestLogoVersion() { await this.page.getByRole('button', { name: 'Load latest saved values', exact: true }).click(); }
   async expectLogoSelectionCleared() {
     await expect(this.page.getByLabel('Venue logo', { exact: true })).toHaveValue('');

@@ -9,6 +9,7 @@ export class EventFixture {
   saves = 0;
   logoUploads = 0;
   loseNextLogoResponse = false;
+  logoUnavailable = false;
   readonly logos = new Map<string, {bytes: number[]; mediaType: string}>();
   handle(operation: string, args: {id?: string; input?: EventInput; title?: string; version?: string; operationId?: string;
     bytes?: number[]; mediaType?: string; name?: string}) {
@@ -16,7 +17,7 @@ export class EventFixture {
     if (operation === 'list') return { result: [...this.events.values()] };
     const current = args.id ? this.events.get(args.id) : undefined;
     if (operation === 'get') return current ? { result: current } : { status: 404 };
-    if (operation === 'getLogo') return this.logos.has(args.id!) ? { result: this.logos.get(args.id!) } : { status: 404 };
+    if (operation === 'getLogo') return this.logoUnavailable ? { status: 503 } : this.logos.has(args.id!) ? { result: this.logos.get(args.id!) } : { status: 404 };
     const receipt = this.receipts.get(args.operationId!);
     const hash = JSON.stringify({ operation, ...args });
     if (receipt) return receipt.hash === hash ? { result: receipt.result } : { status: 409, code: 'operation-key-reused' };

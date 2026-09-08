@@ -19,6 +19,21 @@ async function openEditor(page: Page) {
 
 const logoBytes = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==', 'base64');
 
+test('L2-036/044: given an unavailable saved logo, details remain usable and display can be retried', async ({ page, events }) => {
+  const editor = await openEditor(page);
+  await editor.chooseLogo('venue.png', 'image/png', logoBytes);
+  await editor.uploadLogo();
+  await editor.expectLogoSaved();
+  events.logoUnavailable = true;
+  await page.reload();
+  await editor.expectLogoFallback();
+  await editor.expectDraft('Toronto build night');
+  events.logoUnavailable = false;
+  await editor.retryLogoPreview();
+  await editor.expectLogoVisible();
+  expect(events.logoUploads).toBe(1);
+});
+
 test('L2-044: given a lost logo response, retry confirms one saved image', async ({ page, events }) => {
   const editor = await openEditor(page);
   events.loseNextLogoResponse = true;

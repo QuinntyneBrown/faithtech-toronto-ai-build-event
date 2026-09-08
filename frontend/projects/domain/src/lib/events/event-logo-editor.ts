@@ -16,6 +16,7 @@ export class EventLogoEditor {
   readonly success = signal(false);
   readonly preview = signal('');
   readonly previewError = signal(false);
+  readonly previewAttempt = signal(0);
   readonly conflict = signal<EventDetail | null>(null);
   private operationId = crypto.randomUUID();
   private version = '';
@@ -27,6 +28,7 @@ export class EventLogoEditor {
   }
   constructor() {
     effect(onCleanup => {
+      this.previewAttempt();
       const event = this.event(); let active = true; let url = '';
       this.preview.set(''); this.previewError.set(false);
       if (event.logo) void this.service.getLogo(event.id).then(blob => {
