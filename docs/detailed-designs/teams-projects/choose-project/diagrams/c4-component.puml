@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components - Choose an event project
+Container(ui, "ChooseProjectPage", "Angular / IProjectService", "Signals and typed service contract")
+Container_Boundary(api, "Event API") {
+Component(ctrl, "ProjectController", "ASP.NET Core", "Bind, MediatR dispatch, return")
+Component(gate, "SessionAuthorizationBehavior", "Application pipeline", "Validate actor, event and ownership")
+Component(handler, "ChooseProjectHandler", "Application", "Accept event-owned proposals and atomically change a team project")
+Component(entity, "ProjectChoice", "Domain", "Project catalog, guidance links, team selections and demo project references")
+Component(store, "SqlEventStore", "Infrastructure / IEventStore", "Feature queries, concurrency and transactions")
+}
+ContainerDb(db, "Event database", "SQL Server", "Project catalog, guidance links, team selections and demo project references")
+Rel(ui, ctrl, "Choose project", "HTTPS")
+Rel(ctrl, gate, "Dispatch request through pipeline")
+Rel(gate, handler, "Continue authorized request")
+Rel(handler, entity, "Apply domain policy")
+Rel(handler, store, "Load and persist through port")
+Rel(store, db, "Query or commit", "EF Core")
+@enduml
