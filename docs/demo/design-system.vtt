@@ -1,0 +1,25 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:09.523
+Faith Tech brings builders together around a shared purpose. This independent design system gives the event experience a consistent visual language.
+
+00:00:11.040 --> 00:00:22.477
+The light palette pairs paper and raised surfaces with dark ink. Lime highlights actions, while distinct colours communicate information, success, warning, and errors.
+
+00:00:23.960 --> 00:00:35.577
+Typography creates a clear hierarchy, from a strong invitation to supporting instructions. These foundations are shared design tokens, owned by this independent site.
+
+00:00:37.120 --> 00:00:48.948
+Primary, secondary, and quieter actions share consistent shapes. The unavailable example is disabled. Opening a real dialog shows how the controls work together.
+
+00:00:50.600 --> 00:00:58.743
+The dialog keeps keyboard interaction inside the decision. Escape closes it and returns focus to the action that opened it.
+
+00:01:00.320 --> 00:01:11.848
+Inputs combine visible labels, helpful context, and an explicit error message. Here, the name and event stage can be changed using the real native controls.
+
+00:01:13.360 --> 00:01:23.242
+Cards group related content. Success, error, and informational feedback remain distinguishable, and skeletons communicate a loading state.
+
+00:01:25.040 --> 00:01:36.552
+At a narrow viewport, the same foundations reflow into a single readable experience. The gallery stands alone and can be built and deployed independently of the event applications.

@@ -1,0 +1,83 @@
+{
+  "slug": "design-system",
+  "cues": [
+    {
+      "text": "Faith Tech brings builders together around a shared purpose. This independent design system gives the event experience a consistent visual language.",
+      "duration": 9.522585,
+      "chapter": "A shared visual language",
+      "start": 0,
+      "end": 9.522584999999996,
+      "visibleEnd": 11.000000000000004
+    },
+    {
+      "text": "The light palette pairs paper and raised surfaces with dark ink. Lime highlights actions, while distinct colours communicate information, success, warning, and errors.",
+      "duration": 11.43737,
+      "chapter": "Colour",
+      "start": 11.040000000000003,
+      "end": 22.477370000000004,
+      "visibleEnd": 23.960000000000004
+    },
+    {
+      "text": "Typography creates a clear hierarchy, from a strong invitation to supporting instructions. These foundations are shared design tokens, owned by this independent site.",
+      "duration": 11.61737,
+      "chapter": "Typography",
+      "start": 23.960000000000004,
+      "end": 35.57737,
+      "visibleEnd": 37.120000000000005
+    },
+    {
+      "text": "Primary, secondary, and quieter actions share consistent shapes. The unavailable example is disabled. Opening a real dialog shows how the controls work together.",
+      "duration": 11.827528,
+      "chapter": "Actions",
+      "start": 37.120000000000005,
+      "end": 48.94752799999999,
+      "visibleEnd": 50.480000000000004
+    },
+    {
+      "text": "The dialog keeps keyboard interaction inside the decision. Escape closes it and returns focus to the action that opened it.",
+      "duration": 8.142948,
+      "chapter": "Keyboard dialog",
+      "start": 50.599999999999994,
+      "end": 58.742948,
+      "visibleEnd": 60.239999999999995
+    },
+    {
+      "text": "Inputs combine visible labels, helpful context, and an explicit error message. Here, the name and event stage can be changed using the real native controls.",
+      "duration": 11.52771,
+      "chapter": "Inputs",
+      "start": 60.31999999999999,
+      "end": 71.84770999999999,
+      "visibleEnd": 73.36
+    },
+    {
+      "text": "Cards group related content. Success, error, and informational feedback remain distinguishable, and skeletons communicate a loading state.",
+      "duration": 9.882494,
+      "chapter": "Feedback",
+      "start": 73.36,
+      "end": 83.242494,
+      "visibleEnd": 84.72
+    },
+    {
+      "text": "At a narrow viewport, the same foundations reflow into a single readable experience. The gallery stands alone and can be built and deployed independently of the event applications.",
+      "duration": 11.51229,
+      "chapter": "Responsive and independent",
+      "start": 85.03999999999999,
+      "end": 96.55229,
+      "visibleEnd": 97.75999999999999
+    }
+  ],
+  "duration": 99.248,
+  "size": 9038129,
+  "streams": [
+    {
+      "codec_name": "vp8",
+      "codec_type": "video",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "codec_name": "opus",
+      "codec_type": "audio"
+    }
+  ]
+}
