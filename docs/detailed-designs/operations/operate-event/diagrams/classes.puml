@@ -1,0 +1,38 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam classBackgroundColor #F9FAFB
+skinparam classBorderColor #344054
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+title Structure - Operate and measure the event platform
+class DiagnosticSnapshot {
+  +DatabaseReady: bool
+  +OutboxLagSeconds: double
+  +PendingQuizAdmissions: int
+  +RequestFailureRate: double
+  +RequestP95Milliseconds: double
+  +EvaluateReadiness(): ReadinessResult
+}
+class EventPlatformOptions {
+  +SqlConnection: string
+  +RedisConnection: string?
+  +TrustedProxyAddresses: string[]
+  +KeyStorageLocation: string
+  +MapTileOrigin: Uri?
+}
+class AuditRecord {
+  +ActorId: Guid
+  +EventId: Guid?
+  +Action: string
+  +OccurredAtUtc: DateTimeOffset
+  +Outcome: string
+  +ResourceId: Guid?
+}
+DiagnosticSnapshot ..> EventPlatformOptions : validated environment
+DiagnosticSnapshot ..> AuditRecord : safe operator evidence
+
+@enduml
