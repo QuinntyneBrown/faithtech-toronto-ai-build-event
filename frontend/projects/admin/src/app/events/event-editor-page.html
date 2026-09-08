@@ -2,6 +2,7 @@
   <p><a routerLink="/events">All events</a></p><p class="eyebrow">MAKE THE EVENING YOUR OWN</p>
   <h1>The details make it yours.</h1><p>Configure this event independently. Save incomplete settings as a draft.</p>
   <ft-event-editor [eventId]="eventId" (denied)="signedOut()" />
+  <p><a [routerLink]="['/events', eventId, 'schedule']">Edit schedule</a></p>
 </ft-administrator-session-panel></main>
 <dialog #leaveDialog aria-labelledby="leave-title" (cancel)="$event.preventDefault(); finishLeave(false)">
   <h2 id="leave-title">Leave unsaved changes?</h2><p>Your proposed changes will be discarded. An unconfirmed save may already have reached the server.</p>

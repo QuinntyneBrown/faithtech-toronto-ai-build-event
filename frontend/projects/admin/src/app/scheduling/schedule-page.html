@@ -1,0 +1,25 @@
+<main id="main"><ft-administrator-session-panel [showDetails]="false" (signedOut)="signedOut()">
+  <p><a [routerLink]="['/events', eventId]">Event settings</a></p><p class="eyebrow">SET THE RHYTHM</p>
+  <h1>One evening. Many possibilities.</h1><p>Configure scheduled screens, instructions, and links. Event timing never advances a project’s progress.</p>
+  <ft-schedule-editor [eventId]="eventId" (editStage)="openStage($event)" (denied)="signedOut()" />
+</ft-administrator-session-panel></main>
+<dialog #stageDialog aria-labelledby="stage-title" (cancel)="$event.preventDefault(); cancelStage()">
+  <h2 id="stage-title">Shape a moment.</h2>
+  @if (editing(); as stage) { <form (ngSubmit)="applyStage()" novalidate>
+    <label>Stage name<input autofocus name="name" [ngModel]="stage.name" (ngModelChange)="change('name', $event)"></label>
+    <label>Phase<input name="phase" [ngModel]="stage.phase" (ngModelChange)="change('phase', $event)"></label>
+    <label>Stage start<input type="datetime-local" name="start" [ngModel]="stage.start?.local || ''" (ngModelChange)="time('start', $event)"></label>
+    <label>Stage start UTC offset (minutes)<input type="number" name="startOffset" [ngModel]="stage.start?.offsetMinutes" (ngModelChange)="offset('start', $event)"></label>
+    <label>Stage end<input type="datetime-local" name="end" [ngModel]="stage.end?.local || ''" (ngModelChange)="time('end', $event)"></label>
+    <label>Stage end UTC offset (minutes)<input type="number" name="endOffset" [ngModel]="stage.end?.offsetMinutes" (ngModelChange)="offset('end', $event)"></label>
+    <label>Participant screen<select name="screen" [ngModel]="stage.screenType" (ngModelChange)="change('screenType', $event)"><option value="information">Information</option><option value="welcome">Welcome</option><option value="teams">Team selection</option><option value="projects">Project selection</option><option value="build">Building guidance</option><option value="people">Networking</option><option value="raffle">Raffle</option><option value="demos">Demos</option><option value="recap">Closing and recap</option></select></label>
+    <label>Stage instructions<textarea name="content" [ngModel]="stage.content" (ngModelChange)="change('content', $event)"></textarea></label>
+    <label>Resource URL<input type="url" name="resource" [ngModel]="stage.resourceUrl" (ngModelChange)="change('resourceUrl', $event)"></label>
+    <p>Apply stage keeps this change in your draft. Save the schedule to commit all timings together.</p>
+    <div class="actions"><button type="button" (click)="cancelStage()">Cancel</button><button type="submit">Apply stage</button></div>
+  </form> }
+</dialog>
+<dialog #leaveDialog aria-labelledby="leave-title" (cancel)="$event.preventDefault(); finishLeave(false)">
+  <h2 id="leave-title">Leave unsaved changes?</h2><p>Your proposed changes will be discarded. An unconfirmed save may already have reached the server.</p>
+  <div class="actions"><button autofocus (click)="finishLeave(false)">Keep editing</button><button (click)="finishLeave(true)">Discard changes</button></div>
+</dialog>

@@ -1,5 +1,6 @@
 import { test as base } from '@playwright/test';
 import { EventFixture } from './event-fixture';
+import { ScheduleFixture } from './schedule-fixture';
 
 export class SessionFixture {
   authenticated = false;
@@ -24,7 +25,12 @@ export class SessionFixture {
   }
 }
 
-export const test = base.extend<{session: SessionFixture; events: EventFixture}>({
+export const test = base.extend<{session: SessionFixture; events: EventFixture; schedules: ScheduleFixture}>({
+  schedules: [async ({ context, events }, use) => {
+    const schedules = new ScheduleFixture(events);
+    await context.exposeBinding('__faithtechSchedule', (_source, operation, args) => schedules.handle(operation, args));
+    await use(schedules);
+  }, { auto: true }],
   events: [async ({ context }, use) => {
     const events = new EventFixture();
     await context.exposeBinding('__faithtechEvents', (_source, operation, args) => events.handle(operation, args));

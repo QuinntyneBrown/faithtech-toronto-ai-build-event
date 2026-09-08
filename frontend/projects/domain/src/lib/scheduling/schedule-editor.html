@@ -1,0 +1,28 @@
+@if (draft(); as values) {
+  <form (ngSubmit)="save()" novalidate>
+    <fieldset [disabled]="busy() || uncertain() || !!conflict()"><legend>Schedule configuration</legend>
+      <section class="card"><h2>Event timing</h2>
+        <label>Timezone<input name="timezone" [ngModel]="values.timezone" (ngModelChange)="change('timezone', $event)"></label>
+        <label>Event start<input type="datetime-local" name="start" [ngModel]="values.start?.local || ''" (ngModelChange)="time('start', $event)"></label>
+        <label>Event start UTC offset (minutes)<input type="number" name="startOffset" [ngModel]="values.start?.offsetMinutes" (ngModelChange)="offset('start', $event)"></label>
+        <label>Event end<input type="datetime-local" name="end" [ngModel]="values.end?.local || ''" (ngModelChange)="time('end', $event)"></label>
+        <label>Event end UTC offset (minutes)<input type="number" name="endOffset" [ngModel]="values.end?.offsetMinutes" (ngModelChange)="offset('end', $event)"></label>
+        <p>Times use the selected timezone. Repeated local times need an explicit UTC offset.</p>
+      </section>
+      <section class="card"><h2>Stages and content</h2><button type="button" (click)="add()">Add stage</button>
+        @if (!values.stages.length) { <p>No stages yet.</p> }
+        @else { <div class="table-scroll"><table><caption>Event stages</caption><thead><tr><th>Time</th><th>Stage and screen</th><th>Actions</th></tr></thead><tbody>
+          @for (stage of values.stages; track stage.id) { <tr><td>{{ stage.start?.local }} – {{ stage.end?.local }}</td><td><strong>{{ stage.name }}</strong><p>{{ stage.screenType }} · {{ stage.content }}</p></td>
+            <td><button type="button" (click)="editStage.emit(stage)" [attr.aria-label]="'Edit ' + stage.name">Edit</button><button type="button" (click)="remove(stage.id)" [attr.aria-label]="'Remove ' + stage.name">Remove</button></td></tr> }
+        </tbody></table></div> }
+      </section>
+    </fieldset>
+    @if (error()) { <p role="alert">{{ error() }}</p> }
+    @if (conflict(); as latest) { <section class="card" aria-label="Latest saved schedule"><h2>Latest saved schedule</h2><p>{{ latest.timezone }} · {{ latest.start?.local }} – {{ latest.end?.local }}</p>
+      @for (stage of latest.stages; track stage.id) { <p>{{ stage.name }} · {{ stage.start?.local }} – {{ stage.end?.local }} · {{ stage.content }}</p> }
+      <button type="button" (click)="reapply()">Reapply my schedule</button><button type="button" (click)="useCurrent()">Use latest schedule</button></section> }
+    @if (saved()) { <p role="status">Schedule saved.</p> }
+    <button type="submit" [disabled]="busy() || !!conflict()">{{ uncertain() ? 'Retry schedule save' : 'Save schedule' }}</button>
+  </form>
+} @else if (error()) { <p role="alert">{{ error() }}</p><button type="button" (click)="load()">Retry</button> }
+@else { <p role="status">Loading schedule…</p> }
