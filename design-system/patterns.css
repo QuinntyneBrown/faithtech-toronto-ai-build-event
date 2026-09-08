@@ -2,6 +2,7 @@ body { line-height: var(--cs-line-height); }
 h1,h2,h3,p { margin-block: var(--cs-zero) var(--cs-space-4); }
 h1,h2,h3 { line-height: var(--cs-heading-leading); }
 h1 { font-size: var(--cs-heading-hero); letter-spacing: var(--cs-tracking); font-weight: var(--cs-weight-bold); }
+.display-sample { font-size: var(--cs-heading-hero); letter-spacing: var(--cs-tracking); font-weight: var(--cs-weight-bold); line-height: var(--cs-heading-leading); }
 h2 { font-size: var(--cs-text-section); letter-spacing: var(--cs-tracking); }
 h3 { font-size: var(--cs-text-lg); }
 a { text-underline-offset: var(--cs-space-1); }
@@ -51,7 +52,6 @@ input[type=checkbox],input[type=radio] { accent-color: var(--cs-lime-strong); in
 .cs-table td,.cs-table th { vertical-align: middle; }
 .cs-table caption { text-align: start; padding: var(--cs-space-4); font-weight: var(--cs-weight-bold); }
 .cs-table p { margin: var(--cs-zero); }
-.cs-alert { margin-block-end: var(--cs-space-4); }
 .badge-live { background: var(--cs-lime); color: var(--cs-ink); }
 .skip { position: absolute; inset-inline-start: var(--cs-space-4); inset-block-start: var(--cs-space-4); transform: var(--cs-skip-offset); z-index: 100; }
 .skip:focus { transform: none; }

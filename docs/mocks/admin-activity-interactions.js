@@ -1,4 +1,4 @@
-import { model, save } from './data.js';
+import { model, save, currentId } from './data.js';
 import { assignmentPreview } from './admin-activity-dialogs.js';
 export function submitAdminActivity(id,data,item,navigate){
   if(id==='team-settings'){model.event.teamMode=data.teamMode;save();navigate('admin-teams',{state:'saved'});return true;}
@@ -7,10 +7,10 @@ export function submitAdminActivity(id,data,item,navigate){
     const members=Object.keys(data).filter(k=>k.startsWith('member-')).map(k=>k.slice(7)),capacity=Number(data.capacity);
     if(!Number.isInteger(capacity)||capacity<1||capacity<members.length)return 'Choose a whole number of seats that fits every selected member.';
     const t=model.teams.find(t=>t.id===item),values={name:data.name,focus:data.focus,capacity,members};
-    model.teams.forEach(t=>t.members=t.members.filter(p=>!members.includes(p)));if(t)Object.assign(t,values);else model.teams.push({...values,id:'team-'+Date.now()});model.team=model.teams.find(t=>t.members.includes('alex'))?.id||'';save();navigate('admin-teams',{state:'saved'});return true;
+    model.teams.forEach(t=>t.members=t.members.filter(p=>!members.includes(p)));if(t)Object.assign(t,values);else model.teams.push({...values,id:'team-'+Date.now()});model.team=model.teams.find(t=>t.members.includes(currentId()))?.id||'';save();navigate('admin-teams',{state:'saved'});return true;
   }
   if(id==='team-remove'){model.teams=model.teams.filter(t=>t.id!==item);if(model.team===item)model.team='';save();navigate('admin-teams');return true;}
-  if(id==='assign-all'){if(model.teams.reduce((n,t)=>n+t.capacity,0)<model.participants.length)return 'There aren’t enough seats for everyone. Add capacity before assigning teams.';model.teams=assignmentPreview();model.team=model.teams.find(t=>t.members.includes('alex'))?.id||'';save();navigate('admin-teams',{state:'saved'});return true;}
+  if(id==='assign-all'){if(model.teams.reduce((n,t)=>n+t.capacity,0)<model.participants.length)return 'There aren’t enough seats for everyone. Add capacity before assigning teams.';model.teams=assignmentPreview();model.team=model.teams.find(t=>t.members.includes(currentId()))?.id||'';save();navigate('admin-teams',{state:'saved'});return true;}
   if(id==='project-edit'){const p=model.projects.find(p=>p.id===item);if(p)Object.assign(p,data);else model.projects.push({...data,id:'project-'+Date.now()});save();navigate('admin-projects',{state:'saved'});return true;}
   if(id==='project-remove'){model.projects=model.projects.filter(p=>p.id!==item);model.demos=model.demos.filter(d=>d.id!==item);if(model.project===item)model.project='';save();navigate('admin-projects');return true;}
   if(id==='question-edit'){const options=[data.option0,data.option1,data.option2];if(new Set(options.map(o=>o.trim().toLowerCase())).size<options.length)return 'Give each answer a different description.';const values={prompt:data.prompt,options,correct:data.correct},q=model.questions.find(q=>q.id===item);if(q)Object.assign(q,values);else model.questions.push({...values,id:'question-'+Date.now()});save();navigate('admin-quizzes',{state:'saved'});return true;}

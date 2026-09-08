@@ -1,6 +1,6 @@
 export const initial = {
   event: { name: 'FaithTech Toronto AI Build Event', date: '2026-09-09', start: '18:00', end: '21:00', timezone: 'America/Toronto', venue: 'Toronto community venue', address: 'Downtown Toronto · Sample location', logo: '', liturgy: false, teamMode: 'self', proposals: true },
-  profile: { name: 'Alex Morgan', role: 'Product designer', bio: 'Making useful things with thoughtful people.', skills: 'Design, accessibility, prototyping', interests: 'Community care, responsible AI' },
+  profile: { id: 'alex', name: 'Alex Morgan', role: 'Product designer', bio: 'Making useful things with thoughtful people.', skills: 'Design, accessibility, prototyping', interests: 'Community care, responsible AI' },
   participants: [
     { id: 'alex', name: 'Alex Morgan', role: 'Product designer', skills: 'Design, accessibility', interests: 'Community care', email: 'alex@example.com', code: 'BUILD26' },
     { id: 'sarah', name: 'Sarah Chen', role: 'Software developer', skills: 'Angular, AI, TypeScript', interests: 'Community care', email: 'sarah@example.com', code: 'BUILD26' },
@@ -34,3 +34,5 @@ export let model;
 try { model = JSON.parse(sessionStorage.getItem('faithtech-mock')) || structuredClone(initial); } catch { model = structuredClone(initial); }
 export const save = () => sessionStorage.setItem('faithtech-mock', JSON.stringify(model));
 export const reset = () => { Object.keys(model).forEach(k=>delete model[k]); Object.assign(model, structuredClone(initial)); save(); };
+
+export const currentId = () => model.profile.id || "alex";

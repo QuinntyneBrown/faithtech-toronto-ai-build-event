@@ -9,7 +9,7 @@ import { submitParticipant } from './interactions.js';
 import { submitAdmin } from './admin-interactions.js';
 import { submitAdminActivity } from './admin-activity-interactions.js';
 import { draw, particles, stopEffects, toggleSound } from './raffle.js';
-import { title, link } from './ui.js';
+import { title, link, esc, external } from './ui.js';
 import { catalog } from './catalog.js';
 import { shell } from './shell.js';
 import { applyState } from './states.js';
@@ -23,7 +23,8 @@ function render(){
   if(q.has('scenario')){model.event.liturgy=q.get('scenario')==='future';model.event.name=model.event.liturgy?'FaithTech Toronto · October Build Night':'FaithTech Toronto AI Build Event';model.event.date=model.event.liturgy?'2026-10-14':'2026-09-09';save();}
   const content=(screen==='catalog'?catalog():null)||adminEventScreens(screen,state)||adminActivityScreens(screen,state)||eventScreens(screen,state)||projectScreens(screen,state,item)||socialScreens(screen,state,item,q.get('search')||'')||activityScreens(screen,state,item)||title('DESIGN ARTIFACT','This page has wandered off.','Return to the screen index to find your place.',link('catalog','All screens','primary'));
   document.title=`${screen.replaceAll('-',' ')} · FaithTech Toronto`;
-  app.innerHTML=shell(applyState(content,screen,state),screen,state);
+  const stage=model.stages.find(s=>s.screen===screen),note=stage&&!['welcome','build'].includes(screen)?`<aside class="stage-note"><p class="eyebrow">${esc(stage.name)} / ${esc(stage.start)}–${esc(stage.end)}</p><p>${esc(stage.content)}</p>${stage.link?external(stage.link,'Open stage resource'):''}</aside>`:'';
+  app.innerHTML=shell(applyState(content,screen,state)+note,screen,state);
   if(q.has('dialog'))openDialog(q.get('dialog'),item);
   if(state==='saved')document.querySelector('#toast').textContent='Your changes are saved for this session.';
   if(state==='winner'||state==='drawing')particles();
