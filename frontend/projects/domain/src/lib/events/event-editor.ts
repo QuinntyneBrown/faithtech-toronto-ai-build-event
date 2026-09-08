@@ -1,6 +1,7 @@
 import { Component, DestroyRef, inject, input, OnInit, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { EVENT_SERVICE, EventDetail, EventInput, EventFailure, ServiceFailure } from '@faithtech/api';
+import { validateEventInput } from './validate-event-input';
 
 @Component({ selector: 'ft-event-editor', imports: [FormsModule], templateUrl: './event-editor.html', styleUrl: './event-editor.css' })
 export class EventEditor implements OnInit {
@@ -36,7 +37,7 @@ export class EventEditor implements OnInit {
     if (!draft || !current || this.busy() || this.conflict()) return;
     this.busy.set(true); this.error.set(''); this.errors.set({}); this.saved.set(false);
     try {
-      const result = await this.service.saveDraft(current.id, draft, current.version, this.operationId);
+      const result = await this.service.saveDraft(current.id, validateEventInput(draft), current.version, this.operationId);
       if (this.destroy.destroyed) return;
       this.detail.set(result); this.draft.set(result); this.saved.set(true); this.uncertain.set(false); this.operationId = crypto.randomUUID();
     } catch (error) {

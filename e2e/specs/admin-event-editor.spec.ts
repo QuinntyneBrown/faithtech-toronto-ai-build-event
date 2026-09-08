@@ -17,6 +17,20 @@ async function openEditor(page: Page) {
   return new AdminEventEditorPage(page);
 }
 
+test('L2-040: given Unicode event text, client limits count normalized scalar values', async ({ page, events }) => {
+  const editor = await openEditor(page);
+  await editor.editContent('😀'.repeat(201), 'Venue', 'Welcome');
+  await editor.save();
+  await editor.expectInvalidTitle();
+  expect(events.saves).toBe(0);
+  await editor.editContent('  ' + '😀'.repeat(200) + '  ', '  Venue  ', '  Welcome  ');
+  await editor.save();
+  await editor.expectSaved();
+  const saved = [...events.events.values()][0];
+  expect(saved.title).toBe('😀'.repeat(200));
+  expect(saved.venueName).toBe('Venue');
+});
+
 for (const width of [320, 575, 576, 767, 768, 991, 992, 1199, 1200, 1440]) {
 test(`L2-035/036: editor content and validation remain accessible at ${width}px`, async ({ page }) => {
   const editor = await openEditor(page);

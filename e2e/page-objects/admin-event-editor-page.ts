@@ -31,6 +31,10 @@ export class AdminEventEditorPage {
     await expect(this.page.getByLabel('Directions link', { exact: true })).toHaveAttribute('aria-invalid', 'true');
     await expect(this.page.getByText('Use an absolute HTTPS URL without credentials.', { exact: true })).toBeVisible();
   }
+  async expectInvalidTitle() {
+    await expect(this.page.getByLabel('Event title', { exact: true })).toHaveAttribute('aria-invalid', 'true');
+    await expect(this.page.getByText('Use at most 200 characters.', { exact: true })).toBeVisible();
+  }
   async expectConflict(currentTitle: string) {
     await expect(this.page.getByRole('alert')).toContainText('Another administrator saved changes');
     await expect(this.page.getByRole('region', { name: 'Current saved values' })).toContainText(currentTitle);
