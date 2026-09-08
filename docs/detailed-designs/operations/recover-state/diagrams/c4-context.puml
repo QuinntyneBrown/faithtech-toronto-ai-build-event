@@ -1,0 +1,9 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Context - Recover committed state after interruption
+Person(actor, "Participant, administrator and operator", "recover state")
+System(system, "FaithTech event platform", "Reconcile unknown outcomes, resume durable work and restore authorized state")
+Rel(actor, system, "Recover state", "HTTPS")
+
+@enduml
