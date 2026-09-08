@@ -40,7 +40,7 @@ API-based project selection, workspace invitations, and project-progress summari
 
 ## Design System
 
-- The design systems of this platform and Liturgy must be identical. Use Liturgy's FaithTech design system in `C:\projects\Liturgy` as the authoritative reference for this platform.
+- The design systems of this platform and Liturgy must be identical. The intended end state is for both applications to use [Cornerstone](https://github.com/QuinntyneBrown/Cornerstone), FaithTech's `@cornerstone/ui` component library, installed through npm. Until that migration, use Liturgy's FaithTech design system in `C:\projects\Liturgy` as the visual reference for this platform.
 - Match Liturgy's design token values, typography, colour palette, spacing, sizing, borders, radii, shadows, iconography, components, interaction states, and motion conventions exactly. Equivalent components must look and behave identically in both applications.
 - For the current version, each application must own a separate, self-contained design-system implementation in its own repository. Do not share design-system packages, source files, libraries, assets, or build/runtime dependencies between the applications at this stage.
 - Inspect Liturgy as a reference and implement matching tokens, styles, components, and local asset copies within this repository. This platform's standalone design-system site, mockups, and production interfaces must build and run without access to the Liturgy repository or application.
@@ -49,9 +49,11 @@ API-based project selection, workspace invitations, and project-progress summari
 - Design-system parity is mandatory even when "Use Liturgy" is disabled, including for September 9. The setting controls workflow integration only.
 - Verify equivalent components and states side by side against Liturgy's light-theme reference before accepting the design or implementation.
 
-### Possible Future Shared Component Library
+### Planned Adoption of Cornerstone
 
-The applications may later adopt the same versioned component library, installed through npm, to distribute common components, design tokens, styles, and assets. Keep the current implementations organized so this migration is practical, while preserving identical appearance and behavior. Extracting, publishing, and adopting that package are outside the current scope; neither application should depend on it yet. Any future shared package must still allow each application to build and run independently of the other application's repository or deployment.
+Both applications are intended to adopt the existing Cornerstone library (`@cornerstone/ui`) through npm for common components, design tokens, styles, and assets. This is the agreed direction; the separate implementations above are an interim arrangement. Keep them organized for migration to Cornerstone and consult its existing component APIs when designing equivalent interfaces.
+
+Publishing and adopting Cornerstone are outside the current scope. Before migration, verify package availability and compatibility with both applications. Preserve identical appearance and behavior as they adopt the library. Each application must continue to build and run independently of the other application's repository or deployment. Cornerstone adoption is independent of the event's "Use Liturgy" setting.
 
 ## Participant Access and Countdown
 
