@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, inject, signal, viewChild } from '@angular/core';
+import { afterNextRender, Component, ElementRef, HostListener, inject, Injector, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { StageInput } from '@faithtech/api';
@@ -7,6 +7,7 @@ import { AdministratorSessionPanel, ScheduleEditor } from '@faithtech/domain';
 @Component({ selector: 'ft-schedule-page', imports: [FormsModule, RouterLink, AdministratorSessionPanel, ScheduleEditor], templateUrl: './schedule-page.html', styleUrl: './schedule-page.css' })
 export class SchedulePage {
   private readonly router = inject(Router);
+  private readonly injector = inject(Injector);
   readonly eventId = inject(ActivatedRoute).snapshot.paramMap.get('eventId')!;
   readonly editor = viewChild.required(ScheduleEditor);
   readonly editing = signal<StageInput | null>(null);
@@ -15,7 +16,10 @@ export class SchedulePage {
   private originalStage = '';
   private discardStage = false;
   private resolveLeave?: (leave: boolean) => void;
-  openStage(stage: StageInput) { this.originalStage = JSON.stringify(stage); this.editing.set(structuredClone(stage)); this.stageDialog().nativeElement.showModal(); }
+  openStage(stage: StageInput) {
+    this.originalStage = JSON.stringify(stage); this.editing.set(structuredClone(stage));
+    afterNextRender(() => { if (this.editing()) this.stageDialog().nativeElement.showModal(); }, { injector: this.injector });
+  }
   change<K extends keyof StageInput>(field: K, value: StageInput[K]) { this.editing.update(stage => stage ? { ...stage, [field]: value } : null); }
   time(field: 'start' | 'end', local: string) { this.change(field, local ? { local, offsetMinutes: null } : null); }
   offset(field: 'start' | 'end', offsetMinutes: number | null) { const time = this.editing()?.[field]; if (time) this.change(field, { ...time, offsetMinutes }); }

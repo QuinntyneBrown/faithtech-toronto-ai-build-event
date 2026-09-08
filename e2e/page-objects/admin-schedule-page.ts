@@ -1,4 +1,5 @@
 import { expect, type Page } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 
 export class AdminSchedulePage {
   constructor(private readonly page: Page) {}
@@ -17,6 +18,29 @@ export class AdminSchedulePage {
     await expect(this.page.getByLabel(label + ' end', { exact: true })).toHaveValue(end);
   }
   async expectWindowDisabled(kind: string) { await expect(this.page.getByRole('checkbox', { name: 'Enable ' + kind, exact: true })).not.toBeChecked(); }
+  async expectError(message: string) { await expect(this.page.getByRole('alert')).toContainText(message); }
+  async retrySave() { await this.page.getByRole('button', { name: 'Retry schedule save', exact: true }).click(); }
+  async expectUncertain() {
+    await this.expectError('could not be confirmed');
+    await expect(this.page.getByLabel('Timezone', { exact: true })).toBeDisabled();
+    await expect(this.page.getByRole('checkbox', { name: 'Enable selection', exact: true })).toBeDisabled();
+  }
+  async reapply() { await this.page.getByRole('button', { name: 'Reapply my schedule', exact: true }).click(); }
+  async beginStage() { await this.page.getByRole('button', { name: 'Add stage', exact: true }).click(); }
+  async expectStageFocused() { await expect(this.page.getByLabel('Stage name', { exact: true })).toBeFocused(); }
+  async cancelStage() { await this.page.getByRole('button', { name: 'Cancel', exact: true }).click(); }
+  async expectAddFocused() { await expect(this.page.getByRole('button', { name: 'Add stage', exact: true })).toBeFocused(); }
+  async returnToSettings() { await this.page.getByRole('link', { name: 'Event settings', exact: true }).click(); }
+  async keepEditing() {
+    await expect(this.page.getByRole('button', { name: 'Keep editing', exact: true })).toBeFocused();
+    await this.page.getByRole('button', { name: 'Keep editing', exact: true }).click();
+  }
+  async expectAccessible(width: number) {
+    await this.page.setViewportSize({ width, height: 1000 });
+    expect((await new AxeBuilder({ page: this.page }).analyze()).violations).toEqual([]);
+    expect(await this.page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
+  async capture(path: string) { await this.page.screenshot({ path, fullPage: true }); }
   async setEventTimes(timezone: string, start: string, end: string) {
     await this.page.getByLabel('Timezone', { exact: true }).fill(timezone);
     await this.page.getByLabel('Event start', { exact: true }).fill(start);
