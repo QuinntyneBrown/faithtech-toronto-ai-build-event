@@ -131,6 +131,74 @@ public sealed class RosterLifecycleTests(EventApiFactory factory) : IClassFixtur
         Assert.DoesNotContain(issuance.Code, JsonSerializer.Serialize(roster));
     }
 
+    [Fact, Trait("Requirement", "L2-002/AC5")]
+    public async Task Given_deactivation_followed_by_reactivation_when_the_participant_authenticates_afresh_then_history_is_restored_but_the_revoked_session_still_fails()
+    {
+        using var admin = await factory.AdministratorBrowser();
+        var item = await CreatePublished(admin);
+        var (oldSession, registrationId, code) = await factory.ParticipantBrowser(admin, item.Id, "Alex", "alex@example.com");
+        using var _ = oldSession;
+        (await oldSession.GetAsync($"/api/events/{item.Id}/session")).EnsureSuccessStatusCode();
+
+        var afterAdd = (await admin.GetFromJsonAsync<RosterEntry[]>($"/api/admin/events/{item.Id}/roster"))!.Single(x => x.Id == registrationId);
+        (await Deactivate(admin, item.Id, registrationId, afterAdd.Version)).EnsureSuccessStatusCode();
+
+        var afterDeactivate = (await admin.GetFromJsonAsync<RosterEntry[]>($"/api/admin/events/{item.Id}/roster"))!.Single(x => x.Id == registrationId);
+        var reactivated = await Reactivate(admin, item.Id, registrationId, afterDeactivate.Version);
+        reactivated.EnsureSuccessStatusCode();
+        var reactivatedEntry = (await reactivated.Content.ReadFromJsonAsync<RosterEntry>())!;
+        Assert.True(reactivatedEntry.Active);
+        Assert.True(reactivatedEntry.EmailBound);
+        Assert.Equal(afterAdd.FirstAccessAtUtc, reactivatedEntry.FirstAccessAtUtc);
+
+        using var oldSessionRead = await oldSession.GetAsync($"/api/events/{item.Id}/session");
+        Assert.Equal(HttpStatusCode.Unauthorized, oldSessionRead.StatusCode);
+
+        using var freshAttempt = factory.Browser();
+        var token = await freshAttempt.GetFromJsonAsync<JsonElement>($"/api/events/{item.Id}/antiforgery");
+        freshAttempt.DefaultRequestHeaders.Add("X-CSRF-TOKEN", token.GetProperty("requestToken").GetString());
+        using var freshResponse = await freshAttempt.PostAsJsonAsync($"/api/events/{item.Id}/session", new { email = "alex@example.com", entryCode = code });
+        freshResponse.EnsureSuccessStatusCode();
+        var freshResult = await freshResponse.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal(registrationId, freshResult.GetProperty("participantId").GetGuid());
+    }
+
+    [Fact, Trait("Requirement", "L2-002/AC6")]
+    public async Task Given_an_inactive_entrys_email_now_bound_elsewhere_when_reactivating_then_it_is_rejected_until_the_binding_is_cleared_by_code_replacement()
+    {
+        using var admin = await factory.AdministratorBrowser();
+        var item = await CreatePublished(admin);
+        var (alexSession, alexId, _) = await factory.ParticipantBrowser(admin, item.Id, "Alex", "shared@example.com");
+        using (alexSession) { }
+
+        var afterAdd = (await admin.GetFromJsonAsync<RosterEntry[]>($"/api/admin/events/{item.Id}/roster"))!.Single(x => x.Id == alexId);
+        (await Deactivate(admin, item.Id, alexId, afterAdd.Version)).EnsureSuccessStatusCode();
+
+        var (rileySession, rileyId, _) = await factory.ParticipantBrowser(admin, item.Id, "Riley", "shared@example.com");
+        using (rileySession) { }
+        Assert.NotEqual(alexId, rileyId);
+
+        var afterDeactivate = (await admin.GetFromJsonAsync<RosterEntry[]>($"/api/admin/events/{item.Id}/roster"))!.Single(x => x.Id == alexId);
+        using var blockedReactivation = await Reactivate(admin, item.Id, alexId, afterDeactivate.Version);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, blockedReactivation.StatusCode);
+        var problem = await blockedReactivation.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.True(problem.GetProperty("errors").TryGetProperty("email", out _));
+
+        var stillInactive = (await admin.GetFromJsonAsync<RosterEntry[]>($"/api/admin/events/{item.Id}/roster"))!.Single(x => x.Id == alexId);
+        Assert.False(stillInactive.Active);
+
+        var replaced = await ReplaceCode(admin, item.Id, alexId, stillInactive.Version, clearEmailBinding: true);
+        replaced.EnsureSuccessStatusCode();
+        var clearedEntry = (await replaced.Content.ReadFromJsonAsync<RosterIssuance>())!.Entry;
+        Assert.False(clearedEntry.EmailBound);
+
+        var reactivated = await Reactivate(admin, item.Id, alexId, clearedEntry.Version);
+        reactivated.EnsureSuccessStatusCode();
+        var reactivatedEntry = (await reactivated.Content.ReadFromJsonAsync<RosterEntry>())!;
+        Assert.True(reactivatedEntry.Active);
+        Assert.False(reactivatedEntry.EmailBound);
+    }
+
     private async Task<EventSummary> CreatePublished(HttpClient admin)
     {
         var item = await Create(admin);
@@ -159,6 +227,14 @@ public sealed class RosterLifecycleTests(EventApiFactory factory) : IClassFixtur
     private static async Task<HttpResponseMessage> ReplaceCode(HttpClient client, Guid eventId, Guid registrationId, string version, bool clearEmailBinding)
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, $"/api/admin/events/{eventId}/roster/{registrationId}/code") { Content = JsonContent.Create(new { clearEmailBinding }) };
+        request.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString());
+        request.Headers.Add("If-Match", $"\"{version}\"");
+        return await client.SendAsync(request);
+    }
+
+    private static async Task<HttpResponseMessage> Reactivate(HttpClient client, Guid eventId, Guid registrationId, string version)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"/api/admin/events/{eventId}/roster/{registrationId}/reactivate");
         request.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString());
         request.Headers.Add("If-Match", $"\"{version}\"");
         return await client.SendAsync(request);

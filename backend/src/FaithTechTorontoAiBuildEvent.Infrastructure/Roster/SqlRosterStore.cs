@@ -3,6 +3,7 @@ using System.Text.Json;
 using FaithTechTorontoAiBuildEvent.Application.Access;
 using FaithTechTorontoAiBuildEvent.Application.Operations;
 using FaithTechTorontoAiBuildEvent.Application.Roster;
+using FaithTechTorontoAiBuildEvent.Application.Validation;
 using FaithTechTorontoAiBuildEvent.Domain.Roster;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -125,6 +126,38 @@ public sealed class SqlRosterStore(EventDbContext db, IEntryCodeGenerator codes,
         db.OperationReceipts.Add(new() { ActorId = command.ActorId, EventId = command.EventId, OperationId = command.OperationId, Target = target,
             PayloadHash = hash, Result = JsonSerializer.Serialize(result with { Code = null, PreviouslyCompleted = true }), CommittedAtUtc = now });
         db.AuditRecords.Add(new() { ActorId = command.ActorId, EventId = command.EventId, SubjectId = entry.Id, Action = "registration-code-replaced", Outcome = "succeeded", AtUtc = now });
+        await db.SaveChangesAsync(cancellationToken); await transaction.CommitAsync(cancellationToken); return result;
+    }
+
+    public async Task<RosterEntry> Reactivate(ReactivateRegistrationCommand command, CancellationToken cancellationToken)
+    {
+        var target = $"POST /api/admin/events/{command.EventId}/roster/{command.RegistrationId}/reactivate";
+        var hash = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new { target, command.Version })));
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        var resource = $"event:{command.EventId}";
+        await db.Database.ExecuteSqlInterpolatedAsync($"DECLARE @result int; EXEC @result = sp_getapplock @Resource={resource}, @LockMode='Exclusive', @LockOwner='Transaction', @LockTimeout=5000; IF @result < 0 THROW 51000, 'Operation unavailable', 1;", cancellationToken);
+        var entry = await db.Registrations.SingleOrDefaultAsync(x => x.Id == command.RegistrationId && x.EventId == command.EventId, cancellationToken) ?? throw new ResourceNotFoundException();
+        var receipt = await db.OperationReceipts.SingleOrDefaultAsync(x => x.ActorId == command.ActorId && x.EventId == command.EventId && x.OperationId == command.OperationId, cancellationToken);
+        if (receipt is not null) {
+            if (receipt.PayloadHash != hash) throw new OperationConflictException();
+            return JsonSerializer.Deserialize<RosterEntry>(receipt.Result)!;
+        }
+        var current = Detail(entry);
+        if (current.Version != command.Version) throw new StaleVersionException(current);
+        // Deactivation never clears a retained email binding, and the partial unique index only covers active entries,
+        // so another entry may have since bound the same email while this one sat inactive. Reactivating would then
+        // create two active entries sharing an email; block it until the admin clears the stale binding (via code
+        // replacement) instead of silently dropping it here.
+        if (entry.NormalizedEmail is not null && await db.Registrations.AnyAsync(x =>
+                x.EventId == command.EventId && x.Active && x.Id != entry.Id && x.NormalizedEmail == entry.NormalizedEmail, cancellationToken))
+            throw new InputValidationException("email", "This entry's remembered email is now bound to another active participant. Replace its entry code and clear the email binding before reactivating.");
+        var now = await db.Database.SqlQuery<DateTimeOffset>($"SELECT TODATETIMEOFFSET(SYSUTCDATETIME(), '+00:00') AS Value").SingleAsync(cancellationToken);
+        entry.Active = true;
+        await db.SaveChangesAsync(cancellationToken);
+        var result = Detail(entry);
+        db.OperationReceipts.Add(new() { ActorId = command.ActorId, EventId = command.EventId, OperationId = command.OperationId, Target = target,
+            PayloadHash = hash, Result = JsonSerializer.Serialize(result), CommittedAtUtc = now });
+        db.AuditRecords.Add(new() { ActorId = command.ActorId, EventId = command.EventId, SubjectId = entry.Id, Action = "registration-reactivated", Outcome = "succeeded", AtUtc = now });
         await db.SaveChangesAsync(cancellationToken); await transaction.CommitAsync(cancellationToken); return result;
     }
 

@@ -37,4 +37,10 @@ public sealed class RosterController(ISender sender) : ControllerBase
         [FromHeader(Name = "If-Match")] string? version, CancellationToken cancellationToken) =>
         Ok(await sender.Send(new ReplaceEntryCodeCommand(Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!),
             eventId, registrationId, operationId!.Value, version, request.ClearEmailBinding), cancellationToken));
+    [HttpPost("{registrationId:guid}/reactivate"), ValidateAntiForgeryToken]
+    public async Task<IActionResult> Reactivate(Guid eventId, Guid registrationId,
+        [FromHeader(Name = "Idempotency-Key"), Required] Guid? operationId,
+        [FromHeader(Name = "If-Match")] string? version, CancellationToken cancellationToken) =>
+        Ok(await sender.Send(new ReactivateRegistrationCommand(Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!),
+            eventId, registrationId, operationId!.Value, version), cancellationToken));
 }

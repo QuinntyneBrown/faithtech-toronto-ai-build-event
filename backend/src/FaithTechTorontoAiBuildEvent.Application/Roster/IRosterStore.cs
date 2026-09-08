@@ -7,4 +7,5 @@ public interface IRosterStore
     Task<RosterEntry> Rename(RenameRegistrationCommand command, CancellationToken cancellationToken);
     Task<RosterEntry> Deactivate(DeactivateRegistrationCommand command, CancellationToken cancellationToken);
     Task<RosterIssuance> ReplaceCode(ReplaceEntryCodeCommand command, CancellationToken cancellationToken);
+    Task<RosterEntry> Reactivate(ReactivateRegistrationCommand command, CancellationToken cancellationToken);
 }
