@@ -73,6 +73,8 @@ public partial class Program
         app.UseAuthorization();
         app.UseStaticFiles();
         app.MapControllers();
+        app.MapGet("/", () => Results.File(Path.Combine(app.Environment.WebRootPath, "index.html"), "text/html"));
+        app.MapFallbackToFile("/events/{*path:nonfile}", "index.html");
         app.MapFallbackToFile("/admin/{*path:nonfile}", "admin/index.html");
         app.Run();
     }
