@@ -3,11 +3,12 @@
   @if (preview() && !previewError()) { <img [src]="preview()" alt="Saved venue logo" (error)="previewError.set(true)"> }
   @if (previewError()) { <p role="status">The saved logo could not be displayed. Your event details remain available.</p> }
   <label for="venue-logo">Venue logo</label>
-  <input id="venue-logo" type="file" accept="image/png,image/jpeg,image/webp" (change)="choose($event)" [disabled]="busy() || uncertain()" aria-describedby="logo-help logo-error" [attr.aria-invalid]="error() ? 'true' : null">
+  <input #fileInput id="venue-logo" type="file" accept="image/png,image/jpeg,image/webp" (change)="choose($event)" [disabled]="busy() || uncertain()" aria-describedby="logo-help logo-error" [attr.aria-invalid]="error() ? 'true' : null">
   <p id="logo-help">PNG, JPEG or WebP, up to 2 MiB and 4,096 pixels per dimension.</p>
   @if (blocked()) { <p>Save draft changes before uploading a logo.</p> }
   @if (error()) { <p id="logo-error" role="alert">{{ error() }}</p> }
   @if (conflict()) { <button type="button" (click)="useCurrent()">Load latest saved values</button> }
   @if (success()) { <p role="status">Logo saved.</p> }
   <button type="button" (click)="upload()" [disabled]="!file() || busy() || blocked() || !!conflict()">{{ uncertain() ? 'Retry logo upload' : 'Upload logo' }}</button>
+  @if (file()) { <button type="button" (click)="clear()" [disabled]="busy() || uncertain()">Clear selected file</button> }
 </section>

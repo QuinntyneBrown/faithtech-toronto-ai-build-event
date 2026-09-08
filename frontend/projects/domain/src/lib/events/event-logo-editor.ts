@@ -1,4 +1,4 @@
-import { Component, DestroyRef, effect, inject, input, output, signal } from '@angular/core';
+import { Component, DestroyRef, effect, ElementRef, inject, input, output, signal, viewChild } from '@angular/core';
 import { EVENT_SERVICE, EventDetail, EventFailure, ServiceFailure } from '@faithtech/api';
 
 @Component({ selector: 'ft-event-logo-editor', templateUrl: './event-logo-editor.html', styleUrl: './event-logo-editor.css' })
@@ -19,6 +19,12 @@ export class EventLogoEditor {
   readonly conflict = signal<EventDetail | null>(null);
   private operationId = crypto.randomUUID();
   private version = '';
+  private readonly fileInput = viewChild.required<ElementRef<HTMLInputElement>>('fileInput');
+  clear() {
+    if (this.busy() || this.uncertain()) return;
+    this.file.set(null); this.fileInput().nativeElement.value = ''; this.error.set(''); this.conflict.set(null);
+    this.operationId = crypto.randomUUID();
+  }
   constructor() {
     effect(onCleanup => {
       const event = this.event(); let active = true; let url = '';
@@ -50,7 +56,8 @@ export class EventLogoEditor {
     try {
       const result = await this.service.uploadLogo(this.event().id, file, this.version, this.operationId);
       if (this.destroy.destroyed) return;
-      this.saved.emit(result); this.file.set(null); this.uncertain.set(false); this.success.set(true);
+      this.saved.emit(result); this.file.set(null); this.fileInput().nativeElement.value = '';
+      this.uncertain.set(false); this.success.set(true);
       this.operationId = crypto.randomUUID();
     } catch (error) {
       if (error instanceof ServiceFailure && error.status === 401) this.denied.emit();

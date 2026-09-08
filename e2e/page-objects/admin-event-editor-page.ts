@@ -7,6 +7,18 @@ export class AdminEventEditorPage {
     await this.page.getByLabel('Venue logo', { exact: true }).setInputFiles({ name, mimeType, buffer });
   }
   async uploadLogo() { await this.page.getByRole('button', { name: 'Upload logo', exact: true }).click(); }
+  async retryLogo() { await this.page.getByRole('button', { name: 'Retry logo upload', exact: true }).click(); }
+  async loadLatestLogoVersion() { await this.page.getByRole('button', { name: 'Load latest saved values', exact: true }).click(); }
+  async expectLogoSelectionCleared() {
+    await expect(this.page.getByLabel('Venue logo', { exact: true })).toHaveValue('');
+  }
+  async expectLogoUploadBlocked() { await expect(this.page.getByRole('button', { name: 'Upload logo', exact: true })).toBeDisabled(); }
+  async clearLogoSelection() { await this.page.getByRole('button', { name: 'Clear selected file', exact: true }).click(); }
+  async expectLogoVisible() {
+    const logo = this.page.getByRole('img', { name: 'Saved venue logo' });
+    await expect(logo).toBeVisible();
+    await expect.poll(() => logo.evaluate((element: HTMLImageElement) => element.naturalWidth)).toBeGreaterThan(0);
+  }
   async expectLogoSaved() {
     await expect(this.page.getByText('Logo saved.', { exact: true })).toBeVisible();
     const logo = this.page.getByRole('img', { name: 'Saved venue logo' });
@@ -56,7 +68,7 @@ export class AdminEventEditorPage {
     await expect(this.page.getByLabel('Event title', { exact: true })).toBeDisabled();
   }
   async retrySave() { await this.page.getByRole('button', { name: 'Retry save', exact: true }).click(); }
-  async expectSaved() { await expect(this.page.getByRole('status')).toHaveText('Draft saved.'); }
+  async expectSaved() { await expect(this.page.getByText('Draft saved.', { exact: true })).toBeVisible(); }
   async returnToEvents() { await this.page.getByRole('link', { name: 'All events' }).click(); }
   async keepEditing() {
     await expect(this.page.getByRole('dialog', { name: 'Leave unsaved changes?' })).toBeVisible();

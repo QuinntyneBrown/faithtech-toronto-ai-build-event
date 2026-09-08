@@ -17,12 +17,69 @@ async function openEditor(page: Page) {
   return new AdminEventEditorPage(page);
 }
 
+const logoBytes = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==', 'base64');
+
+test('L2-044: given a lost logo response, retry confirms one saved image', async ({ page, events }) => {
+  const editor = await openEditor(page);
+  events.loseNextLogoResponse = true;
+  await editor.chooseLogo('venue.png', 'image/png', logoBytes);
+  await editor.uploadLogo();
+  await editor.expectUnconfirmed();
+  await editor.retryLogo();
+  await editor.expectLogoSaved();
+  expect(events.logoUploads).toBe(1);
+});
+
+test('L2-044: given a stale logo upload, explicit recovery retains the selected file', async ({ page, events }) => {
+  const editor = await openEditor(page);
+  await editor.expectDraft('Toronto build night');
+  const current = [...events.events.values()][0];
+  events.events.set(current.id, { ...current, title: 'Saved by another host', version: '2' });
+  await editor.chooseLogo('venue.png', 'image/png', logoBytes);
+  await editor.uploadLogo();
+  await editor.expectLogoError('Another administrator changed');
+  expect(events.logoUploads).toBe(0);
+  await editor.loadLatestLogoVersion();
+  await editor.expectDraft('Saved by another host');
+  await editor.uploadLogo();
+  await editor.expectLogoSaved();
+  expect(events.logoUploads).toBe(1);
+});
+
+test('L2-001/036: given a selected logo and text edits, saving text allows upload without losing either', async ({ page, events }) => {
+  const editor = await openEditor(page);
+  await editor.chooseLogo('venue.png', 'image/png', logoBytes);
+  await editor.editContent('New title', 'New venue', 'Welcome');
+  await editor.expectLogoUploadBlocked();
+  await editor.save();
+  await editor.expectSaved();
+  await editor.uploadLogo();
+  await editor.expectLogoSaved();
+  await page.reload();
+  await editor.expectDraft('New title');
+  await editor.expectContent('New venue', 'Welcome');
+  await editor.expectLogoVisible();
+  expect(events.logoUploads).toBe(1);
+});
+
+test('L2-036: given an unsubmitted logo, leaving requires discard and selection can be cleared', async ({ page }) => {
+  const editor = await openEditor(page);
+  await editor.chooseLogo('venue.png', 'image/png', logoBytes);
+  await editor.returnToEvents();
+  await editor.keepEditing();
+  await editor.clearLogoSelection();
+  await editor.expectLogoSelectionCleared();
+  await editor.returnToEvents();
+  await new AdminEventsPage(page).expectDraft('Toronto build night');
+});
+
 test('L2-001/040: given a venue image, upload saves and displays the accepted logo', async ({ page }) => {
   const editor = await openEditor(page);
   const image = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==', 'base64');
   await editor.chooseLogo('venue.png', 'image/png', image);
   await editor.uploadLogo();
   await editor.expectLogoSaved();
+  await editor.expectLogoSelectionCleared();
 });
 
 test('L2-040: given an unsupported venue logo, upload shows a field error', async ({ page, events }) => {
