@@ -17,10 +17,11 @@ export class RosterPage {
   private readonly summary = viewChild<ElementRef<HTMLElement>>('summary');
   private readonly leaveDialog = viewChild<ElementRef<HTMLDialogElement>>('leaveDialog');
   private readonly renameDialog = viewChild<ElementRef<HTMLDialogElement>>('renameDialog');
+  private readonly deactivateDialog = viewChild<ElementRef<HTMLDialogElement>>('deactivateDialog');
   private closeOnly = false;
   private resolveLeave?: (leave: boolean) => void;
   constructor() {
-    effect(() => { if (!this.session()?.state()) { this.clearCode(); this.addDialog()?.nativeElement.close(); this.renameDialog()?.nativeElement.close(); } });
+    effect(() => { if (!this.session()?.state()) { this.clearCode(); this.addDialog()?.nativeElement.close(); this.renameDialog()?.nativeElement.close(); this.deactivateDialog()?.nativeElement.close(); } });
     effect(() => { if (this.panel()?.error()) afterNextRender(() => this.summary()?.nativeElement.focus(), { injector: this.injector }); });
   }
   openAdd() { this.panel()?.beginAdd(); this.addDialog()?.nativeElement.showModal(); }
@@ -52,7 +53,13 @@ export class RosterPage {
   openRename(entry: RosterEntry) { this.panel()?.beginRename(entry); this.renameDialog()?.nativeElement.showModal(); }
   cancelRename() { if (this.panel()?.renameBusy()) return; this.panel()?.cancelRename(); this.renameDialog()?.nativeElement.close(); }
   renamed(_entry: RosterEntry) { this.renameDialog()?.nativeElement.close(); }
-  signedOut() { this.clearCode(); this.addDialog()?.nativeElement.close(); this.renameDialog()?.nativeElement.close(); void this.router.navigateByUrl('/sign-in', { replaceUrl: true }); }
+  openDeactivate(entry: RosterEntry) { this.panel()?.beginDeactivate(entry); this.deactivateDialog()?.nativeElement.showModal(); }
+  cancelDeactivate() { if (this.panel()?.deactivateBusy()) return; this.panel()?.cancelDeactivate(); this.deactivateDialog()?.nativeElement.close(); }
+  deactivated(_entry: RosterEntry) { this.deactivateDialog()?.nativeElement.close(); }
+  signedOut() {
+    this.clearCode(); this.addDialog()?.nativeElement.close(); this.renameDialog()?.nativeElement.close(); this.deactivateDialog()?.nativeElement.close();
+    void this.router.navigateByUrl('/sign-in', { replaceUrl: true });
+  }
   @HostListener('window:beforeunload', ['$event'])
   beforeUnload(event: BeforeUnloadEvent) { if (this.hasPendingChanges()) event.preventDefault(); }
 }

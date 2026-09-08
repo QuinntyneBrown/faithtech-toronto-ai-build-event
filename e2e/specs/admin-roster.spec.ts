@@ -36,3 +36,13 @@ test('L2-002/AC2: renaming a participant updates the roster without changing the
   await roster.expectParticipants('Alexandra', 1); await roster.expectParticipants('Alex', 0);
   await page.reload(); await roster.expectParticipants('Alexandra', 1);
 });
+
+test('L2-002/AC3: deactivating a participant marks them inactive and blocks a second deactivation', async ({ page }) => {
+  const roster = await openRoster(page);
+  await roster.add('Alex'); await roster.takeCode('Alex');
+  await roster.expectStatus('Alex', 'Active');
+  await roster.deactivate('Alex');
+  await roster.expectStatus('Alex', 'Inactive');
+  await roster.expectDeactivateDisabled('Alex');
+  await page.reload(); await roster.expectStatus('Alex', 'Inactive');
+});

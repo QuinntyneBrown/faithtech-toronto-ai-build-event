@@ -35,4 +35,15 @@ export class RosterService implements IRosterService {
       throw new RosterFailure(0);
     }
   }
+  async deactivate(eventId: string, registrationId: string, version: string, operationId: string): Promise<RosterEntry> {
+    try {
+      const token = await firstValueFrom(this.http.get<{ requestToken: string }>('/api/admin/antiforgery'));
+      return await firstValueFrom(this.http.post<RosterEntry>(
+        `/api/admin/events/${encodeURIComponent(eventId)}/roster/${encodeURIComponent(registrationId)}/deactivate`, null,
+        { headers: { 'X-CSRF-TOKEN': token.requestToken, 'Idempotency-Key': operationId, 'If-Match': `"${version}"` } }));
+    } catch (error) {
+      if (error instanceof HttpErrorResponse) throw new RosterFailure(error.status, error.error?.code, error.error?.errors);
+      throw new RosterFailure(0);
+    }
+  }
 }

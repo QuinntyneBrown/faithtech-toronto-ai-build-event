@@ -8,6 +8,9 @@ export class MockRosterService implements IRosterService {
   rename(eventId: string, registrationId: string, displayName: string, version: string, operationId: string) {
     return this.call<RosterEntry>('rename', { eventId, registrationId, displayName, version, operationId });
   }
+  deactivate(eventId: string, registrationId: string, version: string, operationId: string) {
+    return this.call<RosterEntry>('deactivate', { eventId, registrationId, version, operationId });
+  }
   private async call<T>(operation: string, args: object): Promise<T> {
     const bridge = window as unknown as { __faithtechRoster(operation: string, args: object): Promise<{
       result: T; failed?: boolean; status?: number; code?: string; errors?: Record<string, string[]>;

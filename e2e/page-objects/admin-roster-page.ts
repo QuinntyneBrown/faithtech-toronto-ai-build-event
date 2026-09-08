@@ -37,4 +37,14 @@ export class AdminRosterPage {
     await this.page.getByLabel('New participant name', { exact: true }).fill(newName);
     await this.page.getByRole('button', { name: 'Save name', exact: true }).click();
   }
+  async deactivate(name: string) {
+    await this.page.getByRole('button', { name: 'Deactivate ' + name, exact: true }).click();
+    await this.page.getByRole('button', { name: 'Confirm deactivation', exact: true }).click();
+  }
+  async expectStatus(name: string, status: 'Active' | 'Inactive') {
+    await expect(this.page.getByRole('row', { name: new RegExp(name) }).getByRole('cell', { name: status, exact: true })).toBeVisible();
+  }
+  async expectDeactivateDisabled(name: string) {
+    await expect(this.page.getByRole('button', { name: 'Deactivate ' + name, exact: true })).toBeDisabled();
+  }
 }

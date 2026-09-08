@@ -8,8 +8,10 @@ export class RosterPanel implements OnInit {
   readonly eventId = input.required<string>();
   readonly requestAdd = output<void>();
   readonly requestRename = output<RosterEntry>();
+  readonly requestDeactivate = output<RosterEntry>();
   readonly issued = output<RosterIssuance>();
   readonly renamed = output<RosterEntry>();
+  readonly deactivated = output<RosterEntry>();
   readonly denied = output<void>();
   readonly entries = signal<RosterEntry[] | null>(null);
   readonly loadError = signal('');
@@ -25,6 +27,10 @@ export class RosterPanel implements OnInit {
   readonly renameFieldError = signal('');
   readonly renameBusy = signal(false);
   private renameOperationId = crypto.randomUUID();
+  readonly deactivateTarget = signal<RosterEntry | null>(null);
+  readonly deactivateError = signal('');
+  readonly deactivateBusy = signal(false);
+  private deactivateOperationId = crypto.randomUUID();
   private readonly addButton = viewChild<ElementRef<HTMLButtonElement>>('addButton');
   focusAdd() { this.addButton()?.nativeElement.focus(); }
   discardDraft() { if (!this.uncertain()) { this.name.set(''); this.error.set(''); this.fieldError.set(''); this.operationId = crypto.randomUUID(); } }
@@ -75,5 +81,24 @@ export class RosterPanel implements OnInit {
         this.renameError.set(this.renameFieldError() ? 'Check the participant name. Your entry is retained.' : 'The rename was rejected. Check your access before retrying.');
       } else { this.renameError.set('The rename could not be confirmed. Retry to continue.'); }
     } finally { this.renameBusy.set(false); }
+  }
+  beginDeactivate(entry: RosterEntry) {
+    this.deactivateTarget.set(entry); this.deactivateError.set(''); this.deactivateOperationId = crypto.randomUUID();
+  }
+  cancelDeactivate() { if (!this.deactivateBusy()) this.deactivateTarget.set(null); }
+  async deactivate() {
+    const target = this.deactivateTarget();
+    if (!target || this.deactivateBusy()) return;
+    this.deactivateBusy.set(true); this.deactivateError.set('');
+    try {
+      const result = await this.service.deactivate(this.eventId(), target.id, target.version, this.deactivateOperationId);
+      this.entries.update(entries => (entries ?? []).map(entry => entry.id === result.id ? result : entry));
+      this.deactivateTarget.set(null); this.deactivated.emit(result);
+    } catch (error) {
+      if (error instanceof RosterFailure && error.status === 401) { this.denied.emit(); return; }
+      if (error instanceof RosterFailure && (error.status === 409 || error.status === 428)) {
+        this.deactivateError.set('This participant changed elsewhere. Close this dialog and reopen deactivate to try again.');
+      } else { this.deactivateError.set('The deactivation could not be confirmed. Retry to continue.'); }
+    } finally { this.deactivateBusy.set(false); }
   }
 }
