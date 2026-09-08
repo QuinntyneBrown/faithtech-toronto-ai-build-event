@@ -1,0 +1,44 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+ BorderColor #344054
+ FontColor #101828
+ BackgroundColor #F9FAFB
+}
+title Review, apply and reconcile operator operations - preview and bind approval
+actor Operator as op
+box "Frontend - Windows terminal" #E0F2FE
+participant "Operation command" as cli
+end box
+box "Backend - Application" #ECFDF3
+participant OperatorMutationHandler as handler
+end box
+box "Backend - Infrastructure" #FFF4E5
+participant SqlOperatorUnitOfWork as work
+database "Protected previews and journal" as files
+database "Verified EventDbContext" as db
+end box
+op -> cli : Mutation --preview
+cli -> handler : Typed intent and protected secret input
+handler -> db : Fixed target/state reads only [L2-057]
+db --> handler : Verified principal and versions
+handler -> handler : Canonicalize; hash files; bind secrets
+handler -> files : DPAPI-protect preview; restricted atomic write
+files --> handler : Preview ID
+handler --> cli : Redacted diff or exact supplied SQL
+cli --> op : Review target and intent
+op -> cli : operations apply preview-id
+cli -> handler : Typed target acknowledgement or explicit --approve
+handler -> files : Load protected artifact; verify binding
+files --> handler : Bound intent
+alt Changed target, input, principal or approval mismatch
+handler --> cli : Reject before requested mutation
+else Exact approved intent
+handler --> cli : Dispatch eligible apply path
+end
+cli --> op : Outcome
+@enduml

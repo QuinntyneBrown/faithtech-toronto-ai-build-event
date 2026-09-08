@@ -1,0 +1,20 @@
+@startuml
+title Review, apply and reconcile operator operations - components
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+Container_Boundary(local_process, "Local Provisioning process") {
+Component(cmd, "Operation command types", "Provisioning", "Preview, apply, show and reconcile")
+Component(handler, "OperatorMutationHandler", "Application", "Binds approved intent and routes outcomes")
+Component(preview, "ProtectedOperatorPreviewStore", "Infrastructure", "Protects review artifacts")
+Component(work, "SqlOperatorUnitOfWork", "Infrastructure", "Atomic validated mutations")
+Component(journal, "FileOperatorJournal", "Infrastructure", "Durable attempts and outcome metadata")
+Component(writer, "CommandResultWriter", "Provisioning", "Text, JSON and exit statuses")
+}
+ContainerDb(db, "Event database", "SQL Server", "Durable data")
+Rel(cmd, handler, "Dispatches")
+Rel(handler, preview, "Loads bound review")
+Rel(handler, work, "Applies or reconciles validated intent")
+Rel(handler, journal, "Records attempt/outcome")
+Rel(work, db, "Commits data, receipt and audit")
+Rel(handler, writer, "Returns outcome separately from delivery")
+@enduml

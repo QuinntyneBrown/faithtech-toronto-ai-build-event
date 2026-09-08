@@ -1,0 +1,53 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+ BorderColor #344054
+ FontColor #101828
+ BackgroundColor #F9FAFB
+}
+title Review, apply and reconcile operator operations - types
+class OperatorPreview {
+ +Guid PreviewId
+ +Guid OperationId
+ +string TargetFingerprint
+ +string PrincipalKey
+ +string PayloadHash
+ +Dictionary<string, string> Versions
+}
+class OperatorResult {
+ +Guid? OperationId
+ +string Outcome
+ +long DurationMs
+ +OperatorError? Error
+}
+interface IOperatorUnitOfWork {
+ +Apply(intent: OperatorIntent): Task<OperatorResult>
+ +Reconcile(operationId: Guid): Task<OperatorResult>
+}
+class SqlOperatorUnitOfWork
+class FileOperatorJournal {
+ +Start(operationId: Guid): Task
+ +Append(outcome: OperatorResult): Task
+}
+class OperationReceipt {
+ +Guid ActorId
+ +ActorKind ActorKind
+ +Guid OperationId
+ +string PayloadHash
+ +string Result
+}
+enum ActorKind {
+ Application
+ DatabaseOperator
+}
+SqlOperatorUnitOfWork ..|> IOperatorUnitOfWork
+SqlOperatorUnitOfWork ..> OperatorPreview : validates binding
+SqlOperatorUnitOfWork --> OperationReceipt : persists atomically
+OperationReceipt --> ActorKind
+FileOperatorJournal ..> OperatorResult : records nonsecret metadata
+IOperatorUnitOfWork ..> OperatorResult
+@enduml

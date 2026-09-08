@@ -1,0 +1,41 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+ BorderColor #344054
+ FontColor #101828
+ BackgroundColor #F9FAFB
+}
+title Review, apply and reconcile operator operations - cancel and report uncertainty
+actor Operator as op
+box "Frontend - Windows terminal" #E0F2FE
+participant "Operation command" as cli
+end box
+box "Backend - Application" #ECFDF3
+participant OperatorMutationHandler as handler
+end box
+box "Backend - Infrastructure" #FFF4E5
+participant SqlOperatorUnitOfWork as work
+database "Protected previews and journal" as files
+database "Verified EventDbContext" as db
+end box
+op -> cli : Ctrl+C or configured timeout
+cli -> handler : Cancel requested
+handler -> work : Stop later writes; request provider cancellation
+work -> db : Cancel active command
+alt Confirmed no execution or rollback
+db --> work : Confirmed cancellation
+work --> handler : Cancelled, exit 5
+else Reconciliation establishes prior commits
+db --> work : Known partial completion
+work --> handler : Partial, exit 1
+else Not established within reconciliation budget
+work --> handler : Unconfirmed, exit 6
+end
+handler -> files : Append known outcome and duration
+handler --> cli : Stable status and operation ID
+cli --> op : Inspect before a new operation
+@enduml
