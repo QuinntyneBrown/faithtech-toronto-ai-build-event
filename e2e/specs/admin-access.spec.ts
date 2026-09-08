@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';
+import { test } from '../fixtures/session-fixture';
 import { AdminAccessPage } from '../page-objects/admin-access-page';
 import { AdminSessionPage } from '../page-objects/admin-session-page';
 
