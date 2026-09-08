@@ -8,4 +8,5 @@ public interface IParticipantStore
     Task<ParticipantSession?> FindSession(Guid sessionId, CancellationToken cancellationToken);
     Task<DateTimeOffset> GetUtcNow(CancellationToken cancellationToken);
     Task<bool> IsActiveRegistration(Guid registrationId, CancellationToken cancellationToken);
+    Task RevokeSession(Guid sessionId, CancellationToken cancellationToken);
 }

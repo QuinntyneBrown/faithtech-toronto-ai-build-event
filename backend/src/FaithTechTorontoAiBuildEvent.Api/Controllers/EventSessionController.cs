@@ -34,4 +34,12 @@ public sealed class EventSessionController(ISender sender) : ControllerBase
         var state = await sender.Send(new GetParticipantSessionQuery(Guid.Parse(User.FindFirstValue(ClaimTypes.Sid)!)), cancellationToken);
         return state is null ? Unauthorized() : Ok(state);
     }
+
+    [HttpDelete, Authorize(AuthenticationSchemes = "Participant"), ValidateAntiForgeryToken]
+    public async Task<IActionResult> SignOut(Guid eventId, CancellationToken cancellationToken)
+    {
+        await sender.Send(new SignOutParticipantCommand(Guid.Parse(User.FindFirstValue(ClaimTypes.Sid)!)), cancellationToken);
+        await HttpContext.SignOutAsync("Participant");
+        return NoContent();
+    }
 }

@@ -47,4 +47,8 @@ public sealed class SqlParticipantStore(EventDbContext db, IEntryCodeGenerator c
 
     public async Task<bool> IsActiveRegistration(Guid registrationId, CancellationToken cancellationToken) =>
         await db.Registrations.AnyAsync(x => x.Id == registrationId && x.Active, cancellationToken);
+
+    public Task RevokeSession(Guid sessionId, CancellationToken cancellationToken) =>
+        db.ParticipantSessions.Where(x => x.Id == sessionId)
+            .ExecuteUpdateAsync(set => set.SetProperty(x => x.Revoked, true), cancellationToken);
 }
