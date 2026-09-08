@@ -30,6 +30,35 @@ test('L2-008/036: given a proposed schedule, applying the reference requires con
   expect(schedules.references).toBe(1);
 });
 
+test('L2-008/044: given a lost reference response, retry confirms the same application once', async ({ page, schedules }) => {
+  const schedule = await openSchedule(page); schedules.loseNextResponse = true;
+  await schedule.requestReference(); await schedule.confirmReference(); await schedule.expectUncertain();
+  await schedule.retryReference(); await schedule.expectSaved();
+  expect(schedules.references).toBe(1); expect(schedules.saves).toBe(1);
+  await schedule.expectStage('Reference arrival', 'Welcome from the reference service');
+});
+
+test('L2-008/044: given a stale reference request, applying it to the latest version requires confirmation', async ({ page, events, schedules }) => {
+  const schedule = await openSchedule(page); const current = [...events.events.values()][0];
+  events.events.set(current.id, { ...current, version: '2' });
+  await schedule.requestReference(); await schedule.confirmReference(); await schedule.expectError('Another administrator changed');
+  expect(schedules.references).toBe(0);
+  await schedule.reapplyReference(); await schedule.cancelReference(); expect(schedules.references).toBe(0);
+  await schedule.requestReference(); await schedule.confirmReference(); await schedule.expectSaved(); expect(schedules.references).toBe(1);
+});
+
+test('L2-008/044: given a rejected reference request, saving the retained draft remains a normal schedule save', async ({ page, schedules }) => {
+  const schedule = await openSchedule(page);
+  await schedule.setEventTimes('UTC', '2026-09-09T23:00', '2026-09-10T01:00');
+  await schedule.addStage('Custom draft', '2026-09-09T23:00', '2026-09-10T01:00', 'Preserve this');
+  schedules.validationErrors = { end: ['The reference cannot reopen this event.'] };
+  await schedule.requestReference(); await schedule.confirmReference(); await schedule.expectError('cannot reopen');
+  await schedule.expectStage('Custom draft', 'Preserve this');
+  schedules.validationErrors = null; await schedule.save(); await schedule.expectSaved();
+  expect(schedules.references).toBe(0); expect(schedules.saves).toBe(1);
+  await schedule.expectStage('Custom draft', 'Preserve this');
+});
+
 test('L2-036/AC2: given invalid schedule timing, validation focuses a linked summary and retains the draft', async ({ page, schedules }) => {
   const schedule = await openSchedule(page);
   await schedule.setEventTimes('UTC', '2026-09-09T23:00', '2026-09-10T01:00');
@@ -115,6 +144,7 @@ for (const width of [320, 575, 576, 767, 768, 991, 992, 1199, 1200, 1440]) {
   test(`L2-035/036: schedule empty populated validation and overlay states work at ${width}px`, async ({ page }) => {
     const schedule = await openSchedule(page);
     await schedule.expectAccessible(width); await schedule.beginStage(); await schedule.expectAccessible(width); await schedule.cancelStage();
+    await schedule.requestReference(); await schedule.expectAccessible(width); await schedule.cancelReference();
     await schedule.setEventTimes('UTC', '2026-09-09T23:00', '2026-09-10T01:00');
     await schedule.addStage('Arrival', '2026-09-09T23:00', '2026-09-10T00:00', 'A'.repeat(200));
     await schedule.addStage('Overlapping stage', '2026-09-09T23:30', '2026-09-10T01:00', 'Literal <script> text');
