@@ -18,7 +18,7 @@ public sealed class AddUserCommand : Command
             var password = input.Read(result.GetValue(input.Prompt), result.GetValue(input.Stdin));
             var name = result.GetRequiredValue(username);
             await services.GetRequiredService<ISender>().Send(new ProvisionAdministratorCommand(name, password), token);
-            Console.WriteLine($"Added administrator: {name}");
-        }, cancellationToken));
+            OperatorExecution.WriteCommittedResult(() => Console.WriteLine($"Added administrator: {name}"));
+        }, cancellationToken, reportTarget: true));
     }
 }
