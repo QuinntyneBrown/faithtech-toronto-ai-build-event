@@ -9,4 +9,6 @@ public interface IAdministratorStore
     Task<AdministratorSession?> FindSession(Guid id, CancellationToken cancellationToken);
     Task SaveSession(AdministratorSession session, CancellationToken cancellationToken);
     Task<DateTimeOffset> GetUtcNow(CancellationToken cancellationToken);
+    Task RevokeSession(Guid sessionId, CancellationToken cancellationToken);
+    Task<bool> RecordInteraction(Guid sessionId, CancellationToken cancellationToken);
 }

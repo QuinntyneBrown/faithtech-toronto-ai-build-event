@@ -34,4 +34,17 @@ public sealed class SqlAdministratorStore(EventDbContext db, UserManager<Adminis
     public Task<DateTimeOffset> GetUtcNow(CancellationToken cancellationToken) =>
         db.Database.SqlQuery<DateTimeOffset>($"SELECT TODATETIMEOFFSET(SYSUTCDATETIME(), '+00:00') AS Value")
             .SingleAsync(cancellationToken);
+
+    public Task RevokeSession(Guid sessionId, CancellationToken cancellationToken) =>
+        db.AdministratorSessions.Where(x => x.Id == sessionId)
+            .ExecuteUpdateAsync(set => set.SetProperty(x => x.Revoked, true), cancellationToken);
+
+    public async Task<bool> RecordInteraction(Guid sessionId, CancellationToken cancellationToken)
+    {
+        var now = await GetUtcNow(cancellationToken);
+        return await db.AdministratorSessions.Where(x => x.Id == sessionId && !x.Revoked &&
+                x.AuthenticatedAtUtc > now.AddHours(-8) && x.LastInteractionAtUtc > now.AddMinutes(-30))
+            .ExecuteUpdateAsync(set => set.SetProperty(x => x.LastInteractionAtUtc,
+                x => x.LastInteractionAtUtc > now ? x.LastInteractionAtUtc : now), cancellationToken) == 1;
+    }
 }
