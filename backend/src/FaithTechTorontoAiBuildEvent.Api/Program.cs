@@ -3,6 +3,7 @@ using FaithTechTorontoAiBuildEvent.Infrastructure;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Access;
 using FaithTechTorontoAiBuildEvent.Application.Access;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using FaithTechTorontoAiBuildEvent.Api.Hosting;
 
 namespace FaithTechTorontoAiBuildEvent.Api;
 
@@ -15,6 +16,7 @@ public partial class Program
             Args = args, WebRootPath = Path.Combine(AppContext.BaseDirectory, "wwwroot")
         });
         builder.Services.AddControllersWithViews();
+        builder.Services.AddEventHosting(builder.Configuration);
         builder.Services.AddAntiforgery(options =>
         {
             options.HeaderName = "X-CSRF-TOKEN";
@@ -51,6 +53,7 @@ public partial class Program
         });
         builder.Services.AddAuthorization();
         var app = builder.Build();
+        app.UseForwardedHeaders();
         if (!app.Environment.IsDevelopment()) app.UseHsts();
         app.Use(async (context, next) =>
         {
