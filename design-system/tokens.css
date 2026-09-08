@@ -68,7 +68,7 @@
   --cs-dialog-width: 36rem;
   --cs-dialog-height: min(90dvh, 48rem);
   --cs-scrim: rgb(22 22 12 / 35%);
-  --cs-avatar-size: 2.75rem;
+  --cs-avatar-size: 2.5rem;
   --cs-swatch-height: 6rem;
   --cs-map-height: 19rem;
   --cs-card-min: 17rem;
@@ -77,6 +77,24 @@
   --cs-control-padding: 0.65rem 0.75rem;
   --cs-button-small-padding: 0.35rem 0.75rem;
   --cs-on-lime: #16160c;
+  --cs-control-size: 2.75rem;
+  --cs-check-size: 1.25rem;
+  --cs-choice-height: 88px;
+  --cs-border-width-strong: 2px;
+  --cs-choice-selected: color-mix(in srgb, var(--cs-lime) 20%, var(--cs-paper));
+  --cs-focus-offset: 2px;
+  --cs-hidden-offset: -1px;
+  --cs-grid-min: 16rem;
+  --cs-swatch-min: 8rem;
+  --cs-shimmer-fill: linear-gradient(90deg, var(--cs-surface) 25%, var(--cs-border) 50%, var(--cs-surface) 75%);
+  --cs-shimmer-size: 200% 100%;
+  --cs-shimmer-end: -200% 0;
+  --cs-shimmer-duration: 1.4s;
+  --cs-viewport-width: 100vw;
+  --cs-shell-min-height: 80dvh;
+  --cs-message-width: 85%;
+  --cs-skip-offset: translateY(-200%);
+  --cs-weight-semibold: 700;
 }
 
 

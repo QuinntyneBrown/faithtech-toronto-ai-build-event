@@ -1,9 +1,6 @@
 import { test,expect } from '@playwright/test';
 import { ArtifactPage } from './page-objects/artifact-page.js';
-import { readFile } from 'node:fs/promises';
-// Read the artifact inventory as review cases; tests assert visible browser behavior, not repository structure.
-const catalog=await readFile(new URL('../../docs/mocks/catalog.js',import.meta.url),'utf8');
-const inventory=await import('data:text/javascript,'+encodeURIComponent(catalog.slice(catalog.indexOf('export const screens='),catalog.indexOf('export function catalog'))));
+import * as inventory from '../../docs/mocks/inventory.js';
 for(const width of [320,768,1024,1440]){
   test(`Every screen and state renders at ${width}px`,async({page})=>{
     test.setTimeout(240000);await page.setViewportSize({width,height:900});const artifact=new ArtifactPage(page);
