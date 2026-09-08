@@ -40,14 +40,14 @@ API-based project selection, workspace invitations, and project-progress summari
 
 ## Design System
 
-- The design systems of this platform and Liturgy must be identical. The intended end state is for both applications to use [Cornerstone](https://github.com/QuinntyneBrown/Cornerstone), FaithTech's `@cornerstone/ui` component library, installed through npm. Until that migration, use Liturgy's FaithTech design system in `C:\projects\Liturgy` as the visual reference for this platform.
-- Match Liturgy's design token values, typography, colour palette, spacing, sizing, borders, radii, shadows, iconography, components, interaction states, and motion conventions exactly. Equivalent components must look and behave identically in both applications.
+- **Confirmed September 7, 2026:** use [Cornerstone](https://github.com/QuinntyneBrown/Cornerstone), FaithTech's component library in `C:\projects\Cornerstone`, as this platform's light-theme visual reference. This supersedes the earlier interim Liturgy reference. Future npm adoption remains a separate decision.
+- Match Cornerstone's light design token values, typography, colour palette, spacing, sizing, borders, radii, shadows, iconography, equivalent components, interaction states, and motion conventions. The standalone design system owns local `--cs-*` tokens; event compositions add missing tokens there without overriding reference primitives. Liturgy's current appearance does not override this reference.
 - For the current version, each application must own a separate, self-contained design-system implementation in its own repository. Do not share design-system packages, source files, libraries, assets, or build/runtime dependencies between the applications at this stage.
-- Inspect Liturgy as a reference and implement matching tokens, styles, components, and local asset copies within this repository. This platform's standalone design-system site, mockups, and production interfaces must build and run without access to the Liturgy repository or application.
+- Inspect the recorded Cornerstone revision as a reference and maintain matching tokens, styles, components, and licensed local asset copies within this repository. This platform's standalone design-system site, mockups, and production interfaces must build and run without access to the Cornerstone or Liturgy repositories or deployments.
 - Use a light theme throughout the participant client, administration interface, and standalone design-system site. All screens and states must remain light, regardless of the user's browser or operating-system theme preference. Do not include a dark mode or theme toggle.
 - Apply these requirements to all mockups and production interfaces. Event-specific content and venue branding must fit within this platform's matching FaithTech design system without overriding its tokens or component styling.
 - Design-system parity is mandatory even when "Use Liturgy" is disabled, including for September 9. The setting controls workflow integration only.
-- Verify equivalent components and states side by side against Liturgy's light-theme reference before accepting the design or implementation.
+- Verify equivalent components and states side by side against the recorded Cornerstone light reference before accepting the design or implementation. Record event-layout adaptations, including light host navigation, separately from primitive parity; do not introduce a dark shell or theme toggle.
 
 ### Planned Adoption of Cornerstone
 

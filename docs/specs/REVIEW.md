@@ -31,3 +31,17 @@ Review: these are missing or underspecified requirements. Existing team-capacity
 | Demo editor/reorder lacks a specified relationship between order, start, and duration. | L2-023 | Reorder with a preview and consecutive recalculation, preserve durations, constrain to the presentation window, and explicitly handle gaps. |
 
 Review: checked the complete set for actor, precondition, timing, and observable outcome. The table records requirement changes; well-specified existing behaviors remain intact. Schedule timestamps were checked against `new_slide` and `agent_run` entries and arrival/closing content in the presentation source, without executing the deck generator.
+
+## Pass 3 — Incorrect and contradictory requirements
+
+| Finding and evidence | Requirements | Resolution |
+| --- | --- | --- |
+| Prompt/L1/L2 mandate Liturgy while mock/design-system documentation records Cornerstone. | Prompt design section, L1-011, L2-029-L2-033 | **User decision:** Cornerstone light is authoritative; retain independent local implementation and defer npm adoption. |
+| L2 requires `--ft-*` while the approved design system owns `--cs-*`; inherited phase colours can override it. | L2-030-L2-031 | Use local `--cs-*` values and remove the superseded Liturgy phase palette mandate. |
+| Exact parity could imply an inverted host shell or downloading system fonts. | L2-029, L2-031-L2-032 | Preserve the explicitly documented light navigation adaptation and local/system font delivery. |
+| The named Cornerstone revision does not identify untracked card/choice-card sources in that checkout. | L2-031 | Require source snapshots/hashes for uncommitted reference material; representative fixture parity is not whole-library acceptance. |
+| Blanket provenance language could imply every new detailed default was user-confirmed. | L1 basis/defaults, L2 provenance | Separate explicit decisions, existing defaults, new editorial defaults, and implementation evidence. |
+
+Review: compared prompt, requirements, local tokens, design-system README, and reference checkout metadata. Cornerstone HEAD is `554636edf74af788e83aa33a4380a05b031db16a`; inspected tracked styles have no reported changes, while card/choice-card directories are untracked. Existing local reference specimens remain the reproducible artifact baseline; no external repository was modified. All remaining Liturgy requirements govern optional companion links and independence, not the visual source.
+
+The local `design-system/tests/reference/cornerstone-light.css` specimen inspected for provenance has SHA-256 `3678174BA58E048318B4AD7CCB574FDF78E5CFA5B6708FE18A850667032E236A`. This identifies the existing specimen, not proof of exhaustive component parity.
