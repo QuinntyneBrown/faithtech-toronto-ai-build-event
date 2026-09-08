@@ -62,7 +62,7 @@
   --cs-page-gutter: clamp(1rem, 3vw, 2.5rem);
   --cs-heading-hero: clamp(2.25rem, 5vw, 4.5rem);
   --cs-text-section: clamp(1.35rem, 2vw, 1.75rem);
-  --cs-countdown-size: clamp(3rem, 7vw, 6rem);
+  --cs-countdown-size: clamp(2rem, 4vw, 3.5rem);
   --cs-topbar-size: 4.5rem;
   --cs-sidebar-size: 15rem;
   --cs-dialog-width: 36rem;

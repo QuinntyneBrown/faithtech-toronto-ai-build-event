@@ -1,0 +1,22 @@
+import { model, save } from './data.js';
+export function submitParticipant(id,data,item,navigate) {
+  if(id==='access') {
+    const p=model.participants.find(p=>p.email.toLowerCase()===data.email.toLowerCase()&&p.code===data.code);
+    if(!p)return 'We couldn’t match those details. Check your email and entry code.';
+    model.signedIn=true; model.profile={...model.profile,...p}; save(); navigate('countdown'); return true;
+  }
+  if(id==='join-team'||id==='assign') {
+    const team=id==='assign'?model.teams.find(t=>t.members.length<t.capacity):model.teams.find(t=>t.id===item);
+    if(!team||team.members.length>=team.capacity)return 'This team has no available seats. Choose another team or ask your host.';
+    model.teams.forEach(t=>t.members=t.members.filter(id=>id!=='alex'));team.members.push('alex');model.team=team.id;save();navigate('team',{item:team.id});return true;
+  }
+  if(id==='leave-team'){model.teams.forEach(t=>t.members=t.members.filter(id=>id!=='alex'));model.team='';save();navigate('teams');return true;}
+  if(id==='select-project'){model.project=item;save();navigate('project',{item});return true;}
+  if(id==='propose-project') {
+    if(!model.event.proposals)return 'Your host has restricted project choices for this event.';
+    const p={...data,id:'proposal-'+Date.now(),category:'PARTICIPANT IDEA',repository:'',demo:'',liturgy:'',team:model.teams.find(t=>t.id===model.team)?.name||'Open to a team'};model.projects.push(p);save();navigate('project',{item:p.id});return true;
+  }
+  if(id==='project-links'){const p=model.projects.find(p=>p.id===item);if(!p)return 'This project is no longer available.';Object.assign(p,data);save();navigate('project',{item});return true;}
+  if(id==='sign-out'){model.signedIn=false;model.admin=false;save();navigate('access');return true;}
+  return false;
+}
