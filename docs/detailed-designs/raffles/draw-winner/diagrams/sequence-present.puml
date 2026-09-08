@@ -1,0 +1,55 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam classBackgroundColor #F9FAFB
+skinparam classBorderColor #344054
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+title Present the saved winner across capability failures
+actor "Administrator and participant" as actor
+box "Frontend - Client and admin applications" #E0F2FE
+participant "DrawWinnerPage" as page
+participant "IRaffleService" as client
+end box
+box "Backend - Event API" #D1FADF
+participant "RaffleController" as controller
+end box
+box "Backend - Application and Domain" #ECFDF3
+participant "Authorization / validation pipeline" as gate
+participant "DrawWinnerHandler" as handler
+participant "RaffleAward" as entity
+end box
+box "Backend - Infrastructure" #FFF4E5
+database "SQL Server / IEventStore" as db
+participant "OutboxDispatcher / EventHub" as push
+end box
+client -> controller : GetRaffleQuery or reconcile committed draw
+controller -> gate : MediatR dispatch
+gate -> handler : Authorized result query
+handler -> db : Read saved award [L2-021]
+db --> handler : Immutable winner
+handler --> controller : RaffleResult
+controller --> client : Saved result
+client --> page : Render winner text immediately
+alt Late join, restored page or reduced motion
+page -> page : Skip celebration [L2-022/037]
+else New live award
+page -> page : Attempt WebGPU adapter and device
+alt GPU available
+page -> page : Cycle names and particles for at most ten seconds
+else Unavailable, denied or device lost
+page -> page : Keep saved-winner text / CSS fallback
+end
+end
+opt Deliberate sound enable
+actor -> page : Enable sound
+page -> page : Attempt audio unlock; failure stays silent
+end
+opt Mute selected
+actor -> page : Mute
+page -> page : Stop active audio immediately
+end
+@enduml
