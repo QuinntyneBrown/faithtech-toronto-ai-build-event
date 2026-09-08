@@ -88,10 +88,12 @@ and delete its old private key while session keys still require it.
 
 ### Verification and rollback
 
-The first main-triggered release is recorded in
-[workflow run 34263393987](https://github.com/QuinntyneBrown/faithtech-toronto-ai-build-event/actions/runs/34263393987)
-for commit `0722ecaf14d7db6513be0f800a975cfe078e786e`; the run's deployment job
-and conclusion are the authoritative outcome. The preceding
+The main release following the participant-rename timing fix is recorded in
+[workflow run 34264874405](https://github.com/QuinntyneBrown/faithtech-toronto-ai-build-event/actions/runs/34264874405)
+for commit `eb7fdd7bde2c1134708ead754391a509538c1099`; the run's deployment job
+and conclusion are the authoritative outcome. The
+[first main run](https://github.com/QuinntyneBrown/faithtech-toronto-ai-build-event/actions/runs/34263393987)
+blocked deployment when the browser test exposed that race. The preceding
 [PR verification](https://github.com/QuinntyneBrown/faithtech-toronto-ai-build-event/actions/runs/34262771000)
 passed 139 API tests, 90 application browser tests, three gallery tests, seven
 helper/release tests, and the published-package SQL/authentication smoke test.
