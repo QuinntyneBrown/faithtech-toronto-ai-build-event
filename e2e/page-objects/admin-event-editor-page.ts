@@ -1,7 +1,15 @@
 import { expect, type Page } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 
 export class AdminEventEditorPage {
   constructor(private readonly page: Page) {}
+  async expectAccessible(width: number) {
+    await this.page.setViewportSize({ width, height: 1000 });
+    const results = await new AxeBuilder({ page: this.page }).analyze();
+    expect(results.violations).toEqual([]);
+    expect(await this.page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
+  async capture(path: string) { await this.page.screenshot({ path, fullPage: true }); }
   async setTimes(timezone: string, start: string, end: string) {
     await this.page.getByLabel('Timezone', { exact: true }).fill(timezone);
     await this.page.getByLabel('Start date and time', { exact: true }).fill(start);

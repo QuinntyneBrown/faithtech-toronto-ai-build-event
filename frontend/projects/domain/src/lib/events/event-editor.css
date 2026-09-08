@@ -10,3 +10,6 @@ button { margin-top: var(--cs-space-5); }
 dd { margin: var(--cs-zero) var(--cs-zero) var(--cs-space-3); white-space: pre-wrap; overflow-wrap: anywhere; }
 dt { font-weight: var(--cs-weight-medium); }
 .actions { display: flex; flex-wrap: wrap; gap: var(--cs-space-3); }
+.columns { align-items: start; }
+.stack { display: grid; gap: var(--cs-space-4); }
+input, textarea { font-weight: var(--cs-weight-body); }

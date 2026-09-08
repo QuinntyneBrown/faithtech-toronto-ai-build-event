@@ -17,6 +17,19 @@ async function openEditor(page: Page) {
   return new AdminEventEditorPage(page);
 }
 
+for (const width of [320, 575, 576, 767, 768, 991, 992, 1199, 1200, 1440]) {
+test(`L2-035/036: editor content and validation remain accessible at ${width}px`, async ({ page }) => {
+  const editor = await openEditor(page);
+  await editor.editContent('A'.repeat(200), 'A'.repeat(200), 'Welcome\n<script>literal text</script>');
+  await editor.expectAccessible(width);
+  await editor.setDirections('http://example.org');
+  await editor.save();
+  await editor.expectInvalidDirections();
+  await editor.expectAccessible(width);
+  if (width === 1440) await editor.capture('test-results/event-editor-desktop.png');
+});
+}
+
 test('L2-001/047: given event dates, saving and reopening preserves timezone and overnight dates', async ({ page }) => {
   const editor = await openEditor(page);
   await editor.setTimes('America/Toronto', '2026-09-09T23:00', '2026-09-10T01:00');
