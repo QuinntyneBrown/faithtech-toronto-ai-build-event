@@ -1,0 +1,67 @@
+{
+  "slug": "provisioning",
+  "cues": [
+    {
+      "text": "The provisioning command line tool prepares storage and controls administrator accounts. This display streams output from the actual local executable.",
+      "duration": 9.832653,
+      "chapter": "Operator tooling",
+      "start": 0,
+      "end": 9.832653,
+      "visibleEnd": 10.520000000000003
+    },
+    {
+      "text": "Migration completed successfully. This isolated database was initialized during setup; running migration again confirms it can safely apply any pending schema changes.",
+      "duration": 11.677188,
+      "chapter": "Apply migrations",
+      "start": 10.520000000000003,
+      "end": 22.197188000000004,
+      "visibleEnd": 25.72
+    },
+    {
+      "text": "The new operator account was created. Its password arrived through redirected standard input and was never echoed or passed as a command argument.",
+      "duration": 9.257506,
+      "chapter": "Provision an operator",
+      "start": 27.72,
+      "end": 36.977506,
+      "visibleEnd": 38.64
+    },
+    {
+      "text": "A real API sign in verifies that the provisioned account can authenticate. No authentication response has been simulated.",
+      "duration": 8.35288,
+      "chapter": "Verify authentication",
+      "start": 41.24,
+      "end": 49.59288,
+      "visibleEnd": 51.080000000000005
+    },
+    {
+      "text": "Disabling the operator completed successfully. A request using its existing authenticated session is now denied, confirming that disabling revokes access.",
+      "duration": 10.572472,
+      "chapter": "Revoke access",
+      "start": 52.559999999999995,
+      "end": 63.132472,
+      "visibleEnd": 64.63999999999999
+    },
+    {
+      "text": "The tool has completed migration, account creation, and account disabling. This disposable database and the owned API process are cleaned up after the recording.",
+      "duration": 10.517551,
+      "chapter": "Completed operator workflow",
+      "start": 64.63999999999999,
+      "end": 75.15755099999998,
+      "visibleEnd": 76.68
+    }
+  ],
+  "duration": 78.168,
+  "size": 6377555,
+  "streams": [
+    {
+      "codec_name": "vp8",
+      "codec_type": "video",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "codec_name": "opus",
+      "codec_type": "audio"
+    }
+  ]
+}

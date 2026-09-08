@@ -1,0 +1,146 @@
+{
+  "slug": "admin",
+  "browser": "149.0.7827.55",
+  "cues": [
+    {
+      "text": "Welcome to the Faith Tech event administrator. Hosts use this application to prepare an event, arrange its schedule, and manage participant access.",
+      "duration": 10.232834,
+      "speechIndex": 0,
+      "chapter": "Host workspace",
+      "start": 0,
+      "end": 10.232834000000004,
+      "visibleEnd": 11.759999999999998
+    },
+    {
+      "text": "The administrator account was provisioned locally. Signing in opens the protected host workspace. This recording uses the real API and an isolated SQL database.",
+      "duration": 11.562358,
+      "speechIndex": 1,
+      "chapter": "Authenticated access",
+      "start": 13.880000000000003,
+      "end": 25.442358000000006,
+      "visibleEnd": 26.96
+    },
+    {
+      "text": "Our new event has been saved as a draft. Hosts can prepare its details before participants arrive. Publication is still under construction in this revision.",
+      "duration": 10.767438,
+      "speechIndex": 2,
+      "chapter": "Create a draft",
+      "start": 27.32,
+      "end": 38.087438,
+      "visibleEnd": 39.6
+    },
+    {
+      "text": "Venue and waiting content have been saved. Reopening the event confirms these details survived navigation and came back from the server.",
+      "duration": 8.702585,
+      "speechIndex": 3,
+      "chapter": "Saved venue and content",
+      "start": 40.4,
+      "end": 49.102585,
+      "visibleEnd": 50.68
+    },
+    {
+      "text": "The saved waiting message welcomes builders and invites them to meet their team. Hosts can edit this content for each event.",
+      "duration": 7.717868,
+      "speechIndex": 11,
+      "chapter": "Waiting message",
+      "start": 50.68,
+      "end": 58.397867999999995,
+      "visibleEnd": 59.88
+    },
+    {
+      "text": "The September ninth reference replaces the current schedule only after confirmation. It supplies the Toronto event timing and content as an editable starting point.",
+      "duration": 10.397188,
+      "speechIndex": 4,
+      "chapter": "Reference confirmation",
+      "start": 60.080000000000005,
+      "end": 70.47718800000001,
+      "visibleEnd": 71.96000000000001
+    },
+    {
+      "text": "Project selection has a separate ten minute window, from six oh five to six fifteen. It does not have to share the timing of demo presentations.",
+      "duration": 9.977914,
+      "speechIndex": 12,
+      "chapter": "Selection window",
+      "start": 73.12,
+      "end": 83.097914,
+      "visibleEnd": 84.6
+    },
+    {
+      "text": "Demo presentations have their own window, from eight thirty to eight fifty. Refreshing confirms that these times came back from the saved reference configuration.",
+      "duration": 10.247619,
+      "speechIndex": 5,
+      "chapter": "Presentation window",
+      "start": 84.64000000000001,
+      "end": 94.88761900000003,
+      "visibleEnd": 96.4
+    },
+    {
+      "text": "The reference also saved twenty one editable stage entries, beginning with arrival and welcome information. Each stage carries its own timing and instructions.",
+      "duration": 10.44263,
+      "speechIndex": 13,
+      "chapter": "Stage content",
+      "start": 96.4,
+      "end": 106.84263000000001,
+      "visibleEnd": 108.36000000000001
+    },
+    {
+      "text": "The optional Liturgy connection is off, as required for this September event. Core event setup remains independent of that companion application.",
+      "duration": 9.822404,
+      "speechIndex": 6,
+      "chapter": "Optional connection off",
+      "start": 108.72,
+      "end": 118.542404,
+      "visibleEnd": 120
+    },
+    {
+      "text": "The roster now contains Alex Morgan. A fresh entry code was issued once and is concealed in this recording. Hosts must share that code privately with its participant.",
+      "duration": 11.49746,
+      "speechIndex": 7,
+      "chapter": "Issue participant access",
+      "start": 120.52000000000001,
+      "end": 132.01746,
+      "visibleEnd": 133.52
+    },
+    {
+      "text": "The participant name has been updated. Deactivation provides a way to withdraw access, including revoking existing participant sessions.",
+      "duration": 9.612834,
+      "speechIndex": 8,
+      "chapter": "Update a participant",
+      "start": 133.84,
+      "end": 143.452834,
+      "visibleEnd": 145.20000000000002
+    },
+    {
+      "text": "The roster shows this participant as inactive. Reactivating the entry restores eligibility to sign in, without reviving an old revoked session.",
+      "duration": 9.852517,
+      "speechIndex": 9,
+      "chapter": "Deactivate access",
+      "start": 145.20000000000002,
+      "end": 155.05251700000002,
+      "visibleEnd": 156.56
+    },
+    {
+      "text": "The participant is active again after refreshing the roster. This completes a host setup journey through saved event details, scheduling, and participant access.",
+      "duration": 11.10263,
+      "speechIndex": 10,
+      "chapter": "Restore eligibility",
+      "start": 157,
+      "end": 168.10263,
+      "visibleEnd": 169.6
+    }
+  ],
+  "duration": 171.088,
+  "size": 17392093,
+  "streams": [
+    {
+      "codec_name": "vp8",
+      "codec_type": "video",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "codec_name": "opus",
+      "codec_type": "audio"
+    }
+  ]
+}

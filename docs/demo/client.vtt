@@ -1,0 +1,22 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:09.932
+Participants enter their event using an email address and an individual entry code. A protected link first brings an unauthenticated visitor to this entrance.
+
+00:00:11.400 --> 00:00:23.292
+This event is a published demo fixture in disposable storage. Publication itself is not implemented yet. All sign in requests still use the real authentication service.
+
+00:00:26.720 --> 00:00:37.572
+An incorrect code is rejected without revealing other participants. The form gives feedback and allows another attempt. Entry codes are concealed in this recording.
+
+00:00:39.920 --> 00:00:50.838
+Alex is now signed in. On first use, the entry code is bound to the supplied email address. The event shell confirms that access was granted.
+
+00:00:52.440 --> 00:01:00.478
+Refreshing the page preserves the participant session. The server verifies access again before the protected page is shown.
+
+00:01:02.040 --> 00:01:15.812
+The navigation includes planned activities, but these screens are explicitly unfinished. This revision does not yet provide the live countdown, team selection, messaging, quizzes, or raffle.
+
+00:01:17.520 --> 00:01:26.103
+Signing out ends this session. Opening the protected event again returns to the entrance, ready for another authenticated visit.

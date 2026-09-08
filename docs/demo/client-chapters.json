@@ -1,0 +1,75 @@
+{
+  "slug": "client",
+  "cues": [
+    {
+      "text": "Participants enter their event using an email address and an individual entry code. A protected link first brings an unauthenticated visitor to this entrance.",
+      "duration": 9.932472,
+      "chapter": "Protected event entrance",
+      "start": 0,
+      "end": 9.932472000000004,
+      "visibleEnd": 11.400000000000006
+    },
+    {
+      "text": "This event is a published demo fixture in disposable storage. Publication itself is not implemented yet. All sign in requests still use the real authentication service.",
+      "duration": 11.892472,
+      "chapter": "Real authentication, seeded publication",
+      "start": 11.400000000000006,
+      "end": 23.292472000000004,
+      "visibleEnd": 24.800000000000004
+    },
+    {
+      "text": "An incorrect code is rejected without revealing other participants. The form gives feedback and allows another attempt. Entry codes are concealed in this recording.",
+      "duration": 10.852381,
+      "chapter": "Rejected code",
+      "start": 26.720000000000006,
+      "end": 37.57238100000001,
+      "visibleEnd": 39.08
+    },
+    {
+      "text": "Alex is now signed in. On first use, the entry code is bound to the supplied email address. The event shell confirms that access was granted.",
+      "duration": 10.917959,
+      "chapter": "Join the event",
+      "start": 39.92,
+      "end": 50.837959,
+      "visibleEnd": 52.36
+    },
+    {
+      "text": "Refreshing the page preserves the participant session. The server verifies access again before the protected page is shown.",
+      "duration": 8.038186,
+      "chapter": "Session survives refresh",
+      "start": 52.44,
+      "end": 60.478185999999994,
+      "visibleEnd": 62
+    },
+    {
+      "text": "The navigation includes planned activities, but these screens are explicitly unfinished. This revision does not yet provide the live countdown, team selection, messaging, quizzes, or raffle.",
+      "duration": 13.7722,
+      "chapter": "Current implementation boundary",
+      "start": 62.040000000000006,
+      "end": 75.8122,
+      "visibleEnd": 77.32000000000001
+    },
+    {
+      "text": "Signing out ends this session. Opening the protected event again returns to the entrance, ready for another authenticated visit.",
+      "duration": 8.582812,
+      "chapter": "Sign out",
+      "start": 77.52000000000001,
+      "end": 86.10281200000001,
+      "visibleEnd": 87.56
+    }
+  ],
+  "duration": 89.088,
+  "size": 7325766,
+  "streams": [
+    {
+      "codec_name": "vp8",
+      "codec_type": "video",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "codec_name": "opus",
+      "codec_type": "audio"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "duration": 99.248,
+  "width": 1280,
+  "height": 720,
+  "sha256": "6a76997488218e7432fe7e4dbc295398e97ff42cef243ec770325939a57999da",
+  "audio": {
+    "meanDb": -21.2,
+    "maxDb": -2.4
+  },
+  "elapsed": 100.578,
+  "chapters": 8,
+  "decodedToEnd": true,
+  "visualReview": "Reviewed all eight chapter frames, dialog transition and ending against complete normal-speed playback. Colour, type, actions, inputs and feedback are readable. Captions clear the demonstrated controls; the narrow viewport is intentionally shown within the 1280 by 720 frame."
+}

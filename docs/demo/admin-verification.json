@@ -1,0 +1,14 @@
+{
+  "duration": 171.088,
+  "width": 1280,
+  "height": 720,
+  "sha256": "1ec0c41eeaa328f18b3e17460059ed39859c2a518eadf6ffb1961a4c7688c9ed",
+  "audio": {
+    "meanDb": -21.4,
+    "maxDb": -2.8
+  },
+  "elapsed": 172.822,
+  "chapters": 14,
+  "decodedToEnd": true,
+  "visualReview": "Reviewed all fourteen chapters, confirmation dialog and ending against complete normal-speed playback. Saved venue and waiting content, selection and presentation times, reference stages, disabled Liturgy and roster status changes are visible. Credentials and issued entry codes are concealed."
+}

@@ -1,0 +1,14 @@
+{
+  "duration": 89.088,
+  "width": 1280,
+  "height": 720,
+  "sha256": "915be634d41b68ec6b3aea512a77273f5d383e9eb7b706be4399c27e44bb476c",
+  "audio": {
+    "meanDb": -21.5,
+    "maxDb": -2.9
+  },
+  "elapsed": 90.374,
+  "chapters": 7,
+  "decodedToEnd": true,
+  "visualReview": "Reviewed all seven chapter frames and ending against normal-speed playback. Entry and denial feedback, signed-in state, placeholder screen and sign-out are legible; entry codes concealed. Current basic participant styling is disclosed."
+}

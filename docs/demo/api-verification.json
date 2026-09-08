@@ -1,0 +1,14 @@
+{
+  "duration": 75.848,
+  "width": 1280,
+  "height": 720,
+  "sha256": "34d8b8cfb8984b239f8ae71e709d9398ca563fcf82ecabcba1fd084743f93a2c",
+  "audio": {
+    "meanDb": -21.2,
+    "maxDb": -2.7
+  },
+  "elapsed": 77.033,
+  "chapters": 6,
+  "decodedToEnd": true,
+  "visualReview": "Reviewed all six chapter frames and ending against normal-speed playback. Persisted draft fields, full title-validation feedback, unchanged event count and denied access remain clear of captions; authentication data omitted."
+}
