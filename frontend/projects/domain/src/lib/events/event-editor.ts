@@ -24,8 +24,12 @@ export class EventEditor implements OnInit {
   }
   reloadCurrent() { const current = this.conflict(); this.reapply(); if (current) this.draft.set(current); }
   private operationId = crypto.randomUUID();
-  change(field: keyof EventInput, value: string | number | null) {
+  change<K extends keyof EventInput>(field: K, value: EventInput[K]) {
     this.draft.update(draft => draft ? { ...draft, [field]: value } : null); this.saved.set(false);
+  }
+  changeTime(field: 'start' | 'end', local: string) { this.change(field, local ? { local, offsetMinutes: null } : null); }
+  changeOffset(field: 'start' | 'end', offsetMinutes: number | null) {
+    const value = this.draft()?.[field]; if (value) this.change(field, { ...value, offsetMinutes });
   }
   async save() {
     const draft = this.draft(), current = this.detail();

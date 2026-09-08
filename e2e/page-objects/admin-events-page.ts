@@ -4,6 +4,11 @@ export class AdminEventsPage {
   constructor(private readonly page: Page) {}
   async open() { await this.page.getByRole('link', { name: 'Manage events' }).click(); }
   async expectEmpty() { await expect(this.page.getByText('No events yet.')).toBeVisible(); }
+  async expectTiming(title: string, date: string, timezone: string) {
+    const row = this.page.getByRole('listitem').filter({ hasText: title });
+    await expect(row).toContainText(date);
+    await expect(row).toContainText(timezone);
+  }
   async openEvent(title: string) {
     await this.page.getByRole('listitem').filter({ hasText: title }).getByRole('link', { name: 'Open event' }).click();
   }

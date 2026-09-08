@@ -6,7 +6,16 @@
         <section class="card"><h2>Event essentials</h2><label>Event title<input name="title" [attr.aria-invalid]="errors()['title'] ? 'true' : null" [attr.aria-describedby]="errors()['title'] ? 'title-error' : null" [ngModel]="values.title" (ngModelChange)="change('title', $event)"></label><span class="field-error" id="title-error">{{ errors()['title']?.join(' ') }}</span>
           <label>Waiting content<textarea name="waitingContent" [attr.aria-invalid]="errors()['waitingContent'] ? 'true' : null" [attr.aria-describedby]="errors()['waitingContent'] ? 'waitingContent-error' : null" [ngModel]="values.waitingContent" (ngModelChange)="change('waitingContent', $event)"></textarea></label><span class="field-error" id="waitingContent-error">{{ errors()['waitingContent']?.join(' ') }}</span>
           <label>Closing content<textarea name="closingContent" [attr.aria-invalid]="errors()['closingContent'] ? 'true' : null" [attr.aria-describedby]="errors()['closingContent'] ? 'closingContent-error' : null" [ngModel]="values.closingContent" (ngModelChange)="change('closingContent', $event)"></textarea></label><span class="field-error" id="closingContent-error">{{ errors()['closingContent']?.join(' ') }}</span>
-          <p>Leave content blank to use neutral waiting and thank-you messages.</p></section>
+          <p>Leave content blank to use neutral waiting and thank-you messages.</p>
+          <label>Timezone<input name="timezone" placeholder="America/Toronto" [ngModel]="values.timezone" (ngModelChange)="change('timezone', $event)" [attr.aria-invalid]="errors()['timezone'] ? 'true' : null" aria-describedby="timezone-error"></label>
+          <span class="field-error" id="timezone-error">{{ errors()['timezone']?.join(' ') }}</span>
+          <label>Start date and time<input name="start" type="datetime-local" [ngModel]="values.start?.local || ''" (ngModelChange)="changeTime('start', $event)" [attr.aria-invalid]="errors()['start'] ? 'true' : null" aria-describedby="start-error"></label>
+          <span class="field-error" id="start-error">{{ errors()['start']?.join(' ') }}</span>
+          <label>Start UTC offset (minutes)<input name="startOffset" type="number" [disabled]="!values.start" [ngModel]="values.start?.offsetMinutes" (ngModelChange)="changeOffset('start', $event)" aria-describedby="offset-help start-error"></label>
+          <label>End date and time<input name="end" type="datetime-local" [ngModel]="values.end?.local || ''" (ngModelChange)="changeTime('end', $event)" [attr.aria-invalid]="errors()['end'] ? 'true' : null" aria-describedby="end-error"></label>
+          <span class="field-error" id="end-error">{{ errors()['end']?.join(' ') }}</span>
+          <label>End UTC offset (minutes)<input name="endOffset" type="number" [disabled]="!values.end" [ngModel]="values.end?.offsetMinutes" (ngModelChange)="changeOffset('end', $event)" aria-describedby="offset-help end-error"></label>
+          <p id="offset-help">Times use the selected timezone. Leave offsets blank for automatic resolution; repeated local times require an explicit offset.</p></section>
         <section class="card"><h2>A place to gather</h2><label>Venue name<input name="venueName" [attr.aria-invalid]="errors()['venueName'] ? 'true' : null" [attr.aria-describedby]="errors()['venueName'] ? 'venueName-error' : null" [ngModel]="values.venueName" (ngModelChange)="change('venueName', $event)"></label><span class="field-error" id="venueName-error">{{ errors()['venueName']?.join(' ') }}</span>
           <label>Venue address<textarea name="address" [attr.aria-invalid]="errors()['address'] ? 'true' : null" [attr.aria-describedby]="errors()['address'] ? 'address-error' : null" [ngModel]="values.address" (ngModelChange)="change('address', $event)"></textarea></label><span class="field-error" id="address-error">{{ errors()['address']?.join(' ') }}</span>
           <label>Latitude<input name="latitude" [attr.aria-invalid]="errors()['latitude'] ? 'true' : null" [attr.aria-describedby]="errors()['latitude'] ? 'latitude-error' : null" type="number" step="any" [ngModel]="values.latitude" (ngModelChange)="change('latitude', $event)"></label><span class="field-error" id="latitude-error">{{ errors()['latitude']?.join(' ') }}</span>
@@ -17,6 +26,8 @@
       @if (conflict(); as current) {
         <section class="card" aria-label="Current saved values"><h2>Current saved values</h2>
           <dl><dt>Event title</dt><dd>{{ current.title || 'Not set' }}</dd>
+            <dt>Timezone</dt><dd>{{ current.timezone || 'Not set' }}</dd><dt>Start date and time</dt><dd>{{ current.start?.local || 'Not set' }} (UTC offset minutes: {{ current.start?.offsetMinutes ?? 'Not resolved' }})</dd>
+            <dt>End date and time</dt><dd>{{ current.end?.local || 'Not set' }} (UTC offset minutes: {{ current.end?.offsetMinutes ?? 'Not resolved' }})</dd>
             <dt>Venue name</dt><dd>{{ current.venueName || 'Not set' }}</dd><dt>Venue address</dt><dd>{{ current.address || 'Not set' }}</dd>
             <dt>Latitude</dt><dd>{{ current.latitude ?? 'Not set' }}</dd><dt>Longitude</dt><dd>{{ current.longitude ?? 'Not set' }}</dd>
             <dt>Waiting content</dt><dd>{{ current.waitingContent || 'Default message' }}</dd><dt>Closing content</dt><dd>{{ current.closingContent || 'Default message' }}</dd>

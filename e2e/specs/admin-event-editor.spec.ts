@@ -17,6 +17,18 @@ async function openEditor(page: Page) {
   return new AdminEventEditorPage(page);
 }
 
+test('L2-001/047: given event dates, saving and reopening preserves timezone and overnight dates', async ({ page }) => {
+  const editor = await openEditor(page);
+  await editor.setTimes('America/Toronto', '2026-09-09T23:00', '2026-09-10T01:00');
+  await editor.save();
+  await editor.expectSaved();
+  await editor.returnToEvents();
+  const list = new AdminEventsPage(page);
+  await list.expectTiming('Toronto build night', '2026-09-09', 'America/Toronto');
+  await list.openEvent('Toronto build night');
+  await editor.expectTimes('America/Toronto', '2026-09-09T23:00', '2026-09-10T01:00');
+});
+
 test('L2-036/044: given unsaved event changes, leaving requires an explicit discard', async ({ page }) => {
   const editor = await openEditor(page);
   await editor.editContent('Unsaved title', 'Unsaved venue', 'Unsaved welcome');

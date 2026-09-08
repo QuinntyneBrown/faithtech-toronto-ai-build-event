@@ -1,4 +1,9 @@
+import { LocalTimeInput } from './local-time-input';
+
 export interface EventInput {
+  timezone: string | null;
+  start: LocalTimeInput | null;
+  end: LocalTimeInput | null;
   title: string | null;
   venueName: string | null;
   address: string | null;

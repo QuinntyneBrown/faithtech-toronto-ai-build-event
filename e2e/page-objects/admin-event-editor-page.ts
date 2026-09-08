@@ -2,6 +2,16 @@ import { expect, type Page } from '@playwright/test';
 
 export class AdminEventEditorPage {
   constructor(private readonly page: Page) {}
+  async setTimes(timezone: string, start: string, end: string) {
+    await this.page.getByLabel('Timezone', { exact: true }).fill(timezone);
+    await this.page.getByLabel('Start date and time', { exact: true }).fill(start);
+    await this.page.getByLabel('End date and time', { exact: true }).fill(end);
+  }
+  async expectTimes(timezone: string, start: string, end: string) {
+    await expect(this.page.getByLabel('Timezone', { exact: true })).toHaveValue(timezone);
+    await expect(this.page.getByLabel('Start date and time', { exact: true })).toHaveValue(start);
+    await expect(this.page.getByLabel('End date and time', { exact: true })).toHaveValue(end);
+  }
   async editContent(title: string, venue: string, waiting: string) {
     await this.page.getByLabel('Event title', { exact: true }).fill(title);
     await this.page.getByLabel('Venue name', { exact: true }).fill(venue);

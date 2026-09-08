@@ -21,6 +21,7 @@ export class EventFixture {
     const result: EventDetail = operation === 'create' ? {
       id: randomUUID(), title: args.title?.trim() || null, published: false, useLiturgy: false, version: '1',
       venueName: null, address: null, latitude: null, longitude: null, waitingContent: null, closingContent: null, directionsUrl: null,
+      timezone: null, start: null, end: null, startsAtUtc: null, endsAtUtc: null,
     } : { ...current!, ...args.input!, version: String(Number(args.version) + 1) };
     this.events.set(result.id, result);
     this.receipts.set(args.operationId!, { hash, result });
