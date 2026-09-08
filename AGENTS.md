@@ -1,4 +1,4 @@
-# quinntyne-brown-stewardship
+# faith-tech-toronto-ai-build-event
 
 ## Project
 
@@ -32,6 +32,7 @@ say what it cost rather than quietly narrowing scope.
 
 ## Backend
 
+- Use `FaithTechTorontoAiBuildEvent` as the .NET solution's root namespace.
 - Use Clean Architecture. Dependencies point inward. `Domain` references nothing.
 - Keep controllers thin: bind, dispatch through MediatR, return. No logic in a
   controller.
@@ -39,7 +40,7 @@ say what it cost rather than quietly narrowing scope.
 - One file per type. Every class, interface, record, and enum gets its own file,
   named for the type it holds.
 - Folders and namespaces agree. Controllers live in a `Controllers` folder and are
-  namespaced `QuinntyneBrownStewardship.Api.Controllers`.
+  namespaced `FaithTechTorontoAiBuildEvent.Api.Controllers`.
 
 ## Frontend
 
