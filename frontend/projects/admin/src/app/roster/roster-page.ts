@@ -1,7 +1,7 @@
 import { afterNextRender, Component, effect, ElementRef, HostListener, inject, Injector, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { RosterIssuance } from '@faithtech/api';
+import { RosterEntry, RosterIssuance } from '@faithtech/api';
 import { AdministratorSessionPanel, RosterPanel } from '@faithtech/domain';
 
 @Component({ selector: 'ft-roster-page', imports: [FormsModule, RouterLink, AdministratorSessionPanel, RosterPanel], templateUrl: './roster-page.html', styleUrl: './roster-page.css' })
@@ -16,10 +16,11 @@ export class RosterPage {
   private readonly codeDialog = viewChild<ElementRef<HTMLDialogElement>>('codeDialog');
   private readonly summary = viewChild<ElementRef<HTMLElement>>('summary');
   private readonly leaveDialog = viewChild<ElementRef<HTMLDialogElement>>('leaveDialog');
+  private readonly renameDialog = viewChild<ElementRef<HTMLDialogElement>>('renameDialog');
   private closeOnly = false;
   private resolveLeave?: (leave: boolean) => void;
   constructor() {
-    effect(() => { if (!this.session()?.state()) { this.clearCode(); this.addDialog()?.nativeElement.close(); } });
+    effect(() => { if (!this.session()?.state()) { this.clearCode(); this.addDialog()?.nativeElement.close(); this.renameDialog()?.nativeElement.close(); } });
     effect(() => { if (this.panel()?.error()) afterNextRender(() => this.summary()?.nativeElement.focus(), { injector: this.injector }); });
   }
   openAdd() { this.panel()?.beginAdd(); this.addDialog()?.nativeElement.showModal(); }
@@ -48,7 +49,10 @@ export class RosterPage {
     afterNextRender(() => { if (this.issuance() && this.session()?.state()) this.codeDialog()?.nativeElement.showModal(); }, { injector: this.injector });
   }
   clearCode() { const visible = !!this.issuance(); this.codeDialog()?.nativeElement.close(); this.issuance.set(null); if (visible) this.restoreFocus(); }
-  signedOut() { this.clearCode(); this.addDialog()?.nativeElement.close(); void this.router.navigateByUrl('/sign-in', { replaceUrl: true }); }
+  openRename(entry: RosterEntry) { this.panel()?.beginRename(entry); this.renameDialog()?.nativeElement.showModal(); }
+  cancelRename() { if (this.panel()?.renameBusy()) return; this.panel()?.cancelRename(); this.renameDialog()?.nativeElement.close(); }
+  renamed(_entry: RosterEntry) { this.renameDialog()?.nativeElement.close(); }
+  signedOut() { this.clearCode(); this.addDialog()?.nativeElement.close(); this.renameDialog()?.nativeElement.close(); void this.router.navigateByUrl('/sign-in', { replaceUrl: true }); }
   @HostListener('window:beforeunload', ['$event'])
   beforeUnload(event: BeforeUnloadEvent) { if (this.hasPendingChanges()) event.preventDefault(); }
 }

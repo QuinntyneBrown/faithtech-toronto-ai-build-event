@@ -8,11 +8,20 @@ export class RosterFixture {
   loseNextResponse = false;
   additions = 0;
   constructor(private readonly events: EventFixture) {}
-  handle(operation: string, args: { eventId: string; input?: RegistrationInput; operationId?: string }) {
+  handle(operation: string, args: { eventId: string; input?: RegistrationInput; operationId?: string; registrationId?: string; displayName?: string; version?: string }) {
     if (this.unavailable) return { status: 503 };
     if (!this.events.events.has(args.eventId)) return { status: 404 };
     const entries = this.entries.get(args.eventId) ?? [];
     if (operation === 'list') return { result: entries };
+    if (operation === 'rename') {
+      const entry = entries.find(x => x.id === args.registrationId);
+      if (!entry) return { status: 404 };
+      const name = (args.displayName ?? '').trim().replace(/\r\n?/g, '\n');
+      if (!name || Array.from(name).length > 200) return { status: 422, errors: { displayName: ['Enter a participant name of 1–200 characters.'] } };
+      if (entry.version !== args.version) return { status: 409, code: 'stale-version' };
+      entry.displayName = name; entry.version = (Number(entry.version) + 1).toString();
+      return { result: entry };
+    }
     const name = args.input!.displayName.trim().replace(/\r\n?/g, '\n');
     if (!name || Array.from(name).length > 200) return { status: 422, errors: { displayName: ['Enter a participant name of 1–200 characters.'] } };
     const key = args.eventId + ':' + args.operationId, hash = JSON.stringify({ ...args, input: { displayName: name } }), receipt = this.receipts.get(key);

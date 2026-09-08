@@ -24,4 +24,15 @@ export class RosterService implements IRosterService {
       throw new RosterFailure(0);
     }
   }
+  async rename(eventId: string, registrationId: string, displayName: string, version: string, operationId: string): Promise<RosterEntry> {
+    try {
+      const token = await firstValueFrom(this.http.get<{ requestToken: string }>('/api/admin/antiforgery'));
+      return await firstValueFrom(this.http.put<RosterEntry>(
+        `/api/admin/events/${encodeURIComponent(eventId)}/roster/${encodeURIComponent(registrationId)}/name`, { displayName },
+        { headers: { 'X-CSRF-TOKEN': token.requestToken, 'Idempotency-Key': operationId, 'If-Match': `"${version}"` } }));
+    } catch (error) {
+      if (error instanceof HttpErrorResponse) throw new RosterFailure(error.status, error.error?.code, error.error?.errors);
+      throw new RosterFailure(0);
+    }
+  }
 }

@@ -5,6 +5,9 @@ import { IRosterService, RegistrationInput, RosterEntry, RosterIssuance, RosterF
 export class MockRosterService implements IRosterService {
   list(eventId: string) { return this.call<RosterEntry[]>('list', { eventId }); }
   add(eventId: string, input: RegistrationInput, operationId: string) { return this.call<RosterIssuance>('add', { eventId, input, operationId }); }
+  rename(eventId: string, registrationId: string, displayName: string, version: string, operationId: string) {
+    return this.call<RosterEntry>('rename', { eventId, registrationId, displayName, version, operationId });
+  }
   private async call<T>(operation: string, args: object): Promise<T> {
     const bridge = window as unknown as { __faithtechRoster(operation: string, args: object): Promise<{
       result: T; failed?: boolean; status?: number; code?: string; errors?: Record<string, string[]>;

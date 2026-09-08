@@ -28,3 +28,11 @@ test('L2-002/041: given duplicate participant names, adding them reveals separat
   expect(first).not.toBe(second); await roster.expectParticipants('Alex', 2);
   await page.reload(); await roster.expectParticipants('Alex', 2); await roster.expectNoCode();
 });
+
+test('L2-002/AC2: renaming a participant updates the roster without changing their identity', async ({ page }) => {
+  const roster = await openRoster(page);
+  await roster.add('Alex'); await roster.takeCode('Alex');
+  await roster.rename('Alex', 'Alexandra');
+  await roster.expectParticipants('Alexandra', 1); await roster.expectParticipants('Alex', 0);
+  await page.reload(); await roster.expectParticipants('Alexandra', 1);
+});

@@ -32,4 +32,9 @@ export class AdminRosterPage {
   }
   async expectParticipants(name: string, count: number) { await expect(this.page.getByRole('cell', { name, exact: true })).toHaveCount(count); }
   async expectNoCode() { await expect(this.page.getByLabel('New entry code', { exact: true })).toHaveCount(0); }
+  async rename(currentName: string, newName: string) {
+    await this.page.getByRole('button', { name: 'Rename ' + currentName, exact: true }).click();
+    await this.page.getByLabel('New participant name', { exact: true }).fill(newName);
+    await this.page.getByRole('button', { name: 'Save name', exact: true }).click();
+  }
 }

@@ -1,7 +1,7 @@
 <main id="main"><ft-administrator-session-panel [showDetails]="false" (signedOut)="signedOut()">
   <p><a [routerLink]="['/events', eventId]">Event settings</a></p><p class="eyebrow">A PLACE FOR EVERY BUILDER</p>
   <h1>Your people.</h1><p>Manage participant identities and event access. Entry codes are shown only when issued.</p>
-  <ft-roster-panel [eventId]="eventId" (requestAdd)="openAdd()" (issued)="showCode($event)" (denied)="signedOut()" />
+  <ft-roster-panel [eventId]="eventId" (requestAdd)="openAdd()" (issued)="showCode($event)" (requestRename)="openRename($event)" (renamed)="renamed($event)" (denied)="signedOut()" />
 </ft-administrator-session-panel></main>
 <dialog #addDialog aria-labelledby="add-title" (cancel)="$event.preventDefault(); cancelAdd()">
   <h2 id="add-title">Add participant</h2>
@@ -17,6 +17,17 @@
 <dialog #leaveDialog aria-labelledby="leave-title" (cancel)="$event.preventDefault(); finishLeave(false)">
   <h2 id="leave-title">Leave unsaved changes?</h2><p>Unsaved input and any displayed entry code will be lost when you leave this page. An unconfirmed addition may already have reached the server; closing its form keeps the pending outcome available for review here.</p>
   <div class="actions"><button autofocus (click)="finishLeave(false)">Keep editing</button><button (click)="finishLeave(true)">Discard changes</button></div>
+</dialog>
+<dialog #renameDialog aria-labelledby="rename-title" (cancel)="$event.preventDefault(); cancelRename()">
+  <h2 id="rename-title">Rename participant</h2>
+  @if (panel(); as editor) { <form (ngSubmit)="editor.rename()" novalidate>
+    <fieldset [disabled]="editor.renameBusy()"><legend>Participant identity</legend>
+      <label>New participant name<input #renameInput autofocus name="renameName" [ngModel]="editor.renameName()" (ngModelChange)="editor.renameName.set($event)" [attr.aria-invalid]="editor.renameFieldError() ? 'true' : null" [attr.aria-describedby]="editor.renameFieldError() ? 'rename-name-error' : null"></label>
+      @if (editor.renameFieldError()) { <p id="rename-name-error">{{ editor.renameFieldError() }}</p> }
+    </fieldset>
+    @if (editor.renameError()) { <section role="alert" tabindex="-1">{{ editor.renameError() }}</section> }
+    <div class="actions"><button type="button" [disabled]="editor.renameBusy()" (click)="cancelRename()">Cancel</button><button type="submit" [disabled]="editor.renameBusy()">Save name</button></div>
+  </form> }
 </dialog>
 <dialog #codeDialog aria-labelledby="code-title" (cancel)="$event.preventDefault(); clearCode()">
   @if (issuance(); as value) {
