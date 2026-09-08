@@ -17,8 +17,8 @@ unimplemented. Participant companion-link filtering and project URL storage rema
 unimplemented. Passing tests below establish only
 the implemented behaviors, not completion of any entire cross-cutting requirement.
 
-Latest verification on 8 September 2026: **65 API acceptance cases** against
-isolated SQL Server databases, **60 Playwright cases** with injected mock adapters,
+Latest verification on 8 September 2026: **77 API acceptance cases** against
+isolated SQL Server databases, **66 Playwright cases** with injected mock adapters,
 and successful builds of all .NET projects and all five Angular projects. Browser:
 Chrome **152.0.7977.76**, Windows ARM64. No performance/load acceptance is claimed.
 
@@ -53,6 +53,7 @@ separate Azure deployment runbook being maintained alongside implementation.
 | Schedule persistence | Dated overnight stages retain stable identities through edits and deletion. Adjacent intervals are accepted; overlap is rejected. Schedule changes use the event version, transactional receipts and audit records; ordinary event edits cannot invalidate saved intervals. |
 | Schedule editor | Stage/content editing and independent selection/presentation windows survive save and refresh. Browser acceptance covers lost-response retry, explicit stale reapplication, unsaved navigation, dialog focus, and empty/populated/validation/overlay accessibility at ten widths. |
 | Schedule closure | SQL time determines elapsed published windows and events without a worker. Disabling an open or elapsed selection window preserves closure, and completed events cannot be extended into the future. Tests seed publication as their Given; no publication endpoint is delivered. |
+| Schedule validation feedback | Rejected event/window/stage fields retain entered values and receive an announced, focused summary with links and accessible descriptions. Stage links open the affected dialog field and follow stable identities after other rows are removed. Removing a stage or disabling a window clears obsolete field feedback; stage removal restores focus to its heading. Twelve additional API cases verify field-specific rejection without changing persisted configuration. |
 
 ## Event editor continuation
 
@@ -79,8 +80,7 @@ stages and independent activity windows, using the same expected-version and
 operation headers as event edits. The Angular schedule page consumes
 `SCHEDULE_SERVICE` and owns stage and unsaved-change dialogs.
 
-The next acceptance increments must complete schedule validation feedback with
-field-linked focus, quiz references and closure, the event preset, participant
+The next acceptance increments must complete quiz references and closure, the event preset, participant
 stage transitions, and participant-access checks. Publication field errors and
 valid empty-schedule publication also remain. Publication must not be enabled until its
 complete configuration and participant-access checks exist. Distributed
