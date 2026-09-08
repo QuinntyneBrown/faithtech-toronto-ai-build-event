@@ -37,4 +37,13 @@ public sealed class AdministratorEventsController(ISender sender) : ControllerBa
             operationId!.Value, request.Title), cancellationToken);
         return StatusCode(StatusCodes.Status201Created, result);
     }
+
+    [HttpPost("{eventId:guid}/copy"), ValidateAntiForgeryToken]
+    public async Task<IActionResult> Copy(Guid eventId, CopyEventRequest request,
+        [FromHeader(Name = "Idempotency-Key"), Required] Guid? operationId, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new CopyEventCommand(Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!),
+            eventId, operationId!.Value, request.Start), cancellationToken);
+        return StatusCode(StatusCodes.Status201Created, result);
+    }
 }
