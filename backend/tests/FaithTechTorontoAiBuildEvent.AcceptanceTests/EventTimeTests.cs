@@ -12,6 +12,7 @@ public sealed class EventTimeTests(EventApiFactory factory) : IClassFixture<Even
     [InlineData("America/Toronto", "2026-11-01T01:30:00", -300, "2026-11-01T03:00:00", 200)]
     [InlineData("America/Toronto", "2026-03-08T02:30:00", -300, "2026-03-08T04:00:00", 422)]
     [InlineData("America/Toronto", "2026-09-09T23:00:00", null, "2026-09-10T01:00:00", 200)]
+    [InlineData("America/Toronto", "2026-09-09T23:00", null, "2026-09-10T01:00", 200)]
     [InlineData("America/Toronto", "2026-09-09T23:00:00", 0, "2026-09-10T01:00:00", 422)]
     [InlineData("America/Toronto", "2026-09-09T23:00:00", null, "2026-09-09T21:00:00", 422)]
     [InlineData("Missing/Zone", "2026-09-09T17:00:00", null, "2026-09-09T21:00:00", 422)]
