@@ -1,0 +1,43 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:10.233
+Welcome to the Faith Tech event administrator. Hosts use this application to prepare an event, arrange its schedule, and manage participant access.
+
+00:00:13.880 --> 00:00:25.442
+The administrator account was provisioned locally. Signing in opens the protected host workspace. This recording uses the real API and an isolated SQL database.
+
+00:00:27.320 --> 00:00:38.087
+Our new event has been saved as a draft. Hosts can prepare its details before participants arrive. Publication is still under construction in this revision.
+
+00:00:40.400 --> 00:00:49.103
+Venue and waiting content have been saved. Reopening the event confirms these details survived navigation and came back from the server.
+
+00:00:50.680 --> 00:00:58.398
+The saved waiting message welcomes builders and invites them to meet their team. Hosts can edit this content for each event.
+
+00:01:00.080 --> 00:01:10.477
+The September ninth reference replaces the current schedule only after confirmation. It supplies the Toronto event timing and content as an editable starting point.
+
+00:01:13.120 --> 00:01:23.098
+Project selection has a separate ten minute window, from six oh five to six fifteen. It does not have to share the timing of demo presentations.
+
+00:01:24.640 --> 00:01:34.888
+Demo presentations have their own window, from eight thirty to eight fifty. Refreshing confirms that these times came back from the saved reference configuration.
+
+00:01:36.400 --> 00:01:46.843
+The reference also saved twenty one editable stage entries, beginning with arrival and welcome information. Each stage carries its own timing and instructions.
+
+00:01:48.720 --> 00:01:58.542
+The optional Liturgy connection is off, as required for this September event. Core event setup remains independent of that companion application.
+
+00:02:00.520 --> 00:02:12.017
+The roster now contains Alex Morgan. A fresh entry code was issued once and is concealed in this recording. Hosts must share that code privately with its participant.
+
+00:02:13.840 --> 00:02:23.453
+The participant name has been updated. Deactivation provides a way to withdraw access, including revoking existing participant sessions.
+
+00:02:25.200 --> 00:02:35.053
+The roster shows this participant as inactive. Reactivating the entry restores eligibility to sign in, without reviving an old revoked session.
+
+00:02:37.000 --> 00:02:48.103
+The participant is active again after refreshing the roster. This completes a host setup journey through saved event details, scheduling, and participant access.
