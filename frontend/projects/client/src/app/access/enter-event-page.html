@@ -1,0 +1,27 @@
+<main id="main" class="access-layout">
+  @if (loadError()) {
+    <section class="card" aria-labelledby="load-error-title">
+      <h1 id="load-error-title">This event could not be loaded.</h1>
+      <p>Check your connection and retry.</p>
+      <button type="button" (click)="load()">Retry</button>
+    </section>
+  } @else if (header() === undefined) {
+    <p role="status">Loading…</p>
+  } @else if (header() === null) {
+    <section class="card" aria-labelledby="unavailable-title">
+      <h1 id="unavailable-title">This event isn't available.</h1>
+      <p>Check the link from your event host, or contact them for help.</p>
+    </section>
+  } @else if (session(); as value) {
+    <section class="card" aria-labelledby="joined-title">
+      <h1 id="joined-title">You're in.</h1>
+      <p role="status">Welcome to {{ header()!.title || 'the event' }}.</p>
+    </section>
+  } @else {
+    <section class="intro" aria-labelledby="intro-title">
+      <p class="eyebrow">{{ header()!.title || 'FaithTech event' }}</p>
+      <h1 id="intro-title">Good people. Big questions. Let's build.</h1>
+    </section>
+    <section class="card"><ft-participant-access-form [eventId]="eventId" (authenticated)="authenticated($event)" /></section>
+  }
+</main>

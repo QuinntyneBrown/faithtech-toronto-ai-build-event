@@ -1,0 +1,13 @@
+<form (ngSubmit)="submit()" [attr.aria-busy]="busy()">
+  <h2>Welcome, builder.</h2>
+  <p>Enter your email and the code provided by your event host.</p>
+  @if (error()) { <p id="participant-access-error" role="alert">{{ error() }}</p> }
+  <label for="participant-email">Email address</label>
+  <input id="participant-email" name="email" type="email" autocomplete="email" required
+    [ngModel]="email()" (ngModelChange)="email.set($event)" [attr.aria-invalid]="fieldError() ? 'true' : null"
+    [attr.aria-describedby]="error() ? 'participant-access-error' : null">
+  <label for="participant-code">Entry code</label>
+  <input id="participant-code" name="entryCode" autocomplete="one-time-code" required maxlength="256"
+    [ngModel]="code()" (ngModelChange)="code.set($event)" [attr.aria-describedby]="error() ? 'participant-access-error' : null">
+  <div class="actions"><button type="submit" [disabled]="busy()">{{ busy() ? 'Joining…' : 'Join the event' }}</button></div>
+</form>
