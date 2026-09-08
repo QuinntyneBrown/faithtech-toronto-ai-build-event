@@ -19,6 +19,21 @@ async function openEditor(page: Page) {
 
 const logoBytes = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==', 'base64');
 
+test('L2-026: given a new draft, the administrator can save the optional companion setting from its off default', async ({ page }) => {
+  const editor = await openEditor(page);
+  await editor.expectCompanion(false);
+  await editor.setCompanion(true);
+  await editor.save();
+  await editor.expectSaved();
+  await page.reload();
+  await editor.expectCompanion(true);
+  await editor.setCompanion(false);
+  await editor.save();
+  await editor.expectSaved();
+  await page.reload();
+  await editor.expectCompanion(false);
+});
+
 test('L2-036/044: given an unavailable saved logo, details remain usable and display can be retried', async ({ page, events }) => {
   const editor = await openEditor(page);
   await editor.chooseLogo('venue.png', 'image/png', logoBytes);

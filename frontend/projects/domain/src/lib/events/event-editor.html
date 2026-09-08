@@ -13,6 +13,10 @@
           <span class="field-error" id="end-error">{{ errors()['end']?.join(' ') }}</span>
           <label>End UTC offset (minutes)<input name="endOffset" type="number" [disabled]="!values.end" [ngModel]="values.end?.offsetMinutes" (ngModelChange)="changeOffset('end', $event)" aria-describedby="offset-help end-error"></label>
           <p id="offset-help">Times use the selected timezone. Leave offsets blank for automatic resolution; repeated local times require an explicit offset.</p></section>
+        <section class="card"><h2>Optional companion experience</h2>
+          <label class="companion"><input type="checkbox" name="useLiturgy" [ngModel]="values.useLiturgy" (ngModelChange)="change('useLiturgy', $event)" aria-describedby="companion-help">Use Liturgy</label>
+          <p id="companion-help">Show optional project workspace links for this event. Disabled by default. Turning this off preserves saved project URLs. Participants never need a Liturgy account to take part.</p>
+        </section>
         <section class="card"><h2>Participant content</h2>
           <label>Waiting content<textarea name="waitingContent" [attr.aria-invalid]="errors()['waitingContent'] ? 'true' : null" [attr.aria-describedby]="errors()['waitingContent'] ? 'waitingContent-error' : null" [ngModel]="values.waitingContent" (ngModelChange)="change('waitingContent', $event)"></textarea></label><span class="field-error" id="waitingContent-error">{{ errors()['waitingContent']?.join(' ') }}</span>
           <label>Closing content<textarea name="closingContent" [attr.aria-invalid]="errors()['closingContent'] ? 'true' : null" [attr.aria-describedby]="errors()['closingContent'] ? 'closingContent-error' : null" [ngModel]="values.closingContent" (ngModelChange)="change('closingContent', $event)"></textarea></label><span class="field-error" id="closingContent-error">{{ errors()['closingContent']?.join(' ') }}</span>
@@ -29,6 +33,7 @@
       @if (conflict(); as current) {
         <section class="card" aria-label="Current saved values"><h2>Current saved values</h2>
           <dl><dt>Event title</dt><dd>{{ current.title || 'Not set' }}</dd>
+            <dt>Use Liturgy</dt><dd>{{ current.useLiturgy ? 'Enabled' : 'Disabled' }}</dd>
             <dt>Timezone</dt><dd>{{ current.timezone || 'Not set' }}</dd><dt>Start date and time</dt><dd>{{ current.start?.local || 'Not set' }} (UTC offset minutes: {{ current.start?.offsetMinutes ?? 'Not resolved' }})</dd>
             <dt>End date and time</dt><dd>{{ current.end?.local || 'Not set' }} (UTC offset minutes: {{ current.end?.offsetMinutes ?? 'Not resolved' }})</dd>
             <dt>Venue name</dt><dd>{{ current.venueName || 'Not set' }}</dd><dt>Venue address</dt><dd>{{ current.address || 'Not set' }}</dd>

@@ -1,6 +1,7 @@
 import { LocalTimeInput } from './local-time-input';
 
 export interface EventInput {
+  useLiturgy: boolean;
   timezone: string | null;
   start: LocalTimeInput | null;
   end: LocalTimeInput | null;

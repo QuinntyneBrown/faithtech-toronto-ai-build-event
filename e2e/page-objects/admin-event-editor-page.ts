@@ -3,6 +3,8 @@ import AxeBuilder from '@axe-core/playwright';
 
 export class AdminEventEditorPage {
   constructor(private readonly page: Page) {}
+  async setCompanion(enabled: boolean) { await this.page.getByRole('checkbox', { name: 'Use Liturgy', exact: true }).setChecked(enabled); }
+  async expectCompanion(enabled: boolean) { await expect(this.page.getByRole('checkbox', { name: 'Use Liturgy', exact: true })).toBeChecked({ checked: enabled }); }
   async chooseLogo(name: string, mimeType: string, buffer: Buffer) {
     await this.page.getByLabel('Venue logo', { exact: true }).setInputFiles({ name, mimeType, buffer });
   }

@@ -29,6 +29,7 @@ public sealed class SqlEventStore(EventDbContext db) : IEventStore
         if (current.Version != command.Version) throw new StaleVersionException(current);
         var input = command.Input;
         item.Title = input.Title; item.VenueName = input.VenueName; item.Address = input.Address;
+        item.UseLiturgy = input.UseLiturgy;
         item.Latitude = input.Latitude; item.Longitude = input.Longitude;
         item.WaitingContent = input.WaitingContent; item.ClosingContent = input.ClosingContent; item.DirectionsUrl = input.DirectionsUrl;
         item.Timezone = input.Timezone; item.StartLocal = input.Start?.Local; item.EndLocal = input.End?.Local;
