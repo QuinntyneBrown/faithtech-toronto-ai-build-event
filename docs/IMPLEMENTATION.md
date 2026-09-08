@@ -6,30 +6,44 @@ requirements, including their cross-cutting criteria.
 
 ## Current completion boundary
 
-The full implementation plan is **incomplete**. The participant application's
-route table is empty. Administrator functionality currently covers provisioned
-access, session management, draft creation/listing, and editing titles, venue
-details, coordinates, waiting/closing content, directions, timezone and dated
-event endpoints, validated venue logos, the optional Use Liturgy setting, scheduled
-stages/content, independent selection and demo presentation windows, and applying
-the editable September 9 reference configuration.
-Publication, copying, roster management and the remaining activity configuration remain
-unimplemented. Participant companion-link filtering and project URL storage remain
-unimplemented. Passing tests below establish only
-the implemented behaviors, not completion of any entire cross-cutting requirement.
+The full implementation plan is **incomplete**. Administrator functionality
+covers provisioned access, session management, draft creation/listing/copying,
+editing titles, venue details, coordinates, waiting/closing content, directions,
+timezone and dated event endpoints, validated venue logos, the optional Use
+Liturgy setting, scheduled stages/content, independent selection and demo
+presentation windows, applying the editable September 9 reference configuration,
+and the full roster lifecycle (add, rename, deactivate, replace entry code,
+reactivate). The participant application now authenticates by email and entry
+code, holds a 24-hour absolute session across refresh/history/restored tabs,
+signs out, and offers core navigation (current event, schedule, teams, people,
+messages, quiz, raffle, showcase — the last seven as an explicit stub, not a
+broken link) behind a session guard that re-verifies the server on every entry.
+A protected deep link resumes after authentication via a server-validated
+return target; switching between two events in one browser session cannot
+show one event's private content under the other's URL.
 
-Latest verification on 8 September 2026: **83 API acceptance cases** against
-isolated SQL Server databases, **70 Playwright cases** with injected mock adapters,
-and successful builds of all .NET projects and all five Angular projects. Browser:
-Chrome **152.0.7977.76**, Windows ARM64. No performance/load acceptance is claimed.
+Explicit publication and the remaining activity configuration (schedule
+countdown/live-stage participant screens, teams/projects, profiles/messaging,
+quizzes, raffle, demos/showcase content) remain unimplemented — the "current
+event" and "showcase" destinations above are routing placeholders, not the
+built screens L2-005 through L2-028 require. Participant companion-link
+filtering and project URL storage remain unimplemented. Passing tests below
+establish only the implemented behaviors, not completion of any entire
+cross-cutting requirement.
 
-Continue with remaining schedule acceptance and roster management,
-then participant access and explicit publication, followed by event copying.
-Continue through the entire ordered delivery queue below. Remaining shared work
-includes distributed notifications/outbox,
-authentication completion receipts, production key/proxy configuration, complete
-error/state matrices, and operational recovery/load verification. Preserve the
-separate Azure deployment runbook being maintained alongside implementation.
+Latest verification on 8 September 2026: **127 API acceptance cases** against
+isolated SQL Server databases, **90 Playwright cases** with injected mock
+adapters across both the administrator and participant applications, and
+successful builds of all .NET projects and all five Angular projects. Browser:
+Chrome, Windows ARM64. No performance/load acceptance is claimed.
+
+Continue with schedule, countdown, transitions and synchronization
+(L2-005/006/007/044) as the next participant-facing slice, then teams and
+projects. Continue through the entire ordered delivery queue below. Remaining
+shared work includes distributed notifications/outbox, authentication
+completion receipts, production key/proxy configuration, complete error/state
+matrices, and operational recovery/load verification. Preserve the separate
+Azure deployment runbook being maintained alongside implementation.
 
 ## Verified increments
 
@@ -56,6 +70,10 @@ separate Azure deployment runbook being maintained alongside implementation.
 | Schedule closure | SQL time determines elapsed published windows and events without a worker. Disabling an open or elapsed selection window preserves closure, and completed events cannot be extended into the future. Tests seed publication as their Given; no publication endpoint is delivered. |
 | Schedule validation feedback | Rejected event/window/stage fields retain entered values and receive an announced, focused summary with links and accessible descriptions. Stage links open the affected dialog field and follow stable identities after other rows are removed. Removing a stage or disabling a window clears obsolete field feedback; stage removal restores focus to its heading. Twelve additional API cases verify field-specific rejection without changing persisted configuration. |
 | September 9 reference | The protected reference action atomically applies all 21 distinct entries, phase boundaries, combined timed content, the 20:00 reminder, independent activity windows, Stone Church and Use Liturgy off. Blank drafts retain absent address/coordinates/logo and are not published. API acceptance verifies editable content, fresh identities across events, access/CSRF/version protection, and old-operation retry after later edits without another audit. Browser acceptance verifies explicit replacement confirmation, cancellation, refresh, lost-response retry, stale reconfirmation, retained rejected drafts, and the reference dialog at all ten widths. Participant transitions and activity behavior remain dependent on later slices. |
+| Roster lifecycle | Rename, deactivate, replace-code and reactivate all use the roster's existing version/receipt/audit pattern. Deactivation and code replacement revoke every live participant session for the registration in the same transaction; reactivation never revives a revoked session and is rejected with a field-specific error when the entry's retained email now belongs to a different active entry, until an admin clears that binding via code replacement. Browser acceptance covers the confirmation dialogs, the already-present "replace the entry code" action, and focus handling when a freshly issued code renders into an already-open dialog. |
+| Event copying | `POST /api/admin/events/{id}/copy` clones content, venue and schedule into a new draft, shifting every dated interval by the elapsed duration between the source's resolved start and the supplied new start; stage identities are remapped, registrations/credentials are never copied, Use Liturgy is forced off, and a dated-interval copy with no resolved source start returns a configuration error instead of guessing. |
+| Participant authentication | `POST /api/events/{id}/session` atomically binds a trimmed, case/whitespace-insensitive email to an event-scoped entry code on first use, or resumes an existing binding; same-code races share the administrator authentication budget's rolling-window lock, so exactly one of two concurrent different-email attempts against one code wins. Malformed email returns a field-specific 422; every other rejection (unpublished event, inactive entry, wrong-event code, mismatched or duplicate email) returns a generic 401 that discloses nothing about other participants. A second cookie scheme, scoped to `/api/events/{id}` and independently validated against the request's own event-id path segment on every request, keeps one event's session from being honored on another's route even if replayed manually. |
+| Participant session and navigation | `GET`/`DELETE /api/events/{id}/session` read and revoke the current session only (24-hour absolute expiry, no idle extension). The client's event shell, behind a guard that re-verifies the server on initial navigation, browser history and a restored tab, offers current-event/schedule/teams/people/messages/quiz/raffle/showcase navigation and sign-out; unbuilt activities render a shared stub, never a broken link. A protected deep link carries a `returnTo` through the access screen and lands there after authentication only if the server's `ReturnTargetPolicy` accepts it as a same-event, recognized-route request; an external URL, a protocol-relative one, or another event's route falls back to a computed default. The session panel and shell track the current event reactively (not a one-time route snapshot) so that reusing the shell component across an in-app switch between two events cannot show the prior event's content under the new one. |
 
 ## Event editor continuation
 
@@ -89,24 +107,78 @@ The browser describes those changes before confirmation. Template content comes
 from L2-008 and the supplied presentation; it does not provision project choices,
 registrations, credentials, quizzes or prizes.
 
-The next acceptance increments must complete quiz references and closure, participant
-stage transitions, and participant-access checks. Publication field errors and
-valid empty-schedule publication also remain. Publication must not be enabled until its
-complete configuration and participant-access checks exist. Distributed
+Publication field errors and valid empty-schedule publication also remain. Publication
+must not be enabled until its complete configuration and participant-access checks
+exist. Distributed invalidation, restart/restore verification and the remaining
+delivery groups are still required; no complete L2 requirement is declared satisfied
+by these slices.
+
+## Roster and participant access continuation
+
+`SqlRosterStore` gained `Rename`, `Deactivate`, `ReplaceCode` and `Reactivate`,
+each following `Add`'s existing `sp_getapplock`/receipt/audit shape. Deactivate
+and ReplaceCode call into `IParticipantStore.RevokeSessionsForRegistration`
+within the same transaction (both stores share the request's `EventDbContext`
+instance, so the revoke is atomic with the roster mutation, not a follow-up
+write). Reactivate checks the entry's retained `NormalizedEmail` against every
+other *active* registration before flipping `Active`, since the partial unique
+index that enforces "one active entry per email" only ever covered active rows
+— a different entry can freely bind an email while the original sits inactive.
+
+`POST /api/admin/events/{id}/copy` reuses `ScheduleMapping.Input`/`Apply` and
+`ScheduleValidator.Normalize` to shift and re-validate a schedule rather than
+re-implementing interval arithmetic; only content that already exists (no
+teams, quizzes or prizes yet) is copied.
+
+`AuthenticationBudget.Verify` was generalized to take a caller-supplied scope
+key instead of assuming an administrator username, so participant sign-in
+shares its SQL-persisted rolling-window throttle (keyed by event and entry
+code) with administrator sign-in rather than a second implementation.
+`ParticipantCookieEvents` mirrors `AdministratorCookieEvents` but additionally
+compares the session's bound event claim against the request path's `eventId`
+segment on every validation — cookie path scoping alone is not a security
+boundary against a non-browser client replaying the cookie value cross-path.
+An anonymous antiforgery-token fetch made after a participant signs in still
+observed an unauthenticated principal (the "Participant" scheme, unlike the
+default admin scheme, is authenticated only when something explicitly
+requests it), so `EventAntiforgeryController` now authenticates that scheme
+itself before generating tokens, keeping generation and later validation
+consistent.
+
+The client's `ParticipantSessionPanel` and `ClientShell` initially captured
+`:eventId` once via `ActivatedRoute` snapshot; because the shell's route
+config is identical for every event, Angular reuses the component instance
+across an in-app switch between two events, so a snapshot would leave the nav
+links and the session check pinned to whichever event loaded first. Both now
+track `eventId` reactively (a `paramMap`-derived signal on the shell; an
+`effect` that tears down and re-verifies on the panel) instead.
+`GetAuthorizedInitialRoute` computes a same-event landing route from the
+event's resolved end time (a completed event resolves to `/showcase`;
+everything else to the shell's index, since dedicated countdown/current-stage
+screens don't exist yet) and validates any client-supplied `returnTo` through
+`ReturnTargetPolicy` before honoring it.
+
+The next acceptance increments must build the actual schedule/countdown/current-stage
+participant screens that `GetAuthorizedInitialRoute` and the shell's stub routes
+currently stand in for, then teams and projects. Publication remains blocked on
+its own complete configuration and participant-access checks. Distributed
 invalidation, restart/restore verification and the remaining delivery groups are
 still required; no complete L2 requirement is declared satisfied by these slices.
 
 Implementation references: [EF Core transactions](https://learn.microsoft.com/en-us/ef/core/saving/transactions),
 [Angular route guards](https://angular.dev/guide/routing/route-guards),
+[Angular signal effects](https://angular.dev/guide/signals#effects),
 [invalid local times](https://learn.microsoft.com/en-us/dotnet/api/system.timezoneinfo.isinvalidtime?view=net-10.0)
 and [ambiguous offsets](https://learn.microsoft.com/en-us/dotnet/api/system.timezoneinfo.getambiguoustimeoffsets?view=net-10.0).
 
 ## Delivery queue
 
-1. Administrator provisioning, authentication, expiry and sign-out (L2-038/041/042).
-2. Event configuration, copying, preset and roster (L2-001/002/008/047).
-3. Participant access, continuity and navigation (L2-003/004/046).
-4. Schedule, countdown, transitions and synchronization (L2-005/006/007/044).
+1. Administrator provisioning, authentication, expiry and sign-out (L2-038/041/042). **Done.**
+2. Event configuration, copying, preset and roster (L2-001/002/008/047). **Done.**
+3. Participant access, continuity and navigation (L2-003/004/046). **Done**, except the actual
+   countdown/current-stage/recap screens the shell's stub routes and computed initial route
+   currently stand in for — those depend on group 4.
+4. Schedule, countdown, transitions and synchronization (L2-005/006/007/044). **Next.**
 5. Teams and projects (L2-009–012).
 6. Profiles, discovery, messaging and safety (L2-013–016/048).
 7. Quizzes and final results (L2-017–019).
