@@ -177,3 +177,50 @@ try {
 Obtain the token from the gallery resource's **Manage deployment token**, keep it private, and record the SWA CLI version used. Publish `dist/site`, not the mock bundle. Verify the generated HTTPS URL, gallery assets and absence of an application runtime dependency. [SWA CLI installation and deployment](https://learn.microsoft.com/en-us/azure/static-web-apps/static-web-apps-cli-deploy).
 
 Configure the public domain using [the Namecheap guide](namecheap-domain-setup.md), then perform the checks below through the custom domains. Keep Liturgy integration disabled for September 9; no Liturgy service is required by this topology.
+
+## 4. Acceptance before the September 9 event
+
+Record the release SHA, region, SKU, database tier, date, browser/network conditions, raw timings and operator for each rehearsal. Use a synthetic event on the deployed stack. These checks describe required behavior; they have **not** been run by writing this guide.
+
+| Given | When | Required result |
+| --- | --- | --- |
+| Valid production configuration | Start the release on a clean deployment | SQL readiness and admin sign-in succeed; completed participant journey succeeds. Missing settings fail clearly without logging values. |
+| Custom domains and certificates | Visit apex, `www`, and admin over HTTP and HTTPS | HTTPS works without warnings; redirects follow the URL table; deep links refresh correctly; missing assets/API routes do not return HTML. |
+| Valid/invalid sessions | Sign in, mutate with and without CSRF, sign out, then retry | Secure cookies work; unauthorized and CSRF-invalid requests are rejected; sign-out/revocation take effect. |
+| Trusted Azure ingress | Send forged forwarded headers and real requests from separate clients | Scheme handling works and spoofing cannot bypass HTTPS or combine/spoof source-address rate limits. |
+| Always On and provisioned SQL | Leave the app without participant traffic for at least 30 minutes, then request it | Process remains warm; SQL has not paused; no startup penalty from inactivity. |
+| Saved event mutations and active sessions | Restart App Service, then reconnect | Durable data and keys survive; session behavior remains correct; application rebuilds event state from SQL/time. |
+| A synthetic SQL outage | Check readiness, attempt a write, then restore access | Not-ready/failure is reported without false success; normal behavior resumes without lost acknowledged writes. |
+| A synthetic event backup | Restore into an isolated database and open it through a private test deployment | Registrations, selections, messages, quiz results and raffle history are coherent; record recovery duration and recovery point. |
+
+For **L2-043**, use the real API and durable SQL: 200 connected participants plus two administrators; two minutes warm-up; ten minutes measured with one read per participant every five seconds and one valid mutation every 30 seconds; one admin configuration change per minute; include a scheduled stage transition and raffle. Repeat for another ten minutes without restarting or cleaning up. Also test 200 first quiz answers within one second. API p95 must be at most **1,000 ms**, unexpected failures at most **1%**, every observed connected client must show updates within **two seconds**, and acknowledged mutations must not be lost. Report dropped clients and intended rejection responses separately. Use valid reusable writes, not rejected/duplicate answers as load. Full criteria: [L2-043 through L2-045](specs/L2.md#l2-043-measurable-performance-baseline).
+
+Do not assume 5 DTUs meets this load. During rehearsal inspect SQL DTU/CPU/data IO/log IO/worker utilization and App Service CPU, memory, request latency and errors. If SQL is saturated, raise Basic to Standard S0 and rerun; if still saturated, raise to S1/S2 as needed. If application CPU or memory is constrained, raise B1 to B2, then B3 if needed. Change the measured bottleneck first, record the new monthly price and rerun all performance intervals. If failures occur without saturation, fix the application instead of hiding them with capacity. Retest SQL firewall addresses after resizing.
+
+The production size is the **lowest configuration that passes**, not necessarily the $18.52 candidate. Provision/load-test ahead of the event, freeze a verified release before doors open, keep the proven size for the whole event, and rehearse any later downsize before using it. Do not deploy or resize during a quiz, raffle, or other critical live stage.
+
+## 5. Operations, backup and recovery
+
+Assign an operator to watch Azure metrics and protected readiness during the event; inspect every 15 minutes and immediately on participant-reported failures. Enable bounded application console logs (Information, seven days/100 MB where configurable); measure actual retention/storage. Preserve correlation IDs and stable audit identifiers while excluding credentials, participant emails, message bodies and profile/report text as L2-045 requires. Monitor SQL space before the Basic 2-GB limit, CPU/DTU pressure and request failures. Add notification rules for sustained errors, not-ready status and capacity pressure after checking their price in Azure Monitor; paid alert/ingestion costs are outside the base estimate. Avoid automatic verbose tracing or uncapped Application Insights ingestion.
+
+Set Azure SQL short-term retention to **seven days** (Basic supports at most seven). Azure schedules weekly full backups, differential backups every 12 or 24 hours, and transaction-log backups approximately every ten minutes. The exact restore point depends on completed backups; this is not a zero-loss promise. Confirm point-in-time restore is available after the initial backups, before accepting event traffic. LRS backup storage cannot recover from a regional disaster. [Automated backups and retention](https://learn.microsoft.com/en-us/azure/azure-sql/database/automated-backups-overview?view=azuresql).
+
+Rehearse before the event with synthetic data and repeat after material persistence changes. Target a recovery rehearsal within **60 minutes**, recording the observed time and recoverable-data gap rather than claiming a guaranteed RTO/RPO. Store the current and two previous release ZIPs, hashes, configuration inventory, HMAC secret, protected Data Protection keys/decryption material, and operator access instructions in access-controlled recovery storage/password management. Refresh that recovery set on each release or key change. Never put participant data in a public artifact or issue.
+
+### Restore procedure
+
+1. Record incident time and last known good operation. Stop production writes using a maintenance response (or stop the app if no maintenance mode exists); retain the original database for investigation.
+2. In Azure SQL database Overview, select **Restore**, choose a UTC point before the incident, and restore to a **new named database** on the server. Restore cannot overwrite the original. The restored database incurs charges; wait for completion. [Point-in-time restore](https://learn.microsoft.com/en-us/azure/azure-sql/database/recovery-using-backups?view=azuresql).
+3. Use a separate restricted test app to validate the restored database with a compatible release and isolated key/application identity. Verify saved synthetic event records and retry/reconciliation behavior. In a real incident restrict restored private data to authorized operators; do not send notifications or run scheduled actions during validation.
+4. At cutover, set production's runtime connection string to the restored database and verify its contained user/permissions. Restore the matching HMAC/key recovery material if it was lost; deliberately invalidate sessions if key continuity cannot be recovered. Start production, verify readiness and sign-in, and reread representative saved data before reopening writes.
+5. Report the recovery point and any operations after it that need reconciliation. Do not re-run raffles, quiz awards or other committed actions blindly. Retain incident evidence, then remove temporary test resources once validation and the retention decision are complete.
+
+Seven-day PITR is a recovery window, not long-term archival. Keeping the production database running preserves the showcase; do not delete the logical SQL server after the event. If a historical event snapshot must remain restorable beyond seven days, configure and price long-term retention separately before that window expires. Keep secrets/key backups separate from SQL backup storage.
+
+### Release rollback and routine maintenance
+
+Before every upgrade, confirm a usable restore point and retain the old package. Review migration compatibility: prefer additive migrations so the previous application can still read the database. Basic has no deployment slots; plan a short maintenance window and deploy the prebuilt ZIP. Run migrations through the operator CLI, never automatically on every web startup.
+
+If a release fails and the schema is backward-compatible, redeploy the preceding ZIP with `az webapp deploy` and verify readiness/authentication. If schema/data changes are incompatible, use the restore procedure and explicitly reconcile later writes; rolling back binaries alone is insufficient. Do not assume App Service's optional backup feature replaces SQL backups or is included in this tier.
+
+Azure maintains the managed hosting OS/runtime platform; the team still updates .NET/Angular/NuGet/npm dependencies, including supported patches, and tests the resulting release. Keep MediatR pinned to **12.5.0**. Review bills, database growth, certificates and backup restore availability monthly. Keep Always On enabled between events for recap access, and remove only specifically identified temporary test resources. Stopping an App Service app does not stop billing for its allocated plan.
