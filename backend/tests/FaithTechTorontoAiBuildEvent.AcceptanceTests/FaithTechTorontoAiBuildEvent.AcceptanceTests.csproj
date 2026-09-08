@@ -2,6 +2,7 @@
   <PropertyGroup><IsTestProject>true</IsTestProject><IsPackable>false</IsPackable></PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/FaithTechTorontoAiBuildEvent.Api/FaithTechTorontoAiBuildEvent.Api.csproj" />
+    <ProjectReference Include="../../src/FaithTechTorontoAiBuildEvent.Provisioning/FaithTechTorontoAiBuildEvent.Provisioning.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
