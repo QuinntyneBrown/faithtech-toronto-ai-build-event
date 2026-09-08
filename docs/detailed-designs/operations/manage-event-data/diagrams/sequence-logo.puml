@@ -1,0 +1,44 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+ BorderColor #344054
+ FontColor #101828
+ BackgroundColor #F9FAFB
+}
+title Manage event data through validated commands - replace venue logo
+actor Operator as op
+box "Frontend - Windows terminal" #E0F2FE
+participant "Event command" as cli
+end box
+box "Backend - Application" #ECFDF3
+participant "Event maintenance handler" as handler
+participant "Application validators" as rules
+end box
+box "Backend - Infrastructure" #FFF4E5
+participant SqlEventMaintenanceStore as store
+database EventDbContext as db
+end box
+op -> cli : events logo --file image --preview
+cli -> handler : Image bytes and event version
+handler -> rules : Decode and validate image limits
+rules --> handler : Metadata and digest or field error
+handler --> cli : Replacement preview
+cli --> op : Review metadata
+op -> cli : Apply
+cli -> handler : Re-read image; verify digest
+handler -> store : Validated replacement
+store -> db : Lock event; compare version
+alt Changed file or stale event
+store --> handler : Reject unchanged database
+else Valid
+store -> db : Save asset and event reference together
+store -> db : Commit receipt, audit and invalidation
+store --> handler : Logo metadata and new version
+end
+handler --> cli : Outcome
+cli --> op : Result
+@enduml

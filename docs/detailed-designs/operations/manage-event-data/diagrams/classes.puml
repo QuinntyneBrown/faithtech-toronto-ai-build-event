@@ -1,0 +1,42 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+ BorderColor #344054
+ FontColor #101828
+ BackgroundColor #F9FAFB
+}
+title Manage event data through validated commands - types
+class EventPatch {
+ +Dictionary<string, JsonValue> PresentFields
+}
+class EventMaintenanceHandler {
+ +Handle(intent: EventMaintenanceIntent): Task<OperatorResult>
+}
+class EventMaintenanceIntent {
+ +Guid EventId
+ +string ExpectedVersion
+ +EventPatch Patch
+}
+interface IEventMaintenanceStore {
+ +Apply(intent: EventMaintenanceIntent): Task<OperatorResult>
+}
+class SqlEventMaintenanceStore
+class SqlEventMutations {
+ +ApplyDraft(item: BuildEvent, input: EventInput): void
+ +ApplySchedule(item: BuildEvent, input: ScheduleInput): void
+}
+class BuildEvent {
+ +Guid Id
+ +bool Published
+}
+EventMaintenanceHandler ..> EventMaintenanceIntent
+EventMaintenanceIntent *-- EventPatch
+EventMaintenanceHandler --> IEventMaintenanceStore
+SqlEventMaintenanceStore ..|> IEventMaintenanceStore
+SqlEventMaintenanceStore ..> SqlEventMutations
+SqlEventMutations --> BuildEvent : changes tracked state
+@enduml
