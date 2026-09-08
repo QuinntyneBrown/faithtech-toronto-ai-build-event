@@ -60,3 +60,51 @@ The local `design-system/tests/reference/cornerstone-light.css` specimen inspect
 | Draft retention conflicted with sign-out cleanup; retry semantics did not distinguish changed input from replay. | L2-004, L2-044 | Invalidation clears private drafts, not durable history. Preserve operation identity on retry, return committed outcomes, reject changed reuse, and require explicit reapplication of stale edits. |
 
 Review: followed each retained entity through create, edit, selection change, removal/deactivation, expiry, closing, interruption, retry, and return. Existing raffle persistence/fairness and same-event privacy requirements remain authoritative even where mock behavior differs.
+
+## Pass 5 — Acceptance criteria and final consistency
+
+| Finding | Requirements | Resolution |
+| --- | --- | --- |
+| Two-second reconnect deadlines used inconsistent starting points; offline clients cannot instantly know remote revocation. | L2 measurement convention, L2-004, L2-007, L2-034, L2-043-L2-044 | Define connected update versus post-synchronization measurement, explicit stale states, and server enforcement versus client invalidation. |
+| Publication allowed an address without defining how the required map marker was configured. | L2-001, L2-005, L2-040 | Require administrator-supplied coordinates for publication, define coordinate bounds and text fallback, and cover multi-day countdowns. No address is inferred from mock or deck. |
+| Incomplete drafts, absent waiting text, and no stages lacked a consistent successful path. | L2-001, L2-006 | Preserve draft saving; define neutral fallback content and countdown/waiting/recap boundaries for a stage-free event. |
+| Profile save could imply sharing or participant-controlled roster rename; recommendation ties lacked complete evidence. | L2-013-L2-014, L2-048 | Keep roster name read-only, sharing explicit, private fields retained only for the owner, and intersection/ranking deterministic. |
+| Message filtering and timestamps lacked concrete multi-conversation acceptance. | L2-015 | Specify both participant identities, dated event-zone timestamps, stable ordering, and an A/B versus C/B privacy scenario. |
+| Raffle confirmation/count could be mistaken for reserved eligibility. | L2-020-L2-022 | Select a prize explicitly, recheck eligibility at commit, retain attributable history, and separate sound and motion criteria. |
+| Error summaries, removed dialog triggers, and user-initiated dirty navigation were underspecified. | L2-036-L2-037 | Add field-linked error focus, dismissal fallback, keep/discard behavior, and explicit active-audio mute acceptance. |
+| Background requests could prevent administrator inactivity expiry indefinitely. | L2-038 | Only accepted requests from deliberate administrator interaction renew inactivity; add exact idle/absolute expiry acceptance. |
+| Text lengths, tag counts, script-like text, and URL rejection allowed divergent validators. | L2-040 | Define Unicode scalar counting, normalized distinct tags, plain-text rendering, field limits, and explicit invalid URL/coordinate cases. |
+| Local-storage-only wording left other script-readable credential persistence unspecified; retry throttling could count one accepted send twice. | L2-041-L2-042 | Cover session storage/IndexedDB and positive retry delays; committed message retries do not consume new allowance. |
+| New report/profile fields lacked explicit diagnostic exclusion. | L2-045 | Extend redaction and split audit attribution from private-value exclusion criteria. |
+| Copies could retain foreign references, discard prize configuration, or activate copied quizzes. | L2-017, L2-047 | Remap identities, copy prize definitions without awards, keep quizzes inactive, and reject invalid publication references. |
+| Product evidence and static artifact evidence were conflated in mock coverage. | L2 acceptance delivery | Preserve separate browser, API, design, and operational evidence obligations; static checks do not certify production requirements. |
+
+## Complete coverage review
+
+The following mapping was reviewed manually against all 33 mock screens, 37 dialog entries, and their listed alternate states. Missing mock surfaces do not remove product requirements; the mock inventory is unchanged by this task.
+
+Mock-only conveniences such as the review clock, fixture reset, direct sign-in bypass, generic role field, team-full state, and quiz restart are not new production requirements. A dedicated stage-reorder dialog is also not mandated: valid administrator edits of timed entries already provide schedule ordering. These distinctions prevent a coverage review from turning every mock control into extra product scope.
+
+| Requirement group | Surfaces or source examined | Final review outcome |
+| --- | --- | --- |
+| L2-001-L2-002, L2-047 | Admin event list/settings/overview; participant add/edit/remove; prompt reuse | Draft/publication, reuse, credentials, revocation, and history covered. |
+| L2-003-L2-004, L2-046 | Access/rejected/expired; account/sign-out/navigation; direct screen links | Existing email binding/concurrency criteria retained; event context, private cleanup, and return paths clarified. |
+| L2-005-L2-008 | Countdown, schedule, stage edit/reorder/remove, welcome/build; presentation | Exact boundaries, coordinate fallback, timed entries, screen identity, and closure reviewed. |
+| L2-009-L2-012 | Teams/team, join/leave/assignment, projects/project/proposal and admin editors | Unlimited capacity retained; proposal lifecycle, correction, dependency removal, and guidance covered. |
+| L2-013-L2-016, L2-048 | Profile, people/person/connections, message picker/thread/failure/retry | Sharing, directory search, recommendations, pairwise privacy, blocking, reporting, and moderation covered. |
+| L2-017-L2-019 | Quiz intro/waiting/question/feedback/results/closed; question editor/admin results | Multiple quizzes, activation, immutable submissions, closing, scoring, and ties covered. |
+| L2-020-L2-022 | Raffle/draw/prize editors/winner/history/exhausted; effect fallbacks | Existing uniformity, atomic award, replay, fallback, and reduced-motion requirements retained; confirmation/history precision added. |
+| L2-023-L2-025 | Demo editor/reorder/remove, demos/demo, showcase/recap, link editor | Team pairing ownership, slot validity, ordering, missing selections, and post-event access covered. |
+| L2-026-L2-028 | September/future review scenarios, host opt-out, project/recap links | Existing opt-out, URL retention, membership separation, and no-API-integration requirements retained. |
+| L2-029-L2-033 | Standalone gallery/tokens/parity specimens and design provenance | Superseded visual reference corrected; independence, light-only adaptation, and future adoption boundary retained. |
+| L2-034-L2-037 | Loading/empty/error/overlay states, responsive and accessibility checks | Existing ten widths and zoom obligations retained; focus, sound, navigation, and synchronization made explicit. |
+| L2-038-L2-042 | Admin login/denial, forms/upload/link controls, sessions and failure states | Role/event/ownership protections retained; expiry, limits, text safety, and credential persistence clarified. |
+| L2-043-L2-045 | Save error/offline/reconnect artifacts; production requirements | Real-load, restart, backup/restore, readiness, and audit evidence remain required separately from mocks. |
+
+## Verification and delivery
+
+- Reviewed 14 L1 capabilities and 48 L2 requirements, with existing IDs preserved and new L2-046 through L2-048 each mapped to one existing parent. The L1 matrix covers every group above.
+- Reviewed numbered criteria for observable Given/When/Then outcomes, boundary/error behavior, and cross-cutting applicability; split conflicting or independent outcomes where they obscured acceptance.
+- Checked the final prompt/specification wording for stale visual mandates, unresolved placeholders, broken local references, and inconsistent closure/ownership/timing rules. Historical mentions of the superseded reference are explicitly labeled.
+- Used editorial read-through and `git diff --check` for documentation increments. No specification-parsing or architecture tests were added. No application tests/builds were rerun for these prose-only edits; the earlier 25 passing static mock checks are not production acceptance evidence.
+- Changes are confined to the requirements, the reconciled prompt design section, this review record, and task tracking. No mock/application behavior, screenshot, dependency, deployment, or external repository changes are part of this delivery.
