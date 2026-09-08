@@ -85,6 +85,8 @@ public sealed class SqlEventStore(EventDbContext db) : IEventStore
 
     public async Task<IReadOnlyList<EventSummary>> ListEvents(CancellationToken cancellationToken) =>
         await db.Events.AsNoTracking().OrderBy(x => x.Title).ThenBy(x => x.Id)
-            .Select(x => new EventSummary(x.Id, x.Title, x.Published, x.UseLiturgy, Convert.ToBase64String(EF.Property<byte[]>(x, "Version"))))
+            .Select(x => new EventSummary(x.Id, x.Title, x.Published, x.UseLiturgy, Convert.ToBase64String(EF.Property<byte[]>(x, "Version")),
+                x.Timezone, x.StartLocal.HasValue ? new LocalTimeInput(x.StartLocal.Value, x.StartOffsetMinutes) : null,
+                x.EndLocal.HasValue ? new LocalTimeInput(x.EndLocal.Value, x.EndOffsetMinutes) : null, x.StartsAtUtc, x.EndsAtUtc))
             .ToListAsync(cancellationToken);
 }

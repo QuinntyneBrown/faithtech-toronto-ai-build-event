@@ -36,6 +36,11 @@ public sealed class EventTimeTests(EventApiFactory factory) : IClassFixture<Even
             Assert.True(end > start);
             Assert.Equal(TimeSpan.Zero, start.Offset);
             Assert.Equal(DateTime.Parse(localStart), reloaded.GetProperty("start").GetProperty("local").GetDateTime());
+            var list = await client.GetFromJsonAsync<JsonElement>("/api/admin/events");
+            var listed = list.EnumerateArray().Single(item => item.GetProperty("id").GetGuid() == original.GetProperty("id").GetGuid());
+            Assert.Equal(timezone, listed.GetProperty("timezone").GetString());
+            Assert.Equal(start, listed.GetProperty("startsAtUtc").GetDateTimeOffset());
+            Assert.Equal(end, listed.GetProperty("endsAtUtc").GetDateTimeOffset());
             if (offsetMinutes.HasValue) Assert.Equal(offsetMinutes, reloaded.GetProperty("start").GetProperty("offsetMinutes").GetInt32());
         }
         else Assert.Equal(original.GetProperty("version").GetString(), reloaded.GetProperty("version").GetString());
