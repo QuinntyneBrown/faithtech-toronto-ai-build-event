@@ -10,18 +10,19 @@ The full implementation plan is **incomplete**. The participant application's
 route table is empty. Administrator functionality currently covers provisioned
 access, session management, draft creation/listing, and editing titles, venue
 details, coordinates, waiting/closing content, directions, timezone and dated
-event endpoints. Logo upload, publication, copying, roster management and activity
-configuration remain unimplemented. Use Liturgy remains false and is not yet
-configurable. Passing tests below establish only
+event endpoints, validated venue logos, and the optional Use Liturgy setting.
+Publication, copying, roster management and activity configuration remain
+unimplemented. Participant companion-link filtering and project URL storage remain
+unimplemented. Passing tests below establish only
 the implemented behaviors, not completion of any entire cross-cutting requirement.
 
-Latest verification on 8 September 2026: **33 API acceptance cases** against
-isolated SQL Server databases, **37 Playwright cases** with injected mock adapters,
+Latest verification on 8 September 2026: **58 API acceptance cases** against
+isolated SQL Server databases, **45 Playwright cases** with injected mock adapters,
 and successful builds of all .NET projects and all five Angular projects. Browser:
 Chrome **152.0.7977.76**, Windows ARM64. No performance/load acceptance is claimed.
 
-Continue with accepted logo storage, companion settings and explicit publication,
-then transactional stage/window configuration, event copying and roster management.
+Continue with transactional stage/window configuration and roster management,
+then participant access and explicit publication, followed by event copying.
 Continue through the entire ordered delivery queue below. Remaining shared work
 includes distributed notifications/outbox,
 authentication completion receipts, production key/proxy configuration, complete
@@ -45,6 +46,9 @@ separate Azure deployment runbook being maintained alongside implementation.
 | Event dates | Nine API cases cover overnight dates, browser minute precision, both valid offsets for repeated local times, missing/mismatched offsets, nonexistent times, invalid zones and nonpositive intervals. Local dates and resolved UTC instants survive rereading and appear in event listings. |
 | Editor browser recovery | Opening, editing, saving and reopening; explicit unsaved discard; retained field errors; deliberate conflict reapplication; lost-response retry producing one save; client Unicode scalar limits and normalization. |
 | Editor layout | Rendered desktop inspected against the settings mock. Populated and validation states pass Axe and horizontal-overflow checks separately at all ten required widths. This does not establish the full loading/error/zoom/browser matrix or complete mock parity. |
+| Venue logo API | 24 additional API cases cover PNG/JPEG/WebP, exact 2 MiB and 4,096-pixel boundaries, malformed/mismatched uploads, all eight EXIF orientations, private serving, concurrent retry, stale replacement, authentication and antiforgery. Canonical PNG bytes, event version, receipt and audit commit together in SQL. |
+| Venue logo editor | Injected service upload and private preview, retained invalid selections, explicit stale recovery, lost-response retry, selection clearing, unsaved navigation, saved text/logo coexistence, and preview failure/retry pass browser acceptance. Branding is grouped with venue information. |
+| Optional companion setting | New drafts default off. Administrator enable/disable/re-enable survives API rereads and browser refreshes; another event keeps its default. Unauthorized writes fail. This does not establish participant link filtering, URL retention or connected-update behavior, which require the remaining project/participant implementation. |
 
 ## Event editor continuation
 
@@ -59,8 +63,15 @@ same-origin API requests and the Playwright composition uses an injected adapter
 Browser fixtures retain event state outside the page so refreshes and controlled
 lost responses can be exercised without reaching the production adapter.
 
-The next acceptance increments must add decoded/validated branding, publication
-field errors and valid empty-schedule publication, then protect published edits
+`POST /api/admin/events/{id}/logo` accepts multipart `file`, the same expected-version
+header and a fresh operation UUID. The authenticated GET at that route serves the
+stored PNG with no-store caching and nosniff. Uploads are decoded with SkiaSharp
+4.151.2 and re-encoded with orientation applied; original metadata and trailing
+content are not served. NuGet's vulnerability audit, including transitive packages,
+reported no known vulnerable packages on 8 September 2026. MediatR remains 12.5.0.
+
+The next acceptance increments must add schedule/window and participant-access
+checks, publication field errors and valid empty-schedule publication, then protect published edits
 and completed event/window boundaries. Publication must not be enabled until its
 complete configuration and participant-access checks exist. Distributed
 invalidation, restart/restore verification and the remaining delivery groups are
