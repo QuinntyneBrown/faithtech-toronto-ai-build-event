@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace FaithTechTorontoAiBuildEvent.Infrastructure;
 
@@ -15,8 +16,10 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddEventInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddMediatR(options => options.RegisterServicesFromAssemblyContaining<AuthenticateAdministratorCommand>());
-        services.AddDbContext<EventDbContext>(options => options.UseSqlServer(
-            configuration.GetConnectionString("EventDatabase") ?? throw new InvalidOperationException("Configure ConnectionStrings:EventDatabase.")));
+        services.AddOptions<DatabaseOptions>().Bind(configuration.GetSection("ConnectionStrings"))
+            .Validate(options => options.IsValid(), "Configure ConnectionStrings:EventDatabase with a server, database and MARS disabled.").ValidateOnStart();
+        services.AddDbContext<EventDbContext>((provider, options) => options.UseSqlServer(
+            provider.GetRequiredService<IOptions<DatabaseOptions>>().Value.EventDatabase));
         services.AddIdentityCore<AdministratorAccount>().AddRoles<IdentityRole<Guid>>().AddEntityFrameworkStores<EventDbContext>();
         services.AddScoped<IAdministratorStore, SqlAdministratorStore>();
         services.AddScoped<IEventStore, SqlEventStore>();
