@@ -55,6 +55,19 @@ say what it cost rather than quietly narrowing scope.
 - Folders and namespaces agree. Controllers live in a `Controllers` folder and are
   namespaced `FaithTechTorontoAiBuildEvent.Api.Controllers`.
 
+## Command-Line Tools
+
+- Use `System.CommandLine` for all CLI tools.
+- Apply SOLID principles and use `Microsoft.Extensions` libraries for dependency
+  injection, logging, Options, and Configuration.
+- Follow the command-per-file pattern: each command lives in its own file, named
+  for the command type.
+- Package every CLI as a .NET tool, installable through `dotnet tool`.
+- Provide a script under `<ROOT>/eng/scripts/` for each tool that builds and
+  packages the latest local source, then installs or updates that build on the
+  developer's machine. The script must support both first-time installation and
+  updating an existing installation.
+
 ## Frontend
 
 - `frontend/` is an Angular workspace: the `api`, `components`, and `domain`
@@ -169,6 +182,8 @@ faithtech-toronto-ai-build-event/
 |       |-- components/
 |       `-- domain/
 |-- design-system/
+|-- eng/
+|   `-- scripts/
 |-- e2e/
 |   |-- page-objects/
 |   `-- specs/

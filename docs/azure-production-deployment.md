@@ -1,5 +1,112 @@
 # Lowest-cost usable Azure production deployment
 
+## Automated deployment (8 September 2026)
+
+The repository now contains GitHub Actions CI/CD. The manual release commands
+below remain useful for recovery; routine releases use the workflows instead.
+
+- Resource group: `rg-faithtech-prod`, Canada Central, subscription
+  `4a1b5113-89f9-4d27-acfe-581493385536`.
+- Linux B1 app: `faithtech-uyosyof73ce5o`; .NET 10, Always On, HTTPS Only.
+- Initial URL: `https://faithtech-uyosyof73ce5o.azurewebsites.net`.
+- SQL server: `faithtech-sql-uyosyof73ce5o`; database `FaithTech`, Basic, 5 DTUs,
+  2 GB, locally redundant backups and seven-day short-term retention.
+- The purchased Namecheap domain is not bound yet. Custom DNS and independent
+  design-system deployment are separate steps.
+
+Every push to `main` enters the release queue, including documentation-only
+pushes. Pull requests run verification without production access. The pipeline
+installs locked dependencies, audits npm packages, builds Angular/.NET/gallery,
+runs API acceptance against disposable SQL Server, runs both mock-based Angular
+browser suites and gallery tests, then starts and verifies the published package
+against another disposable database. No test database is shared with production.
+Builds enforce the existing strict TypeScript and .NET warning settings. The
+repository has no standalone lint command; workflow/script syntax is reviewed
+without inventing architecture tests or suppressing existing behavior tests.
+
+Successful main runs use GitHub's `production` environment and Azure OIDC to
+migrate with a separate database identity, remove temporary runner SQL access,
+upload the exact tested ZIP, and check routes, assets, authenticated SQL readiness,
+source revision and sign-out. CI never creates administrator accounts during
+ordinary releases. A failed migration prevents uploading the new package. A failed
+smoke check marks deployment failed; it does not reverse migrations automatically.
+
+`GET /api/admin/readiness` requires the existing administrator session. Its body
+contains `ready`, assembly `revision` (including source SHA), and an opaque
+process `instance`. An available but outdated database returns `ready: false`;
+SQL errors during session validation use the API's existing 503 response.
+Unrecognized APIs and missing static files remain 404. Participant deep links
+under `/events/` and administrator links under `/admin/` load their own bundles.
+
+Release runs and manual rollback share a concurrency group. `queue: max` retains
+up to 100 pending runs; GitHub cancels further arrivals if that documented limit
+is reached. Runs are not interrupted by later pushes. A recorded successful run
+number prevents a delayed older release overwriting a newer successful release.
+No workflow queues can guarantee processing after GitHub outages or manual cancellation.
+
+### Bootstrap and configuration
+
+From a clean checkout on Windows with PowerShell 7, Azure CLI, GitHub CLI, SQLCMD,
+the pinned SDK and Node installed, sign into the intended Azure subscription and
+GitHub repository. Bootstrap scripts run sequentially:
+
+```powershell
+pwsh -File eng/azure/provision.ps1
+pwsh -File eng/azure/identity.ps1
+npm --prefix frontend ci
+npm --prefix frontend run build
+dotnet restore backend/FaithTechTorontoAiBuildEvent.slnx --locked-mode
+pwsh -File eng/scripts/package-release.ps1 -Revision (git rev-parse HEAD)
+pwsh -File eng/azure/database.ps1
+pwsh -File eng/azure/configure-app.ps1
+```
+
+Packaging requires a fresh `artifacts/release` directory. Existing generated
+passwords are recovered from Windows DPAPI-protected files under
+`%LOCALAPPDATA%/FaithTech/production-secrets`; reruns preserve them and existing
+accounts. This directory also holds the password-encrypted Data Protection PFX.
+These machine/user-bound recovery files are not a portable backup: export the
+credentials and certificate into the operator's password manager/recovery storage
+using a private session before retiring this Windows profile. Do not publish them.
+
+The `production` environment restricts deployment to `main` without a reviewer
+gate. Variables: `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`,
+`AZURE_RESOURCE_GROUP`, `AZURE_APP_NAME`, `AZURE_SQL_SERVER`, `AZURE_WEBAPP_URL`.
+Secrets: `MIGRATION_CONNECTION_STRING`, `PRODUCTION_DIGEST_KEY`, `SMOKE_USERNAME`,
+`SMOKE_PASSWORD`. The federated identity has Website Contributor on this app only
+and a custom SQL firewall role on this SQL server only. Website Contributor can
+manage this app's configuration; protect `main` and review deployment code accordingly.
+The runtime SQL user has reader/writer roles; the migration user has `db_owner`
+only in `FaithTech`, not server-administrator privileges.
+
+Data Protection keys persist under `/home/data/faithtech-keys`, encrypted using
+the uploaded certificate with a fixed application name. The certificate is loaded
+from App Service's private certificate mount; runtime settings never ship in the
+ZIP. Back up encrypted key XML, the PFX/password and stable digest separately from
+SQL. Retain old decrypting certificates when rotating; do not replace a certificate
+and delete its old private key while session keys still require it.
+
+### Verification and rollback
+
+The initial direct Azure deployment is a bootstrap rehearsal, not proof that
+GitHub's main-triggered deployment has run. Record the successful main workflow
+URL and commit after final end-to-end verification. Requesting an Azure restart
+is asynchronous: `smoke-release.ps1 -Restart` requires a different process instance
+while using the same authenticated session before it reports success.
+
+GitHub retains release ZIPs, manifests, provisioning bundles and test reports for
+90 days. Keep the current and previous two releases in access-controlled recovery
+storage if they must outlive this retention. To restore a compatible package,
+run **Roll back production package** from `main`, provide a successful main
+deployment run ID, and confirm schema compatibility. It validates provenance and
+SHA-256, deploys the retained ZIP without rebuilding or migrating, and runs the
+current smoke/deployment tooling. Never use binary rollback for incompatible schema
+changes; follow the point-in-time database recovery procedure below instead.
+
+Local bootstrap secrets and actual event data must never be included in public
+GitHub artifacts. Workflow logs include synthetic checks and release identifiers;
+deployment checks do not create events, participants, or send messages.
+
 Decision and price check: 7 September 2026. Region: **Canada Central**. Currency: **USD**, pay-as-you-go, before tax. This is an operator runbook and a deployment-readiness plan; it does not establish that the unfinished event application is production-ready.
 
 ## Recommendation and monthly cost
