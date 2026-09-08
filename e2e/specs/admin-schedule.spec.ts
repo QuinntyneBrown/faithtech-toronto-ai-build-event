@@ -3,8 +3,9 @@ import { AdminAccessPage } from '../page-objects/admin-access-page';
 import { AdminSessionPage } from '../page-objects/admin-session-page';
 import { AdminEventsPage } from '../page-objects/admin-events-page';
 import { AdminSchedulePage } from '../page-objects/admin-schedule-page';
+import { type Page } from '@playwright/test';
 
-test('L2-006/007: given an empty schedule, an administrator saves distinct overnight stages and reopens their content', async ({ page }) => {
+async function openSchedule(page: Page) {
   const access = new AdminAccessPage(page);
   await access.open(); await access.signIn('host@example.com', 'host-demo');
   await new AdminSessionPage(page).expectSignedIn();
@@ -12,6 +13,24 @@ test('L2-006/007: given an empty schedule, an administrator saves distinct overn
   await events.open(); await events.createDraft('Overnight build'); await events.openEvent('Overnight build');
   const schedule = new AdminSchedulePage(page);
   await schedule.open(); await schedule.expectEmpty();
+  return schedule;
+}
+
+test('L2-006: given independent activity windows, saving and disabling them survives refresh', async ({ page }) => {
+  const schedule = await openSchedule(page);
+  await schedule.setEventTimes('America/Toronto', '2026-09-09T23:00', '2026-09-10T01:00');
+  await schedule.setWindow('selection', '2026-09-09T23:10', '2026-09-09T23:40');
+  await schedule.setWindow('demo presentation', '2026-09-10T00:30', '2026-09-10T00:50');
+  await schedule.save(); await schedule.expectSaved(); await page.reload();
+  await schedule.expectWindow('selection', '2026-09-09T23:10', '2026-09-09T23:40');
+  await schedule.expectWindow('demo presentation', '2026-09-10T00:30', '2026-09-10T00:50');
+  await schedule.disableWindow('selection'); await schedule.save(); await schedule.expectSaved(); await page.reload();
+  await schedule.expectWindowDisabled('selection');
+  await schedule.expectWindow('demo presentation', '2026-09-10T00:30', '2026-09-10T00:50');
+});
+
+test('L2-006/007: given an empty schedule, an administrator saves distinct overnight stages and reopens their content', async ({ page }) => {
+  const schedule = await openSchedule(page);
   await schedule.setEventTimes('America/Toronto', '2026-09-09T23:00', '2026-09-10T01:00');
   await schedule.addStage('Arrival', '2026-09-09T23:00', '2026-09-10T00:00', 'Welcome, builders.');
   await schedule.addStage('Build', '2026-09-10T00:00', '2026-09-10T01:00', 'Build something useful.');

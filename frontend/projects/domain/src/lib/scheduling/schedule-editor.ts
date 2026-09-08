@@ -1,8 +1,9 @@
 import { Component, DestroyRef, inject, input, OnInit, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SCHEDULE_SERVICE, ScheduleDetail, ScheduleFailure, ScheduleInput, StageInput } from '@faithtech/api';
+import { WindowEditor } from './window-editor';
 
-@Component({ selector: 'ft-schedule-editor', imports: [FormsModule], templateUrl: './schedule-editor.html', styleUrl: './schedule-editor.css' })
+@Component({ selector: 'ft-schedule-editor', imports: [FormsModule, WindowEditor], templateUrl: './schedule-editor.html', styleUrl: './schedule-editor.css' })
 export class ScheduleEditor implements OnInit {
   private readonly service = inject(SCHEDULE_SERVICE);
   private readonly destroy = inject(DestroyRef);

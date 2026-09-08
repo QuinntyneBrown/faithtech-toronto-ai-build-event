@@ -1,0 +1,9 @@
+<fieldset><legend>{{ label() }} window</legend>
+  <label class="toggle"><input type="checkbox" [ngModel]="!!value()" (ngModelChange)="enable($event)" [ngModelOptions]="{standalone: true}">Enable {{ label().toLowerCase() }}</label>
+  @if (value(); as window) {
+    <label>{{ label() }} start<input type="datetime-local" [ngModel]="window.start?.local || ''" (ngModelChange)="time('start', $event)" [ngModelOptions]="{standalone: true}"></label>
+    <label>{{ label() }} start UTC offset (minutes)<input type="number" [ngModel]="window.start?.offsetMinutes" (ngModelChange)="offset('start', $event)" [ngModelOptions]="{standalone: true}"></label>
+    <label>{{ label() }} end<input type="datetime-local" [ngModel]="window.end?.local || ''" (ngModelChange)="time('end', $event)" [ngModelOptions]="{standalone: true}"></label>
+    <label>{{ label() }} end UTC offset (minutes)<input type="number" [ngModel]="window.end?.offsetMinutes" (ngModelChange)="offset('end', $event)" [ngModelOptions]="{standalone: true}"></label>
+  } @else { <p>{{ label() }} is disabled.</p> }
+</fieldset>
