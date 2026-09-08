@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components - Follow the live event
+Container(ui, "FollowLiveEventPage", "Angular / ILiveEventService", "Signals and typed service contract")
+Container_Boundary(api, "Event API") {
+Component(ctrl, "LiveEventController", "ASP.NET Core", "Bind, MediatR dispatch, return")
+Component(gate, "SessionAuthorizationBehavior", "Application pipeline", "Validate actor, event and ownership")
+Component(handler, "FollowLiveEventHandler", "Application", "Display authoritative countdowns, stages and recap without losing activity drafts")
+Component(entity, "EventSnapshot", "Domain", "Event timing, stage content, venue branding and authorized snapshot projections")
+Component(store, "SqlEventStore", "Infrastructure / IEventStore", "Feature queries, concurrency and transactions")
+}
+ContainerDb(db, "Event database", "SQL Server", "Event timing, stage content, venue branding and authorized snapshot projections")
+Rel(ui, ctrl, "Follow live event", "HTTPS")
+Rel(ctrl, gate, "Dispatch request through pipeline")
+Rel(gate, handler, "Continue authorized request")
+Rel(handler, entity, "Apply domain policy")
+Rel(handler, store, "Load and persist through port")
+Rel(store, db, "Query or commit", "EF Core")
+@enduml
