@@ -3,7 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 
 export class AdminAccessPage {
   constructor(private readonly page: Page) {}
-  async open() { await this.page.goto('/sign-in'); }
+  async open() { await this.page.goto('sign-in'); }
   async signIn(username: string, password: string) {
     await this.page.getByLabel('Username', { exact: true }).fill(username);
     await this.page.getByLabel('Password', { exact: true }).fill(password);

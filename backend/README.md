@@ -13,6 +13,10 @@ Acceptance tests create uniquely named `FaithTechAcceptance_*` databases on
 `.\SQLEXPRESS` using Windows authentication and remove those databases afterward.
 Set `FAITHTECH_TEST_SQL` to a different test server connection when required. The
 test account needs permission to create and drop its isolated test databases.
+Build the frontend first (`npm --prefix frontend ci`, then
+`npm --prefix frontend run build`) so the hosting acceptance case can exercise
+the actual Angular shell. The API copies built browser assets into its output
+and publish directories. `/admin/` hosts administration on the API's HTTPS origin.
 
 Set `ConnectionStrings__EventDatabase` through the deployment's secret/configuration
 provider. Development API settings use Windows authentication against local SQL

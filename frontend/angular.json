@@ -51,7 +51,8 @@
             ],
             "styles": [
               "projects/admin/src/styles.css"
-            ]
+            ],
+            "baseHref": "/admin/"
           },
           "configurations": {
             "production": {
@@ -101,7 +102,10 @@
               "buildTarget": "admin:build:acceptance"
             }
           },
-          "defaultConfiguration": "development"
+          "defaultConfiguration": "development",
+          "options": {
+            "servePath": "/admin"
+          }
         }
       }
     },

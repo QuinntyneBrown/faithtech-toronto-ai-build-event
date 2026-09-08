@@ -12,6 +12,9 @@ requirements, including their cross-cutting criteria.
 | Administrator access and sessions | 10 API acceptance cases pass against isolated, migrated SQL Server databases: access denial, CSRF, secure sign-in, unknown account, expiry, interaction, sign-out and account disabling. |
 | Operator CLI | Migrate, create-admin and disable-admin executed against a disposable SQL database; disabled state verified in SQL. |
 | Authentication abuse budgets | 14 total API cases pass. Account/source limits, normalized nonexistent identities, expiry and concurrent failures use SQL-persisted HMAC keys and transaction locks. |
+| Administrator browser access | 17 browser scenarios pass: access, session restoration, expiry, failed sign-out, keyboard navigation, ten viewport widths and event draft creation. Desktop rendering inspected against the input mock. |
+| Event drafts | SQL-backed creation and listing, normalized title validation, durable identical retries, changed-operation conflicts and transactional creation audit records. |
+| Same-origin hosting | 18 API cases pass. Published HTTPS process verified with isolated SQL: Angular shell, provisioned sign-in, draft creation/retry and sign-out. |
 
 ## Delivery queue
 

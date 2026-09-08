@@ -1,6 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup><StaticWebAssetsEnabled>false</StaticWebAssetsEnabled></PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../FaithTechTorontoAiBuildEvent.Infrastructure/FaithTechTorontoAiBuildEvent.Infrastructure.csproj" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="../../../frontend/dist/admin/browser/**/*" Link="wwwroot/admin/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../../../frontend/dist/client/browser/**/*" Link="wwwroot/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

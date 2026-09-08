@@ -10,7 +10,10 @@ public partial class Program
 {
     public static void Main(string[] args)
     {
-        var builder = WebApplication.CreateBuilder(args);
+        var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+        {
+            Args = args, WebRootPath = Path.Combine(AppContext.BaseDirectory, "wwwroot")
+        });
         builder.Services.AddControllersWithViews();
         builder.Services.AddAntiforgery(options =>
         {
@@ -58,7 +61,9 @@ public partial class Program
         app.UseExceptionHandler();
         app.UseAuthentication();
         app.UseAuthorization();
+        app.UseStaticFiles();
         app.MapControllers();
+        app.MapFallbackToFile("/admin/{*path:nonfile}", "admin/index.html");
         app.Run();
     }
 }
