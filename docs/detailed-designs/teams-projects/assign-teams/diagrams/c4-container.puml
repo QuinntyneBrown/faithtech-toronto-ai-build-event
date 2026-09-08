@@ -1,0 +1,18 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers - Assign participants to teams
+Person(actor, "Participant and administrator", "assign teams")
+System_Boundary(system, "FaithTech event platform") {
+Container(ui, "Client and admin applications", "Angular", "AssignTeamsPage")
+Container(api, "Event API", ".NET 10 / MediatR 12.5.0", "Enforce one team per participant and confirm balanced random assignments")
+ContainerDb(db, "Event database", "SQL Server", "Teams, memberships, assignment previews and assignment versions")
+ContainerDb(redis, "Fanout backplane", "Redis; multiple API instances only", "Transient notification transport")
+}
+Rel(actor, ui, "Assign teams")
+Rel(ui, api, "Typed requests and state reads", "JSON / HTTPS")
+Rel(api, db, "Commit or query scoped state", "EF Core")
+Rel(api, redis, "EventHub fanout between instances")
+Rel(api, ui, "Committed outbox invalidations through EventHub", "SignalR / HTTPS")
+
+@enduml

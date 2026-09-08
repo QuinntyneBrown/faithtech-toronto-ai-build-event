@@ -1,0 +1,9 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Context - Assign participants to teams
+Person(actor, "Participant and administrator", "assign teams")
+System(system, "FaithTech event platform", "Enforce one team per participant and confirm balanced random assignments")
+Rel(actor, system, "Assign teams", "HTTPS")
+
+@enduml
