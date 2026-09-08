@@ -15,10 +15,12 @@ public sealed class SqlScheduleStore(EventDbContext db) : IScheduleStore
         var item = await db.Events.Include(x => x.Stages).SingleOrDefaultAsync(x => x.Id == eventId, cancellationToken);
         return item is null ? null : ScheduleMapping.Detail(item, Convert.ToBase64String(db.Entry(item).Property<byte[]>("Version").CurrentValue!), await Now(cancellationToken));
     }
-    public async Task<ScheduleDetail> Save(SaveScheduleCommand command, CancellationToken cancellationToken)
+    public Task<ScheduleDetail> Save(SaveScheduleCommand command, CancellationToken cancellationToken) => Save(command, false, cancellationToken);
+    public Task<ScheduleDetail> ApplyReference(SaveScheduleCommand command, CancellationToken cancellationToken) => Save(command, true, cancellationToken);
+    private async Task<ScheduleDetail> Save(SaveScheduleCommand command, bool reference, CancellationToken cancellationToken)
     {
-        var target = $"PUT /api/admin/events/{command.EventId}/schedule";
-        var hash = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new { target, command.Input, command.Version })));
+        var target = reference ? $"POST /api/admin/events/{command.EventId}/reference-schedule" : $"PUT /api/admin/events/{command.EventId}/schedule";
+        var hash = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new { target, Input = reference ? null : command.Input, command.Version })));
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         var resource = $"event:{command.EventId}";
         await db.Database.ExecuteSqlInterpolatedAsync($"DECLARE @result int; EXEC @result = sp_getapplock @Resource={resource}, @LockMode='Exclusive', @LockOwner='Transaction', @LockTimeout=5000; IF @result < 0 THROW 51000, 'Operation unavailable', 1;", cancellationToken);
@@ -37,13 +39,14 @@ public sealed class SqlScheduleStore(EventDbContext db) : IScheduleStore
             throw new InputValidationException("stages", "Use fresh identities for new stages in this event.");
         var existing = item.Stages.Select(x => x.Id).ToHashSet();
         ScheduleMapping.Apply(item, command.Input);
+        if (reference) { item.VenueName = "Stone Church"; item.UseLiturgy = false; }
         foreach (var stage in item.Stages.Where(x => !existing.Contains(x.Id))) db.Stages.Add(stage);
         db.Entry(item).Property(x => x.Timezone).IsModified = true;
         await db.SaveChangesAsync(cancellationToken);
         var result = ScheduleMapping.Detail(item, Convert.ToBase64String(db.Entry(item).Property<byte[]>("Version").CurrentValue!), now);
         db.OperationReceipts.Add(new() { ActorId = command.ActorId, EventId = item.Id, OperationId = command.OperationId,
             Target = target, PayloadHash = hash, Result = JsonSerializer.Serialize(result), CommittedAtUtc = now });
-        db.AuditRecords.Add(new() { ActorId = command.ActorId, EventId = item.Id, Action = "schedule-saved", Outcome = "succeeded", AtUtc = now });
+        db.AuditRecords.Add(new() { ActorId = command.ActorId, EventId = item.Id, Action = reference ? "reference-schedule-applied" : "schedule-saved", Outcome = "succeeded", AtUtc = now });
         await db.SaveChangesAsync(cancellationToken); await transaction.CommitAsync(cancellationToken);
         return result;
     }

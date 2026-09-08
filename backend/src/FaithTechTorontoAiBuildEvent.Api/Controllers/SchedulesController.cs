@@ -10,6 +10,12 @@ namespace FaithTechTorontoAiBuildEvent.Api.Controllers;
 [ApiController, Route("api/admin/events/{eventId:guid}/schedule"), Authorize(Roles = "Administrator")]
 public sealed class SchedulesController(ISender sender) : ControllerBase
 {
+    [HttpPost("/api/admin/events/{eventId:guid}/reference-schedule"), ValidateAntiForgeryToken]
+    public async Task<IActionResult> ApplyReference(Guid eventId,
+        [FromHeader(Name = "Idempotency-Key"), Required] Guid? operationId,
+        [FromHeader(Name = "If-Match")] string? version, CancellationToken cancellationToken) =>
+        Ok(await sender.Send(new ApplySeptember9PresetCommand(Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!),
+            eventId, operationId!.Value, version), cancellationToken));
     [HttpGet]
     public async Task<IActionResult> Get(Guid eventId, CancellationToken cancellationToken)
     {
