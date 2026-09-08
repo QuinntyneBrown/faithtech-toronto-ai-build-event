@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { readFile, writeFile, unlink } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { resolve, basename, dirname } from 'node:path';
 import { request } from '@playwright/test';
 import { host } from './host.mjs';
 import { run } from './media.mjs';
@@ -18,7 +18,7 @@ export async function environment(directory) {
     ASPNETCORE_Kestrel__Certificates__Default__Password: passphrase, FAITHTECH_DEMO_CERT_PASSWORD: passphrase };
   const sql = query => run('sqlcmd', ['-S', sqlServer, '-E', '-C', '-b', '-l', '10', '-t', '30', '-Q', query]);
   const cliPath = resolve('backend/src/FaithTechTorontoAiBuildEvent.Provisioning/bin/Debug/net10.0/FaithTechTorontoAiBuildEvent.Provisioning.dll');
-  const cli = (args, onOutput) => run(dotnet, [cliPath, ...args], { env, input: password + '\n', onOutput, timeout: 60000 });
+  const cli = (args, onOutput) => run(dotnet, [basename(cliPath), ...args], { cwd: dirname(cliPath), env, input: password + '\n', onOutput, timeout: 60000 });
   let api, server, apiClient, logs = '', closed = false;
   const close = async () => {
     if (closed) return; closed = true;
