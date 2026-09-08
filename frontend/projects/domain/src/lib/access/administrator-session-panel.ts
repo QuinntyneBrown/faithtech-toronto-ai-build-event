@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, input, output, signal } from '@angular/core';
+import { Component, DestroyRef, effect, inject, input, output, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { SESSION_SERVICE, SessionState } from '@faithtech/api';
 
@@ -17,6 +17,9 @@ export class AdministratorSessionPanel {
   readonly pendingSignOut = signal(false);
 
   constructor() {
+    effect(() => {
+      if (this.service.interactionRevision() > 0 && !this.pendingSignOut()) void this.refresh(false);
+    });
     const refresh = () => { if (!document.hidden && !this.pendingSignOut()) void this.refresh(); };
     const conceal = () => { this.state.set(null); refresh(); };
     window.addEventListener('pageshow', conceal);
@@ -33,9 +36,9 @@ export class AdministratorSessionPanel {
     });
     void this.refresh();
   }
-  async refresh() {
+  async refresh(conceal = true) {
     const revision = ++this.revision;
-    this.state.set(null);
+    if (conceal) this.state.set(null);
     this.error.set('');
     try {
       const state = await this.service.read();
@@ -51,7 +54,7 @@ export class AdministratorSessionPanel {
     }
   }
   async keepActive() {
-    try { await this.service.interact(); await this.refresh(); }
+    try { await this.service.interact(); }
     catch { await this.refresh(); }
   }
   async signOut() {

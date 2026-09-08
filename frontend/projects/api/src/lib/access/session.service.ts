@@ -1,5 +1,5 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { ISessionService } from './session-service.contract';
 import { SessionState } from './session-state';
@@ -7,6 +7,7 @@ import { ServiceFailure } from './service-failure';
 
 @Injectable()
 export class SessionService implements ISessionService {
+  readonly interactionRevision = signal(0);
   private readonly http = inject(HttpClient);
   private readonly scope = '/api/admin';
 
@@ -24,7 +25,10 @@ export class SessionService implements ISessionService {
     return state;
   }
   signOut(): Promise<void> { return this.mutate('DELETE', '/session'); }
-  interact(): Promise<void> { return this.mutate('POST', '/session/interaction'); }
+  async interact(): Promise<void> {
+    await this.mutate('POST', '/session/interaction');
+    this.interactionRevision.update(value => value + 1);
+  }
 
   private async mutate(method: string, path: string, body?: unknown): Promise<void> {
     try {

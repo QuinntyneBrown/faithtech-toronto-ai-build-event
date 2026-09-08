@@ -1,11 +1,14 @@
-import { AfterViewInit, Component, ElementRef, inject, output, signal, viewChild } from '@angular/core';
+import { AfterViewInit, afterNextRender, Component, ElementRef, inject, Injector, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { EVENT_SERVICE, ServiceFailure } from '@faithtech/api';
 
 @Component({ selector: 'ft-create-event-dialog', imports: [FormsModule], templateUrl: './create-event-dialog.html', styleUrl: './create-event-dialog.css' })
 export class CreateEventDialog implements AfterViewInit {
   private readonly service = inject(EVENT_SERVICE);
+  private readonly injector = inject(Injector);
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
+  private readonly titleInput = viewChild<ElementRef<HTMLInputElement>>('titleInput');
+  private readonly keepButton = viewChild<ElementRef<HTMLButtonElement>>('keepButton');
   private operationId = crypto.randomUUID();
   readonly closed = output<void>();
   readonly saved = output<void>();
@@ -17,14 +20,21 @@ export class CreateEventDialog implements AfterViewInit {
   ngAfterViewInit() { this.dialog().nativeElement.showModal(); }
   requestClose() {
     if (this.busy() || this.uncertain()) return;
-    if (this.title().trim()) this.discard.set(true);
-    else this.closed.emit();
+    if (this.title().trim()) {
+      this.discard.set(true);
+      afterNextRender(() => this.keepButton()?.nativeElement.focus(), { injector: this.injector });
+    } else this.close();
+  }
+  close() { this.dialog().nativeElement.close(); this.closed.emit(); }
+  keepEditing() {
+    this.discard.set(false);
+    afterNextRender(() => this.titleInput()?.nativeElement.focus(), { injector: this.injector });
   }
   async save() {
     if (this.busy()) return;
     this.busy.set(true);
     this.error.set('');
-    try { await this.service.createDraft(this.title(), this.operationId); this.saved.emit(); }
+    try { await this.service.createDraft(this.title(), this.operationId); this.dialog().nativeElement.close(); this.saved.emit(); }
     catch (error) {
       if (error instanceof ServiceFailure && error.status === 422) {
         this.error.set('Event title must contain at most 200 characters.');

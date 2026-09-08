@@ -6,6 +6,7 @@ export class SessionFixture {
   signOutUnavailable = false;
   lifetime = 30 * 60000;
   expires = 0;
+  interactions = 0;
   handle(operation: string, credentials: {username?: string; password?: string} = {}) {
     if (this.unavailable || (operation === 'signout' && this.signOutUnavailable)) return { status: 503 };
     if (operation === 'signin') {
@@ -14,7 +15,7 @@ export class SessionFixture {
       this.expires = Date.now() + this.lifetime;
     }
     if (operation === 'signout') this.authenticated = false;
-    if (operation === 'interact' && this.authenticated) this.expires = Date.now() + this.lifetime;
+    if (operation === 'interact' && this.authenticated) { this.interactions++; this.expires = Date.now() + this.lifetime; }
     return { state: this.authenticated && this.expires > Date.now() ? {
       actorId: '00000000-0000-0000-0000-000000000001', serverNow: new Date().toISOString(),
       idleExpiresAtUtc: new Date(this.expires).toISOString(), absoluteExpiresAtUtc: new Date(this.expires).toISOString(),
