@@ -1,0 +1,9 @@
+{
+  "name": "@faithtech/api",
+  "version": "0.1.0",
+  "sideEffects": false,
+  "peerDependencies": {
+    "@angular/common": "^21.2.0",
+    "@angular/core": "^21.2.0"
+  }
+}
