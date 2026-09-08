@@ -11,6 +11,11 @@ namespace FaithTechTorontoAiBuildEvent.Infrastructure.Events;
 
 public sealed class SqlEventStore(EventDbContext db) : IEventStore
 {
+    public Task<EventSummary?> GetEvent(Guid eventId, CancellationToken cancellationToken) =>
+        db.Events.AsNoTracking().Where(x => x.Id == eventId)
+            .Select(x => new EventSummary(x.Id, x.Title, x.Published, x.UseLiturgy, Convert.ToBase64String(EF.Property<byte[]>(x, "Version"))))
+            .SingleOrDefaultAsync(cancellationToken);
+
     public async Task<EventSummary> CreateDraft(Guid actorId, Guid operationId, string? title, CancellationToken cancellationToken)
     {
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { route = "POST /api/admin/events", title }))));
