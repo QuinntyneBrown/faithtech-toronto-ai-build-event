@@ -11,6 +11,7 @@ public sealed class OperatorRootCommand
         root.Subcommands.Add(new MigrateCommand());
         root.Subcommands.Add(new CreateAdministratorCommand());
         root.Subcommands.Add(new AddUserCommand());
+        root.Subcommands.Add(new ResetPasswordCommand());
         root.Subcommands.Add(new DisableAdministratorCommand());
         root.SetAction(_ => 0);
     }
