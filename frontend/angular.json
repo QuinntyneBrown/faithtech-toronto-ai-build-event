@@ -73,6 +73,17 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "acceptance": {
+              "optimization": false,
+              "sourceMap": true,
+              "extractLicenses": false,
+              "fileReplacements": [
+                {
+                  "replace": "projects/admin/src/app/app.providers.ts",
+                  "with": "projects/admin/src/app/app.providers.mock.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -85,6 +96,9 @@
             },
             "development": {
               "buildTarget": "admin:build:development"
+            },
+            "acceptance": {
+              "buildTarget": "admin:build:acceptance"
             }
           },
           "defaultConfiguration": "development"

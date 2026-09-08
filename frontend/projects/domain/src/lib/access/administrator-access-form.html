@@ -1,0 +1,12 @@
+<form (ngSubmit)="submit()" [attr.aria-busy]="busy()">
+  <h2>Welcome back.</h2>
+  <p>Sign in with your event administrator account.</p>
+  @if (error()) { <p id="access-error" role="alert">{{ error() }}</p> }
+  <label for="username">Username</label>
+  <input id="username" name="username" autocomplete="username" required maxlength="256"
+    [ngModel]="username()" (ngModelChange)="username.set($event)" [attr.aria-describedby]="error() ? 'access-error' : null">
+  <label for="password">Password</label>
+  <input id="password" name="password" type="password" autocomplete="current-password" required maxlength="1024"
+    [ngModel]="password()" (ngModelChange)="password.set($event)" [attr.aria-describedby]="error() ? 'access-error' : null">
+  <div class="actions"><button type="submit" [disabled]="busy()">{{ busy() ? 'Signing in…' : 'Sign in' }}</button></div>
+</form>

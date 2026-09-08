@@ -1,0 +1,3 @@
+header { display: flex; flex-wrap: wrap; align-items: center; gap: var(--cs-space-3); padding: var(--cs-space-4) var(--cs-page-gutter); border-bottom: var(--cs-line) solid var(--cs-border); }
+header span { padding-inline-start: var(--cs-space-4); border-inline-start: var(--cs-line) solid var(--cs-border); font-size: var(--cs-text-xs); text-transform: uppercase; letter-spacing: var(--cs-label-tracking); }
+footer { padding-block: var(--cs-space-5); border-top: var(--cs-line) solid var(--cs-border); font-size: var(--cs-text-xs); }
