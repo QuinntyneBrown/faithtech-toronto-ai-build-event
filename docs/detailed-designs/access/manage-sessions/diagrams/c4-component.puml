@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components - Manage participant and administrator sessions
+Container(ui, "ManageSessionsPage", "Angular / ISessionService", "Signals and typed service contract")
+Container_Boundary(api, "Event API") {
+Component(ctrl, "SessionController", "ASP.NET Core", "Bind, MediatR dispatch, return")
+Component(gate, "SessionAuthorizationBehavior", "Application pipeline", "Validate actor, event and ownership")
+Component(handler, "ManageSessionsHandler", "Application", "Restore authorized sessions and enforce exact expiry and sign-out")
+Component(entity, "Session", "Domain", "SQL sessions, administrator Identity records and revocations")
+Component(store, "SqlEventStore", "Infrastructure / IEventStore", "Feature queries, concurrency and transactions")
+}
+ContainerDb(db, "Event database", "SQL Server", "SQL sessions, administrator Identity records and revocations")
+Rel(ui, ctrl, "Manage sessions", "HTTPS")
+Rel(ctrl, gate, "Dispatch request through pipeline")
+Rel(gate, handler, "Continue authorized request")
+Rel(handler, entity, "Apply domain policy")
+Rel(handler, store, "Load and persist through port")
+Rel(store, db, "Query or commit", "EF Core")
+@enduml

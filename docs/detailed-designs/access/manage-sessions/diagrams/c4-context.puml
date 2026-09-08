@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Context - Manage participant and administrator sessions
+Person(actor, "Participant or administrator", "manage sessions")
+System(system, "FaithTech event platform", "Restore authorized sessions and enforce exact expiry and sign-out")
+Rel(actor, system, "Manage sessions", "HTTPS")
+@enduml

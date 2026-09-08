@@ -1,0 +1,17 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers - Manage participant and administrator sessions
+Person(actor, "Participant or administrator", "manage sessions")
+System_Boundary(system, "FaithTech event platform") {
+Container(ui, "Client and admin applications", "Angular", "ManageSessionsPage")
+Container(api, "Event API", ".NET 10 / MediatR 12.5.0", "Restore authorized sessions and enforce exact expiry and sign-out")
+ContainerDb(db, "Event database", "SQL Server", "SQL sessions, administrator Identity records and revocations")
+ContainerDb(redis, "Fanout backplane", "Redis; multiple API instances only", "Transient notification transport")
+}
+Rel(actor, ui, "Manage sessions")
+Rel(ui, api, "Typed requests and state reads", "JSON / HTTPS")
+Rel(api, db, "Commit or query scoped state", "EF Core")
+Rel(api, redis, "EventHub fanout between instances")
+Rel(api, ui, "Committed outbox invalidations through EventHub", "SignalR / HTTPS")
+@enduml

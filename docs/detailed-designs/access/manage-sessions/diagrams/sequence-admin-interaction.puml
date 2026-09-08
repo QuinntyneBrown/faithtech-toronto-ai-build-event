@@ -1,0 +1,72 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam classBackgroundColor #F9FAFB
+skinparam classBorderColor #344054
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+title Record deliberate administrator activity
+actor "Participant or administrator" as actor
+box "Frontend - Client and admin applications" #E0F2FE
+participant "ManageSessionsPage" as page
+participant "ISessionService" as client
+end box
+box "Backend - Event API" #D1FADF
+participant "SessionController" as controller
+end box
+box "Backend - Application and Domain" #ECFDF3
+participant "Authorization / validation pipeline" as gate
+participant "ManageSessionsHandler" as handler
+participant "Session" as entity
+end box
+box "Backend - Infrastructure" #FFF4E5
+database "SQL Server / IEventStore" as db
+participant "OutboxDispatcher / EventHub" as push
+end box
+actor -> page : Perform an explicit UI action
+page -> client : RecordAdminInteractionCommand
+client -> controller : HTTPS typed request
+controller -> gate : MediatR dispatch
+gate -> gate : Validate session, scope and input [L2-039/040]
+alt Invalid or unauthorized
+gate --> controller : Concealed error / field errors
+controller --> client : ProblemDetails
+client --> page : Retain draft; announce error
+else Authorized
+gate -> handler : Dispatch authorized request
+handler -> db : Load scoped state and receipt / expected version
+db --> handler : Current authorized state
+alt Identical authorized committed intent [L2-044]
+handler --> controller : Original safe receipt result
+controller --> client : Original committed result
+client --> page : Reconcile completed intent
+else New intent; altered reuse rejects with 409
+handler -> entity : Check idle and absolute deadlines before renewal [L2-038]
+alt Expired session; background traffic is not an interaction
+entity --> handler : Reject without mutation
+handler --> controller : Conflict / validation result
+controller --> client : ProblemDetails + authorized current version
+client --> page : Show recovery action; preserve draft
+else Accepted
+handler -> entity : Advance last interaction without extending absolute expiry
+entity --> handler : Updated SessionState
+handler -> db : Commit state + receipt + audit + outbox atomically
+db --> handler : Durable result
+handler --> controller : Feature result
+controller --> client : Authorized response
+client --> page : Update signals and render
+end
+end
+end
+opt Newly committed state
+push -> db : Lease committed invalidation
+db --> push : Audience and resource identity
+push -> client : Invalidate authorized state [L2-044]
+client -> controller : Refresh authorized resource
+controller --> client : Latest projection
+client --> page : Render within two seconds
+end
+@enduml
