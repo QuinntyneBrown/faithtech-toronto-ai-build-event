@@ -31,6 +31,11 @@ source revision and sign-out. CI never creates administrator accounts during
 ordinary releases. A failed migration prevents uploading the new package. A failed
 smoke check marks deployment failed; it does not reverse migrations automatically.
 
+During App Service recycling, smoke sign-in retries transport failures and HTTP
+502/503/504 within a three-minute deadline, refreshing antiforgery state each time.
+Invalid credentials (401) and other unexpected statuses fail immediately. Readiness
+must identify the requested source revision before the release is recorded as successful.
+
 `GET /api/admin/readiness` requires the existing administrator session. Its body
 contains `ready`, assembly `revision` (including source SHA), and an opaque
 process `instance`. An available but outdated database returns `ready: false`;
@@ -76,6 +81,10 @@ Secrets: `MIGRATION_CONNECTION_STRING`, `PRODUCTION_DIGEST_KEY`, `SMOKE_USERNAME
 `SMOKE_PASSWORD`. The federated identity has Website Contributor on this app only
 and a custom SQL firewall role on this SQL server only. Website Contributor can
 manage this app's configuration; protect `main` and review deployment code accordingly.
+Bootstrap reads GitHub's `sub_claim_prefix` and updates existing Azure federation
+on rerun. This repository uses the immutable owner/repository IDs in its subject;
+do not replace it with the older name-only format. See
+[GitHub's OIDC subject reference](https://docs.github.com/en/actions/reference/security/oidc).
 The runtime SQL user has reader/writer roles; the migration user has `db_owner`
 only in `FaithTech`, not server-administrator privileges.
 
