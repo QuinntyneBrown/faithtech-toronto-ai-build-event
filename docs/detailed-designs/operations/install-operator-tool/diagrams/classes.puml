@@ -1,0 +1,29 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+ BorderColor #344054
+ FontColor #101828
+ BackgroundColor #F9FAFB
+}
+title Install and update the operator tool - types
+class OperatorRootCommand {
+ +Build(): Command
+}
+class Program {
+ +Main(args: string[]): Task<int>
+}
+class CommandResultWriter {
+ +Write(result: OperatorResult): int
+}
+class OperatorResult {
+ +string Outcome
+ +int ExitCode
+}
+Program ..> OperatorRootCommand : parses
+Program ..> CommandResultWriter : renders
+CommandResultWriter ..> OperatorResult : formats
+@enduml
