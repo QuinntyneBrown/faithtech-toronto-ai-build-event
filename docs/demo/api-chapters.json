@@ -1,0 +1,74 @@
+{
+  "slug": "api",
+  "browser": "149.0.7827.55",
+  "cues": [
+    {
+      "text": "The dot net API is the shared service behind the administrator and participant applications. These requests run against a real local process and isolated SQL storage.",
+      "duration": 11.262404,
+      "speechIndex": 0,
+      "chapter": "Shared application service",
+      "start": 0,
+      "end": 11.262404000000004,
+      "visibleEnd": 12.759999999999991
+    },
+    {
+      "text": "An authenticated host can create an event draft. The API returns a created response and the event identifier. Authentication cookies and anti forgery tokens stay off screen.",
+      "duration": 12.527029,
+      "speechIndex": 1,
+      "chapter": "Create an event",
+      "start": 12.959999999999994,
+      "end": 25.487028999999993,
+      "visibleEnd": 27
+    },
+    {
+      "text": "A separate read returns the same saved title and draft state. This verifies persistence rather than assuming that a successful write response is enough.",
+      "duration": 9.492834,
+      "speechIndex": 2,
+      "chapter": "Read persisted state",
+      "start": 27.11999999999999,
+      "end": 36.61283399999999,
+      "visibleEnd": 38.11999999999999
+    },
+    {
+      "text": "A title longer than two hundred characters is rejected with a validation response. The list remains unchanged, so the rejected request did not create another event.",
+      "duration": 11.032109,
+      "speechIndex": 3,
+      "chapter": "Reject invalid input",
+      "start": 38.28,
+      "end": 49.31210900000001,
+      "visibleEnd": 50.8
+    },
+    {
+      "text": "The administrator has signed out successfully. A later request to the protected event list is denied, demonstrating that access is enforced by the API.",
+      "duration": 10.03737,
+      "speechIndex": 4,
+      "chapter": "Enforce access",
+      "start": 50.879999999999995,
+      "end": 60.91736999999999,
+      "visibleEnd": 62.44
+    },
+    {
+      "text": "This service also supports schedules, rosters, and participant sessions. The browser demonstrations show those workflows through their real user interfaces.",
+      "duration": 10.417642,
+      "speechIndex": 5,
+      "chapter": "Related workflows",
+      "start": 62.44,
+      "end": 72.85764199999998,
+      "visibleEnd": 74.36
+    }
+  ],
+  "duration": 75.848,
+  "size": 6486883,
+  "streams": [
+    {
+      "codec_name": "vp8",
+      "codec_type": "video",
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "codec_name": "opus",
+      "codec_type": "audio"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:11.262
+The dot net API is the shared service behind the administrator and participant applications. These requests run against a real local process and isolated SQL storage.
+
+00:00:12.960 --> 00:00:25.487
+An authenticated host can create an event draft. The API returns a created response and the event identifier. Authentication cookies and anti forgery tokens stay off screen.
+
+00:00:27.120 --> 00:00:36.613
+A separate read returns the same saved title and draft state. This verifies persistence rather than assuming that a successful write response is enough.
+
+00:00:38.280 --> 00:00:49.312
+A title longer than two hundred characters is rejected with a validation response. The list remains unchanged, so the rejected request did not create another event.
+
+00:00:50.880 --> 00:01:00.917
+The administrator has signed out successfully. A later request to the protected event list is denied, demonstrating that access is enforced by the API.
+
+00:01:02.440 --> 00:01:12.858
+This service also supports schedules, rosters, and participant sessions. The browser demonstrations show those workflows through their real user interfaces.
