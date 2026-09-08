@@ -8,6 +8,8 @@ This feature changes roster and administrator access while retaining participati
 
 ## Description
 
+The current account-command implementation is documented in [Manage administrator passwords](../manage-administrator-passwords/README.md). L2-061 and L2-062 use the existing connection configuration. The shared preview/receipt orchestration described below remains planned.
+
 Existing `IRosterStore` and `SqlRosterStore` implement list, add, rename, deactivate, reactivate, and code replacement. `IEntryCodeGenerator` creates and digests participant codes. Existing `ProvisionAdministratorHandler`, `DisableAdministratorHandler`, and `SqlAdministratorProvisioner` use ASP.NET Core Identity. Those real components supply the policies reused here. `OperatorAccessHandler`, `IOperatorAccessStore`, and `SqlOperatorAccessStore` are proposed operator orchestration additions.
 
 Commands are `roster list --event <id>`, `roster show <registration-id> --event <id>`, `roster add --event <id> --file <registration.json> --preview`, and `roster rename|deactivate|reactivate|replace-code <registration-id> --event <id> --version <version> --preview`. Rename takes `--file` containing `displayName`; replacement alone accepts `--clear-email`. Administrator commands retain `create-admin <username> --preview` and `disable-admin <username> --preview`. All database commands select a target and apply through the [shared operation protocol](../review-and-reconcile-operations/README.md). The file names and IDs are command arguments; passwords and code values are not.
@@ -65,11 +67,3 @@ Only first completion returns the new code; a committed retry never rotates cred
 Account mutation and session revocation share one operator transaction.
 
 ![Manage roster credentials and administrator access: create or disable administrator](diagrams/sequence-administrator.png)
-
-## Current administrator command increment
-
-L2-061 and L2-062 define the implemented account-command path separately from the planned operator protocol above. `AddUserCommand` selects the documented default only when both protected password options are absent. `AdministratorPasswordInput` rejects conflicting options, EOF, empty input, and redirected masked prompts. `ProvisionAdministratorHandler` dispatches creation through the existing `IAdministratorProvisioner` port.
-
-`ResetPasswordCommand` selects one username or all accounts and requires explicit protected password input. `ResetAdministratorPasswordsHandler` dispatches to `SqlAdministratorProvisioner`. The store validates Identity passwords, updates hashes and stamps, and revokes administrator sessions within one SQL transaction. Roles, enabled flags, and participant credentials remain unchanged. The store returns affected usernames only after commit.
-
-Both commands use the existing protected connection configuration. `OperatorExecution` reports resolved database identity before account mutation and redacts failures. This increment does not claim named targets, previews, durable receipts, or automatic reconciliation. A lost connection or cancellation requires state inspection before retry.

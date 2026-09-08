@@ -1,0 +1,33 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Administrator passwords - add
+actor "Database operator" as op
+box "Frontend - Windows terminal" #E0F2FE
+participant AddUserCommand as cli
+end box
+box "Backend - Application" #ECFDF3
+participant ProvisionAdministratorHandler as handler
+end box
+box "Backend - Infrastructure" #FFF4E5
+participant SqlAdministratorProvisioner as store
+database EventDbContext as db
+end box
+op -> cli : Choose username and default / protected password
+cli -> handler : Send creation request (L2-061)
+handler -> store : Provision(username, password)
+store -> db : Begin transaction; validate uniqueness and password
+store -> db : Insert enabled account and Administrator role
+alt Validation or database failure
+store -> db : Roll back transaction
+store --> handler : Failure
+else Valid operation
+store -> db : Commit transaction
+store --> handler : Account identity / affected usernames
+end
+handler --> cli : Result
+cli --> op : Nonsecret result or redacted failure
+@enduml

@@ -1,0 +1,37 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Administrator passwords - reset
+actor "Database operator" as op
+box "Frontend - Windows terminal" #E0F2FE
+participant ResetPasswordCommand as cli
+end box
+box "Backend - Application" #ECFDF3
+participant ResetAdministratorPasswordsHandler as handler
+end box
+box "Backend - Infrastructure" #FFF4E5
+participant SqlAdministratorProvisioner as store
+database EventDbContext as db
+end box
+op -> cli : Choose username / --all and protected password
+cli -> handler : Send reset request (L2-062)
+handler -> store : ResetPasswords(username?, password)
+store -> db : Begin serializable transaction; load ordered accounts
+store -> store : Validate password for every account
+loop Each selected account
+store -> db : Update hash and security/concurrency stamps
+store -> db : Revoke administrator sessions
+end
+alt Validation or database failure
+store -> db : Roll back transaction
+store --> handler : Failure
+else Valid operation
+store -> db : Commit transaction
+store --> handler : Account identity / affected usernames
+end
+handler --> cli : Result
+cli --> op : Nonsecret result or redacted failure
+@enduml

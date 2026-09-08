@@ -1,0 +1,38 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+title Administrator passwords - types
+class AddUserCommand
+class ResetPasswordCommand
+class AdministratorPasswordInput {
+ +Read(prompt: bool, stdin: bool): string
+}
+class ResetAdministratorPasswordsCommand {
+ +string? Username
+ +string Password
+}
+class ResetAdministratorPasswordsHandler
+interface IAdministratorProvisioner {
+ +Provision(username: string, password: string): Task<Guid>
+ +Disable(username: string): Task
+ +ResetPasswords(username: string?, password: string): Task<string[]>
+}
+class SqlAdministratorProvisioner
+class AdministratorAccount {
+ +Guid Id
+ +string UserName
+ +string PasswordHash
+ +string SecurityStamp
+ +bool Enabled
+}
+AddUserCommand --> AdministratorPasswordInput
+ResetPasswordCommand --> AdministratorPasswordInput
+ResetPasswordCommand ..> ResetAdministratorPasswordsCommand
+ResetAdministratorPasswordsHandler ..> ResetAdministratorPasswordsCommand
+ResetAdministratorPasswordsHandler --> IAdministratorProvisioner
+SqlAdministratorProvisioner ..|> IAdministratorProvisioner
+SqlAdministratorProvisioner --> AdministratorAccount
+@enduml

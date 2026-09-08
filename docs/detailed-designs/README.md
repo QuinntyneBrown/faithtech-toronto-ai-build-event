@@ -1,6 +1,6 @@
 # FaithTech Toronto software design
 
-These designs refine the [L1 scope](../specs/L1.md) and [60 L2 requirements](../specs/L2.md). The requirements remain normative, including every acceptance criterion. Quoted requirement excerpts retain their original wording.
+These designs refine the [L1 scope](../specs/L1.md) and [62 L2 requirements](../specs/L2.md). The requirements remain normative, including every acceptance criterion. Quoted requirement excerpts retain their original wording.
 
 Feature pages distinguish proposed components from inspected source behavior. The operator CLI designs identify existing provisioning, event, schedule, and access code alongside their proposed extensions. The standalone `design-system/` and static `docs/mocks/` provide design evidence; neither establishes production acceptance. Feature designs below share the following contracts.
 
@@ -118,6 +118,7 @@ All 33 feature designs own primary coverage for the 60 L2 requirements. Each inc
 | operations | [Connect to an explicit operator target](operations/connect-operator-target/README.md) | L2-050, L2-051 |
 | operations | [Manage event data through validated commands](operations/manage-event-data/README.md) | L2-052 |
 | operations | [Manage roster credentials and administrator access](operations/manage-operator-access/README.md) | L2-053 |
+| operations | [Manage administrator passwords](operations/manage-administrator-passwords/README.md) | L2-061-L2-062 |
 | operations | [Import an event seed without losing event history](operations/import-event-seed/README.md) | L2-054, L2-055 |
 | operations | [Execute explicitly reviewed SQL data repairs](operations/execute-data-repair/README.md) | L2-056 |
 | operations | [Review, apply and reconcile operator operations](operations/review-and-reconcile-operations/README.md) | L2-057, L2-058, L2-059, L2-060 |
