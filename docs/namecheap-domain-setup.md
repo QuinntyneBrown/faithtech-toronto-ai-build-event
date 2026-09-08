@@ -64,3 +64,48 @@ At `www` and `admin`, replace conflicting old A/AAAA/CNAME or URL Redirect recor
 4. Check restrictive CAA records if issuance fails. Microsoft's current documentation identifies DigiCert and, where needed, `0 issue digicert.com`. Preserve other needed issuers; use Namecheap's CAA fields to allow the documented issuer instead of deleting unrelated certificate policy. Keep the apex A and direct subdomain CNAME mappings for renewal, and recheck current Azure requirements if the issuer changes. [Certificate prerequisites](https://learn.microsoft.com/en-us/azure/app-service/configure-ssl-certificate).
 
 Both the original `www` URL and its redirect destination need valid certificates: TLS is checked before an HTTPS redirect can be read. The application must perform the `www` redirect and the admin-root redirect; neither CNAME records nor an Azure certificate creates those redirects. Do not use a paid IP-based SSL binding for this configuration.
+
+## 6. Verify DNS, certificates and application behavior
+
+Run these read-only checks in Windows PowerShell. Compare answers with the actual Azure values you recorded; a correct-looking response is not enough if it targets another app.
+
+```powershell
+Resolve-DnsName faithtech-toronto-ai-build-event.com -Type NS
+Resolve-DnsName faithtech-toronto-ai-build-event.com -Type A
+Resolve-DnsName asuid.faithtech-toronto-ai-build-event.com -Type TXT
+Resolve-DnsName www.faithtech-toronto-ai-build-event.com -Type CNAME
+Resolve-DnsName asuid.www.faithtech-toronto-ai-build-event.com -Type TXT
+Resolve-DnsName admin.faithtech-toronto-ai-build-event.com -Type CNAME
+Resolve-DnsName asuid.admin.faithtech-toronto-ai-build-event.com -Type TXT
+```
+
+Repeat a record lookup with `-Server 1.1.1.1` or `-Server 8.8.8.8` to compare public caches. If answers disagree, query one of the authoritative servers returned by the NS lookup with `-Server <authoritative-nameserver>`. Authoritative answers should contain the new record before waiting on other caches. Namecheap's editor showing a row does not prove that it is the authoritative zone.
+
+Use `curl.exe` to avoid PowerShell's historical `curl` alias. Do not add `-k`: certificate validation is part of the check.
+
+```powershell
+curl.exe -I http://faithtech-toronto-ai-build-event.com/
+curl.exe -I https://faithtech-toronto-ai-build-event.com/
+curl.exe -I 'https://www.faithtech-toronto-ai-build-event.com/?check=dns'
+curl.exe -I https://admin.faithtech-toronto-ai-build-event.com/
+curl.exe -I https://admin.faithtech-toronto-ai-build-event.com/admin/sign-in
+```
+
+Expect HTTP to redirect to HTTPS; apex and admin sign-in to serve successfully; `www` to permanently redirect to the apex while retaining `?check=dns`; and admin `/` to redirect to `/admin/`. Open the same URLs in a browser on both normal Wi-Fi and mobile data, inspect the certificate hostname/validity, refresh a deep link, and complete admin sign-in, one permitted write and sign-out. Verify browser API calls remain on the admin origin under `/api/admin` and show no CORS, CSRF or asset-loading failures. Repeat the deployment guide's participant smoke journey once it is implemented.
+
+## Troubleshooting and later changes
+
+| Symptom | Check and correction |
+| --- | --- |
+| Host Records editor missing or edits have no effect | Inspect the authoritative NS records; edit the active provider's zone. |
+| Azure TXT validation fails | Check the exact `asuid`, `asuid.www` or `asuid.admin` owner and app verification ID; avoid duplicated domain suffixes or whitespace. |
+| Parking page or intermittent wrong site | Compare authoritative/public answers, remove only conflicting web records, and check old AAAA records. Wait for the old TTL; flushing a local cache cannot clear public caches. |
+| Correct DNS but Azure 404 | Add the exact custom hostname binding to the intended web app. If the Azure default URL also fails, investigate deployment and application routing. |
+| Certificate pending or rejected | Confirm apex A, direct Azure CNAME targets, CAA policy and public certificate-validation reachability. Inspect Azure's certificate operation error rather than buying a certificate to bypass it. |
+| Browser certificate warning | Verify the certificate covers that exact hostname and has an SNI binding; even redirect-only `www` needs one. |
+| `https-required`, redirect loop or sign-in failure | Correct trusted forwarded headers, HTTPS handling, cookies/CSRF and host/path routing in the application; DNS is not the fix. |
+| Admin root opens the participant UI, or assets 404 | Implement the planned hostname redirect and retain `/admin/` as the Angular base path. |
+
+Allow the configured TTL for record caches; a deliberate nameserver change can take longer than a simple record update. Do the setup and verify certificate issuance before event day rather than relying on instant propagation. If moving an existing live site, retain the original DNS values for rollback and prevalidate ownership with TXT before cutting traffic over. [Azure live-domain migration guidance](https://learn.microsoft.com/en-us/azure/app-service/manage-custom-dns-migrate-domain).
+
+Keep the A/CNAME and verification TXT records in place for renewals. After app recreation or hosting changes, recheck the inbound IP, hostname and certificates; an app's outbound-IP list is never a replacement apex DNS value. Retain Namecheap account MFA, domain auto-renewal and current billing/contact details. If retiring the Azure app, remove or repoint its DNS records before deleting it to avoid dangling hostnames. Preserve domain/email records unrelated to that retirement.
