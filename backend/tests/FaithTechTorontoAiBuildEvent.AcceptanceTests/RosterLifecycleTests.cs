@@ -93,6 +93,44 @@ public sealed class RosterLifecycleTests(EventApiFactory factory) : IClassFixtur
         Assert.Equal(HttpStatusCode.Unauthorized, reauthenticate.StatusCode);
     }
 
+    [Fact, Trait("Requirement", "L2-002/AC4")]
+    public async Task Given_a_replaced_entry_code_when_the_old_code_or_its_sessions_are_used_then_only_the_new_code_establishes_access()
+    {
+        using var admin = await factory.AdministratorBrowser();
+        var item = await CreatePublished(admin);
+        var (client, registrationId, oldCode) = await factory.ParticipantBrowser(admin, item.Id, "Alex", "alex@example.com");
+        using var _ = client;
+        (await client.GetAsync($"/api/events/{item.Id}/session")).EnsureSuccessStatusCode();
+
+        var entries = (await admin.GetFromJsonAsync<RosterEntry[]>($"/api/admin/events/{item.Id}/roster"))!;
+        var version = entries.Single(x => x.Id == registrationId).Version;
+        var replaced = await ReplaceCode(admin, item.Id, registrationId, version, clearEmailBinding: false);
+        replaced.EnsureSuccessStatusCode();
+        var issuance = (await replaced.Content.ReadFromJsonAsync<RosterIssuance>())!;
+        Assert.NotNull(issuance.Code);
+        Assert.NotEqual(oldCode, issuance.Code);
+        Assert.Equal(registrationId, issuance.Entry.Id);
+
+        using var oldSession = await client.GetAsync($"/api/events/{item.Id}/session");
+        Assert.Equal(HttpStatusCode.Unauthorized, oldSession.StatusCode);
+
+        using var oldCodeAttempt = factory.Browser();
+        var oldToken = await oldCodeAttempt.GetFromJsonAsync<JsonElement>($"/api/events/{item.Id}/antiforgery");
+        oldCodeAttempt.DefaultRequestHeaders.Add("X-CSRF-TOKEN", oldToken.GetProperty("requestToken").GetString());
+        using var oldCodeResponse = await oldCodeAttempt.PostAsJsonAsync($"/api/events/{item.Id}/session", new { email = "alex@example.com", entryCode = oldCode });
+        Assert.Equal(HttpStatusCode.Unauthorized, oldCodeResponse.StatusCode);
+
+        using var newCodeAttempt = factory.Browser();
+        var newToken = await newCodeAttempt.GetFromJsonAsync<JsonElement>($"/api/events/{item.Id}/antiforgery");
+        newCodeAttempt.DefaultRequestHeaders.Add("X-CSRF-TOKEN", newToken.GetProperty("requestToken").GetString());
+        using var newCodeResponse = await newCodeAttempt.PostAsJsonAsync($"/api/events/{item.Id}/session", new { email = "alex@example.com", entryCode = issuance.Code });
+        newCodeResponse.EnsureSuccessStatusCode();
+
+        var roster = (await admin.GetFromJsonAsync<RosterEntry[]>($"/api/admin/events/{item.Id}/roster"))!;
+        Assert.Single(roster);
+        Assert.DoesNotContain(issuance.Code, JsonSerializer.Serialize(roster));
+    }
+
     private async Task<EventSummary> CreatePublished(HttpClient admin)
     {
         var item = await Create(admin);
@@ -113,6 +151,14 @@ public sealed class RosterLifecycleTests(EventApiFactory factory) : IClassFixtur
     private static async Task<HttpResponseMessage> Deactivate(HttpClient client, Guid eventId, Guid registrationId, string version)
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, $"/api/admin/events/{eventId}/roster/{registrationId}/deactivate");
+        request.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString());
+        request.Headers.Add("If-Match", $"\"{version}\"");
+        return await client.SendAsync(request);
+    }
+
+    private static async Task<HttpResponseMessage> ReplaceCode(HttpClient client, Guid eventId, Guid registrationId, string version, bool clearEmailBinding)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"/api/admin/events/{eventId}/roster/{registrationId}/code") { Content = JsonContent.Create(new { clearEmailBinding }) };
         request.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString());
         request.Headers.Add("If-Match", $"\"{version}\"");
         return await client.SendAsync(request);

@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using FaithTechTorontoAiBuildEvent.Api.Roster;
 using FaithTechTorontoAiBuildEvent.Application.Roster;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -30,4 +31,10 @@ public sealed class RosterController(ISender sender) : ControllerBase
         [FromHeader(Name = "If-Match")] string? version, CancellationToken cancellationToken) =>
         Ok(await sender.Send(new DeactivateRegistrationCommand(Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!),
             eventId, registrationId, operationId!.Value, version), cancellationToken));
+    [HttpPost("{registrationId:guid}/code"), ValidateAntiForgeryToken]
+    public async Task<IActionResult> ReplaceCode(Guid eventId, Guid registrationId, ReplaceEntryCodeRequest request,
+        [FromHeader(Name = "Idempotency-Key"), Required] Guid? operationId,
+        [FromHeader(Name = "If-Match")] string? version, CancellationToken cancellationToken) =>
+        Ok(await sender.Send(new ReplaceEntryCodeCommand(Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!),
+            eventId, registrationId, operationId!.Value, version, request.ClearEmailBinding), cancellationToken));
 }
