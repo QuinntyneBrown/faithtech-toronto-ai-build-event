@@ -1,3 +1,11 @@
+using FaithTechTorontoAiBuildEvent.Api.Access;
+using FaithTechTorontoAiBuildEvent.Application.Access;
+using FaithTechTorontoAiBuildEvent.Infrastructure.Access;
+using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+
 namespace FaithTechTorontoAiBuildEvent.Api;
 
 public partial class Program
@@ -5,8 +13,34 @@ public partial class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
-        builder.Services.AddControllers();
+        builder.Services.AddControllersWithViews();
+        builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
+        builder.Services.AddMediatR(options => options.RegisterServicesFromAssemblyContaining<AuthenticateAdministratorCommand>());
+        builder.Services.AddDbContext<EventDbContext>(options => options.UseSqlServer(
+            builder.Configuration.GetConnectionString("EventDatabase") ?? "Server=.\\SQLEXPRESS;Database=FaithTech;Integrated Security=true;TrustServerCertificate=true"));
+        builder.Services.AddIdentityCore<AdministratorAccount>().AddRoles<IdentityRole<Guid>>().AddEntityFrameworkStores<EventDbContext>();
+        builder.Services.AddScoped<IAdministratorStore, SqlAdministratorStore>();
+        builder.Services.AddScoped<AdministratorCookieEvents>();
+        builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
+        {
+            options.Cookie.Name = "FaithTech.Admin";
+            options.Cookie.Path = "/api/admin";
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            options.Cookie.SameSite = SameSiteMode.Strict;
+            options.SlidingExpiration = false;
+            options.EventsType = typeof(AdministratorCookieEvents);
+        });
+        builder.Services.AddAuthorization();
         var app = builder.Build();
+        app.Use(async (context, next) =>
+        {
+            context.Response.Headers.CacheControl = "no-store";
+            context.Response.Headers.XContentTypeOptions = "nosniff";
+            await next();
+        });
+        app.UseAuthentication();
+        app.UseAuthorization();
         app.MapControllers();
         app.Run();
     }

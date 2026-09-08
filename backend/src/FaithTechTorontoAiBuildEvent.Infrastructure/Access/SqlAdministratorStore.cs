@@ -1,0 +1,37 @@
+using FaithTechTorontoAiBuildEvent.Application.Access;
+using FaithTechTorontoAiBuildEvent.Domain.Access;
+using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+
+namespace FaithTechTorontoAiBuildEvent.Infrastructure.Access;
+
+public sealed class SqlAdministratorStore(EventDbContext db, UserManager<AdministratorAccount> users)
+    : IAdministratorStore
+{
+    public async Task<Guid?> VerifyCredentials(string username, string password, CancellationToken cancellationToken)
+    {
+        var account = await users.FindByNameAsync(username.Trim());
+        if (account is null || !await users.CheckPasswordAsync(account, password)) return null;
+        return account.Enabled && await users.IsInRoleAsync(account, "Administrator") ? account.Id : null;
+    }
+
+    public async Task<bool> IsEnabledAdministrator(Guid id, CancellationToken cancellationToken)
+    {
+        var account = await users.FindByIdAsync(id.ToString());
+        return account is { Enabled: true } && await users.IsInRoleAsync(account, "Administrator");
+    }
+
+    public Task<AdministratorSession?> FindSession(Guid id, CancellationToken cancellationToken) =>
+        db.AdministratorSessions.SingleOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+    public async Task SaveSession(AdministratorSession session, CancellationToken cancellationToken)
+    {
+        if (db.Entry(session).State == EntityState.Detached) db.AdministratorSessions.Add(session);
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    public Task<DateTimeOffset> GetUtcNow(CancellationToken cancellationToken) =>
+        db.Database.SqlQuery<DateTimeOffset>($"SELECT TODATETIMEOFFSET(SYSUTCDATETIME(), '+00:00') AS Value")
+            .SingleAsync(cancellationToken);
+}
