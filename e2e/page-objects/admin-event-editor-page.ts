@@ -2,6 +2,18 @@ import { expect, type Page } from '@playwright/test';
 
 export class AdminEventEditorPage {
   constructor(private readonly page: Page) {}
+  async editContent(title: string, venue: string, waiting: string) {
+    await this.page.getByLabel('Event title', { exact: true }).fill(title);
+    await this.page.getByLabel('Venue name', { exact: true }).fill(venue);
+    await this.page.getByLabel('Waiting content', { exact: true }).fill(waiting);
+  }
+  async save() { await this.page.getByRole('button', { name: 'Save draft', exact: true }).click(); }
+  async expectSaved() { await expect(this.page.getByRole('status')).toHaveText('Draft saved.'); }
+  async returnToEvents() { await this.page.getByRole('link', { name: 'All events' }).click(); }
+  async expectContent(venue: string, waiting: string) {
+    await expect(this.page.getByLabel('Venue name', { exact: true })).toHaveValue(venue);
+    await expect(this.page.getByLabel('Waiting content', { exact: true })).toHaveValue(waiting);
+  }
   async expectDraft(title: string) {
     await expect(this.page.getByRole('heading', { name: 'The details make it yours.' })).toBeVisible();
     await expect(this.page.getByLabel('Event title', { exact: true })).toHaveValue(title);

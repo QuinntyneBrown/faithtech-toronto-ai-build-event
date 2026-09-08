@@ -9,3 +9,4 @@ export * from './lib/events/event-service.token';
 export * from './lib/events/event.service';
 export * from './lib/events/event-input';
 export * from './lib/events/event-detail';
+export * from './lib/events/event-failure';

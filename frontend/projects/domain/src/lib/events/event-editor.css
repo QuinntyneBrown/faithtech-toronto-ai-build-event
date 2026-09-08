@@ -1,1 +1,7 @@
 :host { display: block; }
+fieldset { border: none; padding: var(--cs-zero); margin: var(--cs-zero); min-width: var(--cs-zero); }
+legend { margin-bottom: var(--cs-space-4); font-weight: var(--cs-weight-medium); }
+.columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(var(--cs-full), var(--cs-grid-min)), 1fr)); gap: var(--cs-space-5); }
+label { display: block; margin-bottom: var(--cs-space-4); }
+button { margin-top: var(--cs-space-5); }
+[role="alert"] { color: var(--cs-error); margin-top: var(--cs-space-4); }

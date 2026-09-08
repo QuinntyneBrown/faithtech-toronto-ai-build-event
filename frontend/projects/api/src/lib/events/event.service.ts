@@ -3,12 +3,25 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { EventSummary } from './event-summary';
 import { EventDetail } from './event-detail';
+import { EventInput } from './event-input';
+import { EventFailure } from './event-failure';
 import { IEventService } from './event-service.contract';
 import { ServiceFailure } from '../access/service-failure';
 
 @Injectable()
 export class EventService implements IEventService {
   private readonly http = inject(HttpClient);
+  async saveDraft(id: string, input: EventInput, version: string, operationId: string): Promise<EventDetail> {
+    try {
+      const token = await firstValueFrom(this.http.get<{requestToken: string}>('/api/admin/antiforgery'));
+      return await firstValueFrom(this.http.put<EventDetail>(`/api/admin/events/${encodeURIComponent(id)}`, input, {
+        headers: { 'X-CSRF-TOKEN': token.requestToken, 'Idempotency-Key': operationId, 'If-Match': `"${version}"` },
+      }));
+    } catch (error) {
+      if (error instanceof HttpErrorResponse) throw new EventFailure(error.status, error.error?.code, error.error?.errors, error.error?.current);
+      throw new EventFailure(0);
+    }
+  }
   async get(id: string): Promise<EventDetail> {
     try { return await firstValueFrom(this.http.get<EventDetail>(`/api/admin/events/${encodeURIComponent(id)}`)); }
     catch (error) { throw new ServiceFailure(error instanceof HttpErrorResponse ? error.status : 0); }

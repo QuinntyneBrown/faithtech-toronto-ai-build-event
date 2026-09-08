@@ -1,5 +1,22 @@
 @if (detail(); as event) {
   <p>{{ event.published ? 'Published' : 'Draft' }}</p>
-  <section class="card"><h2>Event essentials</h2><label>Event title<input [value]="event.title || ''" readonly></label></section>
+  @if (draft(); as values) {
+    <form (ngSubmit)="save()" novalidate>
+      <fieldset [disabled]="busy() || uncertain()"><legend>Event configuration</legend><div class="columns">
+        <section class="card"><h2>Event essentials</h2><label>Event title<input name="title" [ngModel]="values.title" (ngModelChange)="change('title', $event)"></label>
+          <label>Waiting content<textarea name="waitingContent" [ngModel]="values.waitingContent" (ngModelChange)="change('waitingContent', $event)"></textarea></label>
+          <label>Closing content<textarea name="closingContent" [ngModel]="values.closingContent" (ngModelChange)="change('closingContent', $event)"></textarea></label>
+          <p>Leave content blank to use neutral waiting and thank-you messages.</p></section>
+        <section class="card"><h2>A place to gather</h2><label>Venue name<input name="venueName" [ngModel]="values.venueName" (ngModelChange)="change('venueName', $event)"></label>
+          <label>Venue address<textarea name="address" [ngModel]="values.address" (ngModelChange)="change('address', $event)"></textarea></label>
+          <label>Latitude<input name="latitude" type="number" step="any" [ngModel]="values.latitude" (ngModelChange)="change('latitude', $event)"></label>
+          <label>Longitude<input name="longitude" type="number" step="any" [ngModel]="values.longitude" (ngModelChange)="change('longitude', $event)"></label>
+          <label>Directions link<input name="directionsUrl" type="url" [ngModel]="values.directionsUrl" (ngModelChange)="change('directionsUrl', $event)"></label></section>
+      </div></fieldset>
+      @if (error()) { <p role="alert">{{ error() }}</p> }
+      @if (saved()) { <p role="status">Draft saved.</p> }
+      <button type="submit" [disabled]="busy()">{{ uncertain() ? 'Retry save' : 'Save draft' }}</button>
+    </form>
+  }
 } @else if (error()) { <p role="alert">{{ error() }}</p><button (click)="load()">Retry</button> }
 @else { <p role="status">Loading event…</p> }

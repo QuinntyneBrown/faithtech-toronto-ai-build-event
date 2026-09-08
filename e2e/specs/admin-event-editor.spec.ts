@@ -15,3 +15,22 @@ test('L2-047/AC1: given a saved draft, opening it shows its current configuratio
   await events.openEvent('Toronto build night');
   await new AdminEventEditorPage(page).expectDraft('Toronto build night');
 });
+
+test('L2-001/AC1: given an incomplete draft, saving content retains it when reopened', async ({ page }) => {
+  const access = new AdminAccessPage(page);
+  await access.open();
+  await access.signIn('host@example.com', 'host-demo');
+  await new AdminSessionPage(page).expectSignedIn();
+  const events = new AdminEventsPage(page);
+  await events.open();
+  await events.createDraft('Toronto build night');
+  await events.openEvent('Toronto build night');
+  const editor = new AdminEventEditorPage(page);
+  await editor.editContent('Updated event', 'Toronto venue', 'Welcome, builders.');
+  await editor.save();
+  await editor.expectSaved();
+  await editor.returnToEvents();
+  await events.openEvent('Updated event');
+  await editor.expectDraft('Updated event');
+  await editor.expectContent('Toronto venue', 'Welcome, builders.');
+});
