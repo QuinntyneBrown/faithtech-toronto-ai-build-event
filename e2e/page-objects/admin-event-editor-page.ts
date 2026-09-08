@@ -34,7 +34,11 @@ export class AdminEventEditorPage {
     await this.page.setViewportSize({ width, height: 1000 });
     const results = await new AxeBuilder({ page: this.page }).analyze();
     expect(results.violations).toEqual([]);
-    expect(await this.page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    const overflow = await this.page.evaluate(() => Array.from(document.querySelectorAll('body *'))
+      .filter(element => element.getBoundingClientRect().right > innerWidth)
+      .map(element => ({ tag: element.tagName, name: element.getAttribute('name'),
+        right: element.getBoundingClientRect().right, width: element.getBoundingClientRect().width })));
+    expect(await this.page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), JSON.stringify(overflow)).toBe(true);
   }
   async capture(path: string) { await this.page.screenshot({ path, fullPage: true }); }
   async setTimes(timezone: string, start: string, end: string) {
