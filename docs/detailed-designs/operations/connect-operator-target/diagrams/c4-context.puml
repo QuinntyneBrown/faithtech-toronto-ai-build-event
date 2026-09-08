@@ -1,0 +1,10 @@
+@startuml
+title Connect to an explicit operator target - context
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+Person(op, "Database operator", "Runs approved local operations")
+System(cli, "FaithTech operator CLI", "Resolve and authenticate a named SQL target")
+System_Ext(platform, "FaithTech event platform", "Azure SQL data and API consumers")
+Rel(op, cli, "Uses", "Terminal")
+Rel(cli, platform, "Reads or changes persisted data", "Encrypted SQL")
+@enduml
