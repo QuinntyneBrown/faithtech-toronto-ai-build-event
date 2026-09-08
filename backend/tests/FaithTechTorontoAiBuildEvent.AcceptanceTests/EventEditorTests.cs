@@ -6,6 +6,39 @@ namespace FaithTechTorontoAiBuildEvent.AcceptanceTests;
 
 public sealed class EventEditorTests(EventApiFactory factory) : IClassFixture<EventApiFactory>
 {
+    [Fact, Trait("Requirement", "L2-001/AC1;L2-001/AC6;L2-040/AC1")]
+    public async Task Given_incomplete_configuration_when_saved_then_content_is_normalized_and_invalid_directions_preserve_the_draft()
+    {
+        using var client = await factory.AdministratorBrowser();
+        var first = await Create(client, "Original");
+        var path = $"/api/admin/events/{first.GetProperty("id").GetGuid()}";
+        using var request = new HttpRequestMessage(HttpMethod.Put, path) { Content = JsonContent.Create(new {
+            title = "  Updated  ", venueName = "  Toronto venue  ", address = "  One street  ", latitude = 43.65, longitude = -79.38,
+            waitingContent = "  Welcome\r\n<script>plain text</script>  ", closingContent = " Thank you ", directionsUrl = " https://example.org/directions " }) };
+        request.Headers.Add("If-Match", $"\"{first.GetProperty("version").GetString()}\"");
+        var saved = await client.SendAsync(request);
+        saved.EnsureSuccessStatusCode();
+        var detail = await client.GetFromJsonAsync<JsonElement>(path);
+        Assert.Equal("Toronto venue", detail.GetProperty("venueName").GetString());
+        Assert.Equal("One street", detail.GetProperty("address").GetString());
+        Assert.Equal(43.65, detail.GetProperty("latitude").GetDouble());
+        Assert.Equal(-79.38, detail.GetProperty("longitude").GetDouble());
+        Assert.Equal("Welcome\n<script>plain text</script>", detail.GetProperty("waitingContent").GetString());
+        Assert.Equal("Thank you", detail.GetProperty("closingContent").GetString());
+        Assert.Equal("https://example.org/directions", detail.GetProperty("directionsUrl").GetString());
+        foreach (var url in new[] { "http://example.org", "/relative", "https://user:password@example.org" })
+        {
+            using var invalid = new HttpRequestMessage(HttpMethod.Put, path) { Content = JsonContent.Create(new { directionsUrl = url }) };
+            invalid.Headers.Add("If-Match", $"\"{detail.GetProperty("version").GetString()}\"");
+            invalid.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString());
+            var rejected = await client.SendAsync(invalid);
+            Assert.Equal(HttpStatusCode.UnprocessableEntity, rejected.StatusCode);
+            var problem = await rejected.Content.ReadFromJsonAsync<JsonElement>();
+            Assert.True(problem.GetProperty("errors").TryGetProperty("directionsUrl", out _));
+        }
+        Assert.Equal(detail.ToString(), (await client.GetFromJsonAsync<JsonElement>(path)).ToString());
+    }
+
     [Fact, Trait("Requirement", "L2-001/AC1;L2-044/AC4;L2-044/AC6")]
     public async Task Given_two_editors_when_one_saves_then_stale_writes_fail_and_committed_retries_return_the_original_result()
     {

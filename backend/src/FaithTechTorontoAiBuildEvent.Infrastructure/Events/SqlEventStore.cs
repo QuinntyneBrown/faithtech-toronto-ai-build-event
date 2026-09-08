@@ -11,10 +11,10 @@ namespace FaithTechTorontoAiBuildEvent.Infrastructure.Events;
 
 public sealed class SqlEventStore(EventDbContext db) : IEventStore
 {
-    public async Task<EventSummary> SaveDraft(SaveEventCommand command, CancellationToken cancellationToken)
+    public async Task<EventDetail> SaveDraft(SaveEventCommand command, CancellationToken cancellationToken)
     {
         var target = $"PUT /api/admin/events/{command.EventId}";
-        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { target, command.Title, command.Version }))));
+        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { target, command.Input, command.Version }))));
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         var resource = $"event:{command.EventId}";
         await db.Database.ExecuteSqlInterpolatedAsync($"DECLARE @result int; EXEC @result = sp_getapplock @Resource={resource}, @LockMode='Exclusive', @LockOwner='Transaction', @LockTimeout=5000; IF @result < 0 THROW 51000, 'Operation unavailable', 1;", cancellationToken);
@@ -23,13 +23,16 @@ public sealed class SqlEventStore(EventDbContext db) : IEventStore
         if (receipt is not null)
         {
             if (receipt.PayloadHash != hash) throw new OperationConflictException();
-            return JsonSerializer.Deserialize<EventSummary>(receipt.Result)!;
+            return JsonSerializer.Deserialize<EventDetail>(receipt.Result)!;
         }
-        var current = new EventSummary(item.Id, item.Title, item.Published, item.UseLiturgy, Convert.ToBase64String(db.Entry(item).Property<byte[]>("Version").CurrentValue!));
+        var current = Detail(item);
         if (current.Version != command.Version) throw new StaleVersionException(current);
-        item.Title = command.Title;
+        var input = command.Input;
+        item.Title = input.Title; item.VenueName = input.VenueName; item.Address = input.Address;
+        item.Latitude = input.Latitude; item.Longitude = input.Longitude;
+        item.WaitingContent = input.WaitingContent; item.ClosingContent = input.ClosingContent; item.DirectionsUrl = input.DirectionsUrl;
         await db.SaveChangesAsync(cancellationToken);
-        var result = current with { Title = item.Title, Version = Convert.ToBase64String(db.Entry(item).Property<byte[]>("Version").CurrentValue!) };
+        var result = Detail(item);
         var now = await db.Database.SqlQuery<DateTimeOffset>($"SELECT TODATETIMEOFFSET(SYSUTCDATETIME(), '+00:00') AS Value").SingleAsync(cancellationToken);
         db.OperationReceipts.Add(new() { ActorId = command.ActorId, EventId = item.Id, OperationId = command.OperationId,
             Target = target, PayloadHash = hash, Result = JsonSerializer.Serialize(result), CommittedAtUtc = now });
@@ -39,10 +42,15 @@ public sealed class SqlEventStore(EventDbContext db) : IEventStore
         return result;
     }
 
-    public Task<EventSummary?> GetEvent(Guid eventId, CancellationToken cancellationToken) =>
-        db.Events.AsNoTracking().Where(x => x.Id == eventId)
-            .Select(x => new EventSummary(x.Id, x.Title, x.Published, x.UseLiturgy, Convert.ToBase64String(EF.Property<byte[]>(x, "Version"))))
-            .SingleOrDefaultAsync(cancellationToken);
+    private EventDetail Detail(BuildEvent item) => new(item.Id, item.Title, item.Published, item.UseLiturgy,
+        Convert.ToBase64String(db.Entry(item).Property<byte[]>("Version").CurrentValue!), item.VenueName, item.Address,
+        item.Latitude, item.Longitude, item.WaitingContent, item.ClosingContent, item.DirectionsUrl);
+
+    public async Task<EventDetail?> GetEvent(Guid eventId, CancellationToken cancellationToken)
+    {
+        var item = await db.Events.SingleOrDefaultAsync(x => x.Id == eventId, cancellationToken);
+        return item is null ? null : Detail(item);
+    }
 
     public async Task<EventSummary> CreateDraft(Guid actorId, Guid operationId, string? title, CancellationToken cancellationToken)
     {

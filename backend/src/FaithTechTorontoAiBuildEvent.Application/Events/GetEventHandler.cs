@@ -2,8 +2,8 @@ using MediatR;
 
 namespace FaithTechTorontoAiBuildEvent.Application.Events;
 
-public sealed class GetEventHandler(IEventStore store) : IRequestHandler<GetEventQuery, EventSummary?>
+public sealed class GetEventHandler(IEventStore store) : IRequestHandler<GetEventQuery, EventDetail?>
 {
-    public Task<EventSummary?> Handle(GetEventQuery request, CancellationToken cancellationToken) =>
+    public Task<EventDetail?> Handle(GetEventQuery request, CancellationToken cancellationToken) =>
         store.GetEvent(request.EventId, cancellationToken);
 }

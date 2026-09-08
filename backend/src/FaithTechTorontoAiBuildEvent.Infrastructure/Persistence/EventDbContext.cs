@@ -21,6 +21,11 @@ public sealed class EventDbContext(DbContextOptions<EventDbContext> options)
     {
         base.OnModelCreating(builder);
         builder.Entity<BuildEvent>().Property(x => x.Title).HasMaxLength(400);
+        builder.Entity<BuildEvent>().Property(x => x.VenueName).HasMaxLength(400);
+        builder.Entity<BuildEvent>().Property(x => x.Address).HasMaxLength(10000);
+        builder.Entity<BuildEvent>().Property(x => x.WaitingContent).HasMaxLength(10000);
+        builder.Entity<BuildEvent>().Property(x => x.ClosingContent).HasMaxLength(10000);
+        builder.Entity<BuildEvent>().Property(x => x.DirectionsUrl).HasMaxLength(4096);
         builder.Entity<BuildEvent>().Property<byte[]>("Version").IsRowVersion();
         builder.Entity<OperationReceipt>().HasIndex(x => new { x.ActorId, x.EventId, x.OperationId }).IsUnique().HasFilter(null);
         builder.Entity<OperationReceipt>().Property(x => x.Target).HasMaxLength(200);
