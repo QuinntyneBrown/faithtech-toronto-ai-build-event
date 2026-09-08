@@ -1,2 +1,6 @@
 # Private — internal run sheet, not for the repo
 docs/run-sheet.html
+node_modules/
+dist/
+test-results/
+playwright-report/

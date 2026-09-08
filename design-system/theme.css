@@ -1,0 +1,202 @@
+
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  font-family: var(--cs-font-body);
+  color: var(--cs-ink);
+  background: var(--cs-paper);
+}
+body {
+  margin: 0;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+a {
+  color: inherit;
+}
+:focus-visible {
+  outline: 3px solid var(--cs-focus);
+  outline-offset: 2px;
+}
+.cs-visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+.cs-button {
+  min-block-size: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cs-space-2);
+  border: 1px solid transparent;
+  border-radius: var(--cs-radius-pill);
+  padding: 0.65rem 1.15rem;
+  cursor: pointer;
+  font-weight: 650;
+  background: var(--cs-lime);
+  color: #16160c;
+}
+.cs-button--secondary {
+  border-color: var(--cs-border-strong);
+  background: transparent;
+  color: var(--cs-ink);
+}
+.cs-button--ghost,
+.cs-button--subtle {
+  background: transparent;
+  color: var(--cs-ink);
+}
+.cs-button--danger {
+  background: var(--cs-error);
+  color: Canvas;
+}
+.cs-button--small {
+  min-block-size: 2rem;
+  padding: 0.35rem 0.75rem;
+  font-size: var(--cs-text-sm);
+}
+.cs-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.cs-field {
+  display: grid;
+  gap: var(--cs-space-2);
+}
+.cs-label {
+  font-weight: 650;
+}
+.cs-hint {
+  color: var(--cs-ink-muted);
+  font-size: var(--cs-text-sm);
+}
+.cs-error {
+  color: var(--cs-error);
+  font-size: var(--cs-text-sm);
+}
+.cs-input,
+.cs-select,
+.cs-textarea {
+  inline-size: 100%;
+  min-block-size: 2.75rem;
+  border: 1px solid var(--cs-border-strong);
+  border-radius: var(--cs-radius-sm);
+  padding: 0.65rem 0.75rem;
+  background: var(--cs-paper);
+  color: var(--cs-ink);
+}
+.cs-card {
+  display: block;
+  border: 1px solid var(--cs-border);
+  border-radius: var(--cs-radius-md);
+  padding: var(--cs-space-5);
+  background: var(--cs-surface-raised);
+}
+.cs-card--raised {
+  box-shadow: var(--cs-shadow-md);
+}
+.cs-card--interactive {
+  cursor: pointer;
+  transition: box-shadow var(--cs-duration);
+}
+.cs-card--interactive:hover {
+  box-shadow: var(--cs-shadow-lg);
+}
+.cs-badge,
+.cs-pill {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 1.5rem;
+  border-radius: var(--cs-radius-pill);
+  padding: 0.15rem 0.55rem;
+  font-size: var(--cs-text-xs);
+  font-weight: 700;
+  background: var(--cs-surface);
+}
+.cs-alert {
+  border-inline-start: 4px solid currentColor;
+  border-radius: var(--cs-radius-sm);
+  padding: var(--cs-space-4);
+  background: var(--cs-surface);
+}
+.cs-tone--success {
+  color: var(--cs-success);
+}
+.cs-tone--warning {
+  color: var(--cs-warning);
+}
+.cs-tone--error {
+  color: var(--cs-error);
+}
+.cs-tone--info {
+  color: var(--cs-info);
+}
+.cs-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cs-gap, var(--cs-space-4));
+}
+.cs-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cs-gap, var(--cs-space-4));
+}
+.cs-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    var(--cs-columns, auto-fit),
+    minmax(min(100%, var(--cs-grid-min, 16rem)), 1fr)
+  );
+  gap: var(--cs-gap, var(--cs-space-4));
+}
+.cs-table-container {
+  max-inline-size: 100%;
+  overflow: auto;
+  border: 1px solid var(--cs-border);
+  border-radius: var(--cs-radius-md);
+}
+.cs-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.cs-table th,
+.cs-table td {
+  padding: var(--cs-space-3);
+  border-block-end: 1px solid var(--cs-border);
+  text-align: start;
+}
+.cs-skeleton {
+  display: block;
+  min-block-size: 1rem;
+  border-radius: var(--cs-radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--cs-surface) 25%,
+    var(--cs-border) 50%,
+    var(--cs-surface) 75%
+  );
+  background-size: 200% 100%;
+  animation: cs-shimmer 1.4s infinite;
+}
+@keyframes cs-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
