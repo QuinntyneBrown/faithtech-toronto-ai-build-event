@@ -10,18 +10,19 @@ The full implementation plan is **incomplete**. The participant application's
 route table is empty. Administrator functionality currently covers provisioned
 access, session management, draft creation/listing, and editing titles, venue
 details, coordinates, waiting/closing content, directions, timezone and dated
-event endpoints, validated venue logos, and the optional Use Liturgy setting.
-Publication, copying, roster management and activity configuration remain
+event endpoints, validated venue logos, the optional Use Liturgy setting, scheduled
+stages/content, and independent selection and demo presentation windows.
+Publication, copying, roster management and the remaining activity configuration remain
 unimplemented. Participant companion-link filtering and project URL storage remain
 unimplemented. Passing tests below establish only
 the implemented behaviors, not completion of any entire cross-cutting requirement.
 
-Latest verification on 8 September 2026: **58 API acceptance cases** against
-isolated SQL Server databases, **45 Playwright cases** with injected mock adapters,
+Latest verification on 8 September 2026: **65 API acceptance cases** against
+isolated SQL Server databases, **60 Playwright cases** with injected mock adapters,
 and successful builds of all .NET projects and all five Angular projects. Browser:
 Chrome **152.0.7977.76**, Windows ARM64. No performance/load acceptance is claimed.
 
-Continue with transactional stage/window configuration and roster management,
+Continue with remaining schedule acceptance and roster management,
 then participant access and explicit publication, followed by event copying.
 Continue through the entire ordered delivery queue below. Remaining shared work
 includes distributed notifications/outbox,
@@ -49,6 +50,9 @@ separate Azure deployment runbook being maintained alongside implementation.
 | Venue logo API | 24 additional API cases cover PNG/JPEG/WebP, exact 2 MiB and 4,096-pixel boundaries, malformed/mismatched uploads, all eight EXIF orientations, private serving, concurrent retry, stale replacement, authentication and antiforgery. Canonical PNG bytes, event version, receipt and audit commit together in SQL. |
 | Venue logo editor | Injected service upload and private preview, retained invalid selections, explicit stale recovery, lost-response retry, selection clearing, unsaved navigation, saved text/logo coexistence, and preview failure/retry pass browser acceptance. Branding is grouped with venue information. |
 | Optional companion setting | New drafts default off. Administrator enable/disable/re-enable survives API rereads and browser refreshes; another event keeps its default. Unauthorized writes fail. This does not establish participant link filtering, URL retention or connected-update behavior, which require the remaining project/participant implementation. |
+| Schedule persistence | Dated overnight stages retain stable identities through edits and deletion. Adjacent intervals are accepted; overlap is rejected. Schedule changes use the event version, transactional receipts and audit records; ordinary event edits cannot invalidate saved intervals. |
+| Schedule editor | Stage/content editing and independent selection/presentation windows survive save and refresh. Browser acceptance covers lost-response retry, explicit stale reapplication, unsaved navigation, dialog focus, and empty/populated/validation/overlay accessibility at ten widths. |
+| Schedule closure | SQL time determines elapsed published windows and events without a worker. Disabling an open or elapsed selection window preserves closure, and completed events cannot be extended into the future. Tests seed publication as their Given; no publication endpoint is delivered. |
 
 ## Event editor continuation
 
@@ -70,9 +74,15 @@ stored PNG with no-store caching and nosniff. Uploads are decoded with SkiaSharp
 content are not served. NuGet's vulnerability audit, including transitive packages,
 reported no known vulnerable packages on 8 September 2026. MediatR remains 12.5.0.
 
-The next acceptance increments must add schedule/window and participant-access
-checks, publication field errors and valid empty-schedule publication, then protect published edits
-and completed event/window boundaries. Publication must not be enabled until its
+`GET/PUT /api/admin/events/{id}/schedule` reads and atomically saves event timing,
+stages and independent activity windows, using the same expected-version and
+operation headers as event edits. The Angular schedule page consumes
+`SCHEDULE_SERVICE` and owns stage and unsaved-change dialogs.
+
+The next acceptance increments must complete schedule validation feedback with
+field-linked focus, quiz references and closure, the event preset, participant
+stage transitions, and participant-access checks. Publication field errors and
+valid empty-schedule publication also remain. Publication must not be enabled until its
 complete configuration and participant-access checks exist. Distributed
 invalidation, restart/restore verification and the remaining delivery groups are
 still required; no complete L2 requirement is declared satisfied by these slices.
