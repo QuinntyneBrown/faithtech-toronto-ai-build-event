@@ -9,7 +9,7 @@ try {
     & dotnet dev-certs https --export-path $certificate --password $password
     if ($LASTEXITCODE -ne 0) { throw 'Cannot create local HTTPS certificate.' }
     $connection = [System.Data.Common.DbConnectionStringBuilder]::new()
-    $connection.ConnectionString = $env:FAITHTECH_TEST_SQL
+    $connection.set_ConnectionString($env:FAITHTECH_TEST_SQL)
     $connection['Database'] = $database
     $env:ConnectionStrings__EventDatabase = $connection.ConnectionString
     $env:Security__DigestKey = [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
