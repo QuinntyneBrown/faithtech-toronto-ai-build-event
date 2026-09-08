@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Context - Configure events
+Person(actor, "Administrator", "configure events")
+System(system, "FaithTech event platform", "Save drafts, publish validated configuration, copy configuration only")
+Rel(actor, system, "Configure events", "HTTPS")
+@enduml

@@ -1,9 +1,22 @@
 # faith-tech-toronto-ai-build-event
 
-## Project
+## Project Overview
 
+Build a reusable web platform for live FaithTech build events, beginning with the
+September 9, 2026 Toronto AI Build Event. A participant-facing Angular client and
+an admin-only Angular application share a .NET API. Administrators configure
+events, participant access, schedules, content, venue branding, and activities.
+Participants enter with an email address and individual entry code, see a venue
+countdown, and move automatically through scheduled stages for team and project
+selection, building, networking and private messaging, quizzes, raffles, and demos.
+Project showcases and recaps retain repository and demo links after the event.
 
-
+The solution includes an independent, accessible, responsive, light-theme design
+system matching Cornerstone. Optional per-event Liturgy project links support
+continued work after events; this connection is disabled by default and for the
+September 9 event. Core event features work independently of Liturgy, which owns
+ongoing project management. Product scope and acceptance criteria live in
+[docs/prompt.md](docs/prompt.md) and [docs/specs/](docs/specs/).
 
 ## Speed Is Not the Goal
 
