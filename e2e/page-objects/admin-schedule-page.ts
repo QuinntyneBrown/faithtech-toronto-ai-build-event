@@ -19,15 +19,18 @@ export class AdminSchedulePage {
   }
   async expectWindowDisabled(kind: string) { await expect(this.page.getByRole('checkbox', { name: 'Enable ' + kind, exact: true })).not.toBeChecked(); }
   async expectError(message: string) { await expect(this.page.getByRole('alert')).toContainText(message); }
-  async followValidation(label: string, message: string, summaryLabel = label) {
+  async followValidation(label: string, message: string, summaryLabel = label, expectSummaryFocus = true) {
     const summary = this.page.getByRole('alert');
-    await expect(summary).toBeFocused();
+    if (expectSummaryFocus) await expect(summary).toBeFocused();
     await summary.getByRole('link', { name: summaryLabel + ': ' + message, exact: true }).click();
     const field = this.page.getByLabel(label, { exact: true });
     await expect(field).toBeFocused();
     await expect(field).toHaveAttribute('aria-invalid', 'true');
     await expect(field).toHaveAccessibleDescription(message);
   }
+  async removeStage(name: string) { await this.page.getByRole('button', { name: 'Remove ' + name, exact: true }).click(); }
+  async expectNoValidation() { await expect(this.page.getByRole('alert')).toHaveCount(0); }
+  async expectStagesHeadingFocused() { await expect(this.page.getByRole('heading', { name: 'Stages and content', exact: true })).toBeFocused(); }
   async correctStageStart(local: string) {
     await this.page.getByLabel('Stage start', { exact: true }).fill(local);
     await this.page.getByRole('button', { name: 'Apply stage', exact: true }).click();

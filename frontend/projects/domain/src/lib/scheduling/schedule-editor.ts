@@ -55,12 +55,23 @@ export class ScheduleEditor implements OnInit {
   readonly conflict = signal<ScheduleDetail | null>(null);
   private operationId = crypto.randomUUID();
   hasUnsavedChanges() { return this.busy() || this.uncertain() || JSON.stringify(this.draft()) !== JSON.stringify(this.detail()); }
-  change<K extends keyof ScheduleInput>(field: K, value: ScheduleInput[K]) { this.draft.update(draft => draft ? { ...draft, [field]: value } : null); this.saved.set(false); }
+  change<K extends keyof ScheduleInput>(field: K, value: ScheduleInput[K]) {
+    this.draft.update(draft => draft ? { ...draft, [field]: value } : null); this.saved.set(false);
+    if ((field === 'selection' || field === 'presentation') && value === null) this.clearErrors(field + '.');
+  }
+  private clearErrors(prefix: string) {
+    if (!Object.keys(this.errors()).some(key => key.startsWith(prefix))) return;
+    this.errors.update(errors => Object.fromEntries(Object.entries(errors).filter(([key]) => !key.startsWith(prefix))));
+    if (!Object.keys(this.errors()).length) this.error.set('');
+  }
   time(field: 'start' | 'end', local: string) { this.change(field, local ? { local, offsetMinutes: null } : null); }
   offset(field: 'start' | 'end', offsetMinutes: number | null) { const time = this.draft()?.[field]; if (time) this.change(field, { ...time, offsetMinutes }); }
   add() { this.editStage.emit({ id: crypto.randomUUID(), name: '', phase: '', screenType: 'information', content: '', resourceUrl: null, start: this.draft()?.start ?? null, end: this.draft()?.end ?? null }); }
   applyStage(stage: StageInput) { const stages = this.draft()?.stages ?? []; this.change('stages', stages.some(x => x.id === stage.id) ? stages.map(x => x.id === stage.id ? stage : x) : [...stages, stage]); }
-  remove(id: string) { this.change('stages', this.draft()!.stages.filter(x => x.id !== id)); }
+  remove(id: string) {
+    this.change('stages', this.draft()!.stages.filter(x => x.id !== id)); this.clearErrors(`stage.${id}.`);
+    afterNextRender(() => this.host.nativeElement.querySelector<HTMLElement>('#schedule-stages')?.focus(), { injector: this.injector });
+  }
   reapply() { const current = this.conflict(); if (current) this.detail.set(current); this.conflict.set(null); this.error.set(''); this.operationId = crypto.randomUUID(); }
   useCurrent() { const current = this.conflict(); this.reapply(); if (current) this.draft.set(current); }
   ngOnInit() { void this.load(); }

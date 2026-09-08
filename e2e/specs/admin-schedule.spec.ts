@@ -52,6 +52,28 @@ test('L2-036/AC2: given invalid stage timing, the summary opens the affected sta
   expect([...schedules.schedules.values()][0].stages[1].start?.local).toBe('2026-09-10T00:05');
 });
 
+test('L2-036: given a stage error, removing an earlier stage keeps its identity and removing the affected stage clears feedback', async ({ page, schedules }) => {
+  const schedule = await openSchedule(page);
+  await schedule.setEventTimes('UTC', '2026-09-09T23:00', '2026-09-10T01:00');
+  await schedule.addStage('Arrival', '2026-09-09T23:00', '2026-09-10T00:00', 'Welcome');
+  await schedule.addStage('Build', '2026-09-10T00:00', '2026-09-10T01:00', 'Retained');
+  schedules.validationErrors = { 'stages[1].start': ['Correct the stage start.'] };
+  await schedule.save(); await schedule.expectError('Correct the stage start.'); await schedule.removeStage('Arrival');
+  await schedule.followValidation('Stage start', 'Correct the stage start.', 'Build — Stage start', false);
+  await schedule.cancelStage(); await schedule.removeStage('Build');
+  await schedule.expectNoValidation(); await schedule.expectStagesHeadingFocused();
+  schedules.validationErrors = null; await schedule.save(); await schedule.expectSaved();
+});
+
+test('L2-036: given an invalid window, disabling it removes feedback for the removed controls', async ({ page, schedules }) => {
+  const schedule = await openSchedule(page);
+  await schedule.setEventTimes('UTC', '2026-09-09T23:00', '2026-09-10T01:00');
+  await schedule.setWindow('selection', '2026-09-09T23:15', '2026-09-10T00:15');
+  schedules.validationErrors = { 'selection.end': ['Correct the window.'] };
+  await schedule.save(); await schedule.expectError('Correct the window.'); await schedule.disableWindow('selection');
+  await schedule.expectNoValidation();
+});
+
 test('L2-044: given a lost schedule response, retry confirms one committed save', async ({ page, schedules }) => {
   const schedule = await openSchedule(page);
   await schedule.setEventTimes('UTC', '2026-09-09T23:00', '2026-09-10T01:00'); schedules.loseNextResponse = true;
