@@ -1,0 +1,52 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam classBackgroundColor #F9FAFB
+skinparam classBorderColor #344054
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+title Structure - Validate input and enforce abuse limits
+interface IRequestFeedbackService {
+  +state: Signal<ValidationResult>
+  +refresh(): Promise<void>
+}
+class RequestFeedbackService {
+  -http: HttpClient
+  +refresh(): Promise<void>
+}
+class ValidateRequestsHandler {
+  -store: IEventStore
+  +Handle(request: ValidateRequestInput): Task<ValidationResult>
+}
+interface IEventStore {
+  +LoadAuthorized(scope: ActorEventScope): Task<ValidationResult>
+  +Commit(intent: OperationContext): Task<CommitResult>
+}
+class ValidationResult {
+  +Accepted: bool
+  +Errors: FieldError[]
+  +RetryAfterSeconds: int?
+  +ToProblemDetails(correlationId: string): ProblemDetails
+}
+RequestFeedbackService ..|> IRequestFeedbackService
+ValidateRequestsHandler --> IEventStore : queries / commits through
+ValidateRequestsHandler --> ValidationResult : enforces policy on
+class AttemptWindow {
+  +KeyDigest: byte[]
+  +Kind: LimitKind
+  +AcceptedOrFailedAtUtc: DateTimeOffset[]
+  +Evaluate(now: DateTimeOffset): LimitDecision
+}
+class ValidatedLogo {
+  +MediaType: string
+  +Bytes: byte[]
+  +Width: int
+  +Height: int
+}
+ValidationResult ..> AttemptWindow : throttle decision
+ValidationResult ..> ValidatedLogo : accepted upload result
+
+@enduml

@@ -1,0 +1,9 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Context - Validate input and enforce abuse limits
+Person(actor, "Participant and administrator", "validate requests")
+System(system, "FaithTech event platform", "Validate literal content and enforce shared rolling limits before side effects")
+Rel(actor, system, "Validate requests", "HTTPS")
+
+@enduml
