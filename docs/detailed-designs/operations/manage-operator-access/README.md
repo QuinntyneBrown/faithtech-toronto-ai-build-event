@@ -65,3 +65,11 @@ Only first completion returns the new code; a committed retry never rotates cred
 Account mutation and session revocation share one operator transaction.
 
 ![Manage roster credentials and administrator access: create or disable administrator](diagrams/sequence-administrator.png)
+
+## Current administrator command increment
+
+L2-061 and L2-062 define the implemented account-command path separately from the planned operator protocol above. `AddUserCommand` selects the documented default only when both protected password options are absent. `AdministratorPasswordInput` rejects conflicting options, EOF, empty input, and redirected masked prompts. `ProvisionAdministratorHandler` dispatches creation through the existing `IAdministratorProvisioner` port.
+
+`ResetPasswordCommand` selects one username or all accounts and requires explicit protected password input. `ResetAdministratorPasswordsHandler` dispatches to `SqlAdministratorProvisioner`. The store validates Identity passwords, updates hashes and stamps, and revokes administrator sessions within one SQL transaction. Roles, enabled flags, and participant credentials remain unchanged. The store returns affected usernames only after commit.
+
+Both commands use the existing protected connection configuration. `OperatorExecution` reports resolved database identity before account mutation and redacts failures. This increment does not claim named targets, previews, durable receipts, or automatic reconciliation. A lost connection or cancellation requires state inspection before retry.

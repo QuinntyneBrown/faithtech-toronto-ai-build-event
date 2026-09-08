@@ -10,6 +10,8 @@ public sealed class SqlAdministratorProvisioner(EventDbContext db, UserManager<A
 {
     public async Task<Guid> Provision(string username, string password, CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(username) || username.Length > 256 || string.IsNullOrEmpty(password) || password.Length > 1024)
+            throw new InvalidOperationException("Invalid administrator input.");
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await db.Database.ExecuteSqlRawAsync(
             "EXEC sp_getapplock @Resource='administrator-provisioning', @LockMode='Exclusive', @LockOwner='Transaction'", cancellationToken);
