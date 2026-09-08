@@ -15,13 +15,20 @@ export class EventEditor implements OnInit {
   readonly uncertain = signal(false);
   readonly saved = signal(false);
   readonly errors = signal<Record<string, string[]>>({});
+  readonly conflict = signal<EventDetail | null>(null);
+  reapply() {
+    const current = this.conflict();
+    if (current) this.detail.set(current);
+    this.conflict.set(null); this.error.set(''); this.operationId = crypto.randomUUID();
+  }
+  reloadCurrent() { const current = this.conflict(); this.reapply(); if (current) this.draft.set(current); }
   private operationId = crypto.randomUUID();
   change(field: keyof EventInput, value: string | number | null) {
     this.draft.update(draft => draft ? { ...draft, [field]: value } : null); this.saved.set(false);
   }
   async save() {
     const draft = this.draft(), current = this.detail();
-    if (!draft || !current || this.busy()) return;
+    if (!draft || !current || this.busy() || this.conflict()) return;
     this.busy.set(true); this.error.set(''); this.errors.set({}); this.saved.set(false);
     try {
       const result = await this.service.saveDraft(current.id, draft, current.version, this.operationId);
@@ -30,7 +37,11 @@ export class EventEditor implements OnInit {
     } catch (error) {
       if (error instanceof ServiceFailure && error.status === 401) this.denied.emit();
       else if (error instanceof EventFailure && error.status === 422) {
-        this.errors.set(error.errors); this.error.set('Check the highlighted fields. Your changes are retained.'); this.operationId = crypto.randomUUID();
+        this.uncertain.set(false); this.errors.set(error.errors); this.error.set('Check the highlighted fields. Your changes are retained.'); this.operationId = crypto.randomUUID();
+      } else if (error instanceof EventFailure && error.code === 'stale-version' && error.current) {
+        this.uncertain.set(false); this.conflict.set(error.current); this.error.set('Another administrator saved changes. Compare the current values before reapplying yours.');
+      } else if (error instanceof ServiceFailure && error.status >= 400 && error.status < 500) {
+        this.uncertain.set(false); this.operationId = crypto.randomUUID(); this.error.set('The save was rejected. Your changes are retained; check your access and reload before retrying.');
       } else { this.uncertain.set(true); this.error.set('The save could not be confirmed. Retry this save to check its outcome.'); }
     } finally { this.busy.set(false); }
   }

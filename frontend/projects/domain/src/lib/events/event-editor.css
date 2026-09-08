@@ -5,3 +5,8 @@ legend { margin-bottom: var(--cs-space-4); font-weight: var(--cs-weight-medium);
 label { display: block; margin-bottom: var(--cs-space-4); }
 button { margin-top: var(--cs-space-5); }
 [role="alert"] { color: var(--cs-error); margin-top: var(--cs-space-4); }
+.field-error { color: var(--cs-error); display: block; font-weight: var(--cs-weight-body); }
+[aria-invalid="true"] { border-color: var(--cs-error); }
+dd { margin: var(--cs-zero) var(--cs-zero) var(--cs-space-3); white-space: pre-wrap; overflow-wrap: anywhere; }
+dt { font-weight: var(--cs-weight-medium); }
+.actions { display: flex; flex-wrap: wrap; gap: var(--cs-space-3); }
