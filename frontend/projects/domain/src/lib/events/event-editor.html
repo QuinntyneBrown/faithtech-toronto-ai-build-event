@@ -2,7 +2,7 @@
   <p>{{ event.published ? 'Published' : 'Draft' }}</p>
   @if (draft(); as values) {
     <form (ngSubmit)="save()" novalidate>
-      <fieldset [disabled]="busy() || uncertain()"><legend>Event configuration</legend><div class="columns">
+      <fieldset [disabled]="busy() || uncertain() || logoPending()"><legend>Event configuration</legend><div class="columns">
         <div class="stack"><section class="card"><h2>Event essentials</h2><label>Event title<input name="title" [attr.aria-invalid]="errors()['title'] ? 'true' : null" [attr.aria-describedby]="errors()['title'] ? 'title-error' : null" [ngModel]="values.title" (ngModelChange)="change('title', $event)"></label><span class="field-error" id="title-error">{{ errors()['title']?.join(' ') }}</span>
           <label>Timezone<input name="timezone" placeholder="America/Toronto" [ngModel]="values.timezone" (ngModelChange)="change('timezone', $event)" [attr.aria-invalid]="errors()['timezone'] ? 'true' : null" aria-describedby="timezone-error"></label>
           <span class="field-error" id="timezone-error">{{ errors()['timezone']?.join(' ') }}</span>
@@ -38,8 +38,9 @@
         </section>
       }
       @if (saved()) { <p role="status">Draft saved.</p> }
-      <button type="submit" [disabled]="busy() || !!conflict()">{{ uncertain() ? 'Retry save' : 'Save draft' }}</button>
+      <button type="submit" [disabled]="busy() || !!conflict() || logoPending()">{{ uncertain() ? 'Retry save' : 'Save draft' }}</button>
     </form>
+    <ft-event-logo-editor [event]="event" [blocked]="busy() || uncertain() || !!conflict() || draftChanged()" (saved)="logoSaved($event)" (denied)="denied.emit()" />
   }
 } @else if (error()) { <p role="alert">{{ error() }}</p><button (click)="load()">Retry</button> }
 @else { <p role="status">Loading event…</p> }

@@ -17,6 +17,22 @@ async function openEditor(page: Page) {
   return new AdminEventEditorPage(page);
 }
 
+test('L2-001/040: given a venue image, upload saves and displays the accepted logo', async ({ page }) => {
+  const editor = await openEditor(page);
+  const image = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==', 'base64');
+  await editor.chooseLogo('venue.png', 'image/png', image);
+  await editor.uploadLogo();
+  await editor.expectLogoSaved();
+});
+
+test('L2-040: given an unsupported venue logo, upload shows a field error', async ({ page, events }) => {
+  const editor = await openEditor(page);
+  await editor.chooseLogo('venue.svg', 'image/svg+xml', Buffer.from('<svg/>'));
+  await editor.uploadLogo();
+  await editor.expectLogoError('PNG, JPEG or WebP');
+  expect(events.saves).toBe(0);
+});
+
 test('L2-040: given Unicode event text, client limits count normalized scalar values', async ({ page, events }) => {
   const editor = await openEditor(page);
   await editor.editContent('😀'.repeat(201), 'Venue', 'Welcome');

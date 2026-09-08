@@ -3,6 +3,17 @@ import AxeBuilder from '@axe-core/playwright';
 
 export class AdminEventEditorPage {
   constructor(private readonly page: Page) {}
+  async chooseLogo(name: string, mimeType: string, buffer: Buffer) {
+    await this.page.getByLabel('Venue logo', { exact: true }).setInputFiles({ name, mimeType, buffer });
+  }
+  async uploadLogo() { await this.page.getByRole('button', { name: 'Upload logo', exact: true }).click(); }
+  async expectLogoSaved() {
+    await expect(this.page.getByText('Logo saved.', { exact: true })).toBeVisible();
+    const logo = this.page.getByRole('img', { name: 'Saved venue logo' });
+    await expect(logo).toBeVisible();
+    await expect.poll(() => logo.evaluate((element: HTMLImageElement) => element.naturalWidth)).toBeGreaterThan(0);
+  }
+  async expectLogoError(message: string) { await expect(this.page.getByRole('alert')).toContainText(message); }
   async expectAccessible(width: number) {
     await this.page.setViewportSize({ width, height: 1000 });
     const results = await new AxeBuilder({ page: this.page }).analyze();

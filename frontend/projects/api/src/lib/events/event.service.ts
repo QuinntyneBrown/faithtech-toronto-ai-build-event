@@ -11,6 +11,22 @@ import { ServiceFailure } from '../access/service-failure';
 @Injectable()
 export class EventService implements IEventService {
   private readonly http = inject(HttpClient);
+  async getLogo(id: string): Promise<Blob> {
+    try { return await firstValueFrom(this.http.get(`/api/admin/events/${encodeURIComponent(id)}/logo`, { responseType: 'blob' })); }
+    catch (error) { throw new ServiceFailure(error instanceof HttpErrorResponse ? error.status : 0); }
+  }
+  async uploadLogo(id: string, file: File, version: string, operationId: string): Promise<EventDetail> {
+    const body = new FormData(); body.append('file', file);
+    try {
+      const token = await firstValueFrom(this.http.get<{requestToken: string}>('/api/admin/antiforgery'));
+      return await firstValueFrom(this.http.post<EventDetail>(`/api/admin/events/${encodeURIComponent(id)}/logo`, body, {
+        headers: { 'X-CSRF-TOKEN': token.requestToken, 'Idempotency-Key': operationId, 'If-Match': `"${version}"` },
+      }));
+    } catch (error) {
+      if (error instanceof HttpErrorResponse) throw new EventFailure(error.status, error.error?.code, error.error?.errors, error.error?.current);
+      throw new EventFailure(0);
+    }
+  }
   async saveDraft(id: string, input: EventInput, version: string, operationId: string): Promise<EventDetail> {
     try {
       const token = await firstValueFrom(this.http.get<{requestToken: string}>('/api/admin/antiforgery'));

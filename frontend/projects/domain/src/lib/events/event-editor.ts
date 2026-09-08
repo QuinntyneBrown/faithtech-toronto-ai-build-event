@@ -1,9 +1,10 @@
-import { Component, DestroyRef, inject, input, OnInit, output, signal } from '@angular/core';
+import { Component, DestroyRef, inject, input, OnInit, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { EVENT_SERVICE, EventDetail, EventInput, EventFailure, ServiceFailure } from '@faithtech/api';
 import { validateEventInput } from './validate-event-input';
+import { EventLogoEditor } from './event-logo-editor';
 
-@Component({ selector: 'ft-event-editor', imports: [FormsModule], templateUrl: './event-editor.html', styleUrl: './event-editor.css' })
+@Component({ selector: 'ft-event-editor', imports: [FormsModule, EventLogoEditor], templateUrl: './event-editor.html', styleUrl: './event-editor.css' })
 export class EventEditor implements OnInit {
   private readonly service = inject(EVENT_SERVICE);
   private readonly destroy = inject(DestroyRef);
@@ -17,7 +18,11 @@ export class EventEditor implements OnInit {
   readonly saved = signal(false);
   readonly errors = signal<Record<string, string[]>>({});
   readonly conflict = signal<EventDetail | null>(null);
-  hasUnsavedChanges() { return this.busy() || this.uncertain() || JSON.stringify(this.draft()) !== JSON.stringify(this.detail()); }
+  readonly logoEditor = viewChild(EventLogoEditor);
+  logoPending() { return this.logoEditor()?.busy() || this.logoEditor()?.uncertain() || !!this.logoEditor()?.conflict(); }
+  draftChanged() { return JSON.stringify(this.draft()) !== JSON.stringify(this.detail()); }
+  hasUnsavedChanges() { return this.busy() || this.uncertain() || this.draftChanged() || this.logoEditor()?.hasUnsavedChanges(); }
+  logoSaved(event: EventDetail) { this.detail.set(event); this.draft.set(event); this.saved.set(false); }
   reapply() {
     const current = this.conflict();
     if (current) this.detail.set(current);
@@ -34,7 +39,7 @@ export class EventEditor implements OnInit {
   }
   async save() {
     const draft = this.draft(), current = this.detail();
-    if (!draft || !current || this.busy() || this.conflict()) return;
+    if (!draft || !current || this.busy() || this.conflict() || this.logoPending()) return;
     this.busy.set(true); this.error.set(''); this.errors.set({}); this.saved.set(false);
     try {
       const result = await this.service.saveDraft(current.id, validateEventInput(draft), current.version, this.operationId);
