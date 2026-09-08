@@ -6,6 +6,7 @@ export class ScheduleFixture {
   readonly receipts = new Map<string, { hash: string; result: ScheduleDetail }>();
   unavailable = false;
   loseNextResponse = false;
+  validationErrors: Record<string, string[]> | null = null;
   saves = 0;
   constructor(private readonly events: EventFixture) {}
   handle(operation: string, args: { id: string; input?: ScheduleInput; version?: string; operationId?: string }) {
@@ -18,6 +19,7 @@ export class ScheduleFixture {
     const hash = JSON.stringify(args), receipt = this.receipts.get(args.operationId!);
     if (receipt) return receipt.hash === hash ? { result: receipt.result } : { status: 409, code: 'operation-key-reused' };
     if (args.version !== current.version) return { status: 409, code: 'stale-version', current };
+    if (this.validationErrors) return { status: 422, errors: this.validationErrors };
     const input = args.input!;
     const stages = [...input.stages].sort((a, b) => a.start!.local.localeCompare(b.start!.local));
     if (stages.some((stage, index) => index > 0 && stage.start!.local < stages[index - 1].end!.local))

@@ -19,6 +19,15 @@ export class AdminSchedulePage {
   }
   async expectWindowDisabled(kind: string) { await expect(this.page.getByRole('checkbox', { name: 'Enable ' + kind, exact: true })).not.toBeChecked(); }
   async expectError(message: string) { await expect(this.page.getByRole('alert')).toContainText(message); }
+  async followValidation(label: string, message: string) {
+    const summary = this.page.getByRole('alert');
+    await expect(summary).toBeFocused();
+    await summary.getByRole('link', { name: label + ': ' + message, exact: true }).click();
+    const field = this.page.getByLabel(label, { exact: true });
+    await expect(field).toBeFocused();
+    await expect(field).toHaveAttribute('aria-invalid', 'true');
+    await expect(field).toHaveAccessibleDescription(message);
+  }
   async retrySave() { await this.page.getByRole('button', { name: 'Retry schedule save', exact: true }).click(); }
   async expectUncertain() {
     await this.expectError('could not be confirmed');

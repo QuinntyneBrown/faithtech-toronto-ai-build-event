@@ -1,11 +1,14 @@
 @if (draft(); as values) {
   <form (ngSubmit)="save()" novalidate>
-    <fieldset [disabled]="busy() || uncertain() || !!conflict()"><legend>Schedule configuration</legend>
+    <fieldset [disabled]="busy() || uncertain() || !!conflict()"><legend id="schedule-configuration" tabindex="-1">Schedule configuration</legend>
       <section class="card"><h2>Event timing</h2>
-        <label>Timezone<input name="timezone" [ngModel]="values.timezone" (ngModelChange)="change('timezone', $event)"></label>
-        <label>Event start<input type="datetime-local" name="start" [ngModel]="values.start?.local || ''" (ngModelChange)="time('start', $event)"></label>
+        <label>Timezone<input id="schedule-timezone" name="timezone" [attr.aria-invalid]="errors()['timezone'] ? 'true' : null" [attr.aria-describedby]="errors()['timezone'] ? 'schedule-timezone-error' : null" [ngModel]="values.timezone" (ngModelChange)="change('timezone', $event)"></label>
+        @if (errors()['timezone']; as messages) { <p id="schedule-timezone-error">{{ messages.join(' ') }}</p> }
+        <label>Event start<input id="schedule-start" type="datetime-local" name="start" [attr.aria-invalid]="errors()['start'] ? 'true' : null" [attr.aria-describedby]="errors()['start'] ? 'schedule-start-error' : null" [ngModel]="values.start?.local || ''" (ngModelChange)="time('start', $event)"></label>
+        @if (errors()['start']; as messages) { <p id="schedule-start-error">{{ messages.join(' ') }}</p> }
         <label>Event start UTC offset (minutes)<input type="number" name="startOffset" [ngModel]="values.start?.offsetMinutes" (ngModelChange)="offset('start', $event)"></label>
-        <label>Event end<input type="datetime-local" name="end" [ngModel]="values.end?.local || ''" (ngModelChange)="time('end', $event)"></label>
+        <label>Event end<input id="schedule-end" type="datetime-local" name="end" [attr.aria-invalid]="errors()['end'] ? 'true' : null" [attr.aria-describedby]="errors()['end'] ? 'schedule-end-error' : null" [ngModel]="values.end?.local || ''" (ngModelChange)="time('end', $event)"></label>
+        @if (errors()['end']; as messages) { <p id="schedule-end-error">{{ messages.join(' ') }}</p> }
         <label>Event end UTC offset (minutes)<input type="number" name="endOffset" [ngModel]="values.end?.offsetMinutes" (ngModelChange)="offset('end', $event)"></label>
         <p>Times use the selected timezone. Repeated local times need an explicit UTC offset.</p>
       </section>
@@ -16,7 +19,7 @@
         <ft-window-editor label="Selection" [value]="values.selection" [start]="values.start" [end]="values.end" (changed)="change('selection', $event)" />
         <ft-window-editor label="Demo presentation" [value]="values.presentation" [start]="values.start" [end]="values.end" (changed)="change('presentation', $event)" />
       </section>
-      <section class="card"><h2>Stages and content</h2><button type="button" (click)="add()">Add stage</button>
+      <section class="card"><h2 id="schedule-stages" tabindex="-1">Stages and content</h2><button type="button" (click)="add()">Add stage</button>
         @if (!values.stages.length) { <p>No stages yet.</p> }
         @else { <div class="table-scroll"><table><caption>Event stages</caption><thead><tr><th>Time</th><th>Stage and screen</th><th>Actions</th></tr></thead><tbody>
           @for (stage of values.stages; track stage.id) { <tr><td>{{ stage.start?.local }} – {{ stage.end?.local }}</td><td><strong>{{ stage.name }}</strong><p>{{ stage.screenType }} · {{ stage.content }}</p></td>
@@ -24,7 +27,9 @@
         </tbody></table></div> }
       </section>
     </fieldset>
-    @if (error()) { <p role="alert">{{ error() }}</p> }
+    @if (error()) { <section #summary role="alert" tabindex="-1"><p>{{ error() }}</p>
+      @if (issues().length) { <ul>@for (issue of issues(); track issue.field) { <li><a [href]="'#' + fieldTarget(issue.field)" (click)="focusField($event, issue.field)">{{ issue.label }}: {{ issue.message }}</a></li> }</ul> }
+    </section> }
     @if (conflict(); as latest) { <section class="card" aria-label="Latest saved schedule"><h2>Latest saved schedule</h2><p>{{ latest.timezone }} · {{ latest.start?.local }} – {{ latest.end?.local }}</p>
       @for (stage of latest.stages; track stage.id) { <p>{{ stage.name }} · {{ stage.start?.local }} – {{ stage.end?.local }} · {{ stage.content }}</p> }
       <button type="button" (click)="reapply()">Reapply my schedule</button><button type="button" (click)="useCurrent()">Use latest schedule</button></section> }

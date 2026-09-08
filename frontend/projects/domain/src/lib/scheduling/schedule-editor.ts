@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, input, OnInit, output, signal } from '@angular/core';
+import { afterNextRender, Component, computed, DestroyRef, ElementRef, inject, Injector, input, OnInit, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SCHEDULE_SERVICE, ScheduleDetail, ScheduleFailure, ScheduleInput, StageInput } from '@faithtech/api';
 import { WindowEditor } from './window-editor';
@@ -7,12 +7,20 @@ import { WindowEditor } from './window-editor';
 export class ScheduleEditor implements OnInit {
   private readonly service = inject(SCHEDULE_SERVICE);
   private readonly destroy = inject(DestroyRef);
+  private readonly injector = inject(Injector);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly summary = viewChild<ElementRef<HTMLElement>>('summary');
   readonly eventId = input.required<string>();
   readonly editStage = output<StageInput>();
   readonly denied = output<void>();
   readonly detail = signal<ScheduleDetail | null>(null);
   readonly draft = signal<ScheduleInput | null>(null);
   readonly error = signal('');
+  readonly errors = signal<Record<string, string[]>>({});
+  readonly issues = computed(() => Object.entries(this.errors()).map(([field, messages]) => ({ field, message: messages.join(' '), label: this.fieldLabel(field) })));
+  fieldLabel(field: string) { return ({ timezone: 'Timezone', start: 'Event start', end: 'Event end', stages: 'Stages and content' } as Record<string, string>)[field] ?? 'Schedule configuration'; }
+  fieldTarget(field: string) { return ['timezone', 'start', 'end', 'stages'].includes(field) ? 'schedule-' + field : 'schedule-configuration'; }
+  focusField(event: Event, field: string) { event.preventDefault(); this.host.nativeElement.querySelector<HTMLElement>('#' + this.fieldTarget(field))?.focus(); }
   readonly busy = signal(false);
   readonly uncertain = signal(false);
   readonly saved = signal(false);
@@ -35,7 +43,7 @@ export class ScheduleEditor implements OnInit {
   }
   async save() {
     const draft = this.draft(), current = this.detail(); if (!draft || !current || this.busy() || this.conflict()) return;
-    this.busy.set(true); this.error.set(''); this.saved.set(false);
+    this.busy.set(true); this.error.set(''); this.errors.set({}); this.saved.set(false);
     try {
       const value = await this.service.save(current.id, draft, current.version, this.operationId);
       if (this.destroy.destroyed) return;
@@ -46,7 +54,9 @@ export class ScheduleEditor implements OnInit {
         this.uncertain.set(false); this.conflict.set(error.current); this.error.set('Another administrator changed this event. Compare the latest schedule before reapplying your edits.');
       } else if (error instanceof ScheduleFailure && error.status >= 400 && error.status < 500) {
         this.uncertain.set(false); this.operationId = crypto.randomUUID();
-        this.error.set(Object.entries(error.errors).map(([field, messages]) => `${field}: ${messages.join(' ')}`).join(' ') || 'The schedule was rejected. Check your access before retrying.');
+        this.errors.set(error.errors);
+        this.error.set(Object.keys(error.errors).length ? 'Check the fields below. Your changes are retained.' : 'The schedule was rejected. Check your access before retrying.');
+        afterNextRender(() => this.summary()?.nativeElement.focus(), { injector: this.injector });
       } else { this.uncertain.set(true); this.error.set('The save could not be confirmed. Retry to check its outcome.'); }
     } finally { this.busy.set(false); }
   }

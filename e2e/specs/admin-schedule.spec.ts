@@ -16,6 +16,16 @@ async function openSchedule(page: Page) {
   return schedule;
 }
 
+test('L2-036/AC2: given invalid schedule timing, validation focuses a linked summary and retains the draft', async ({ page, schedules }) => {
+  const schedule = await openSchedule(page);
+  await schedule.setEventTimes('UTC', '2026-09-09T23:00', '2026-09-10T01:00');
+  schedules.validationErrors = { end: ['The event end needs correction.'] };
+  await schedule.save(); await schedule.followValidation('Event end', 'The event end needs correction.');
+  schedules.validationErrors = null;
+  await schedule.save(); await schedule.expectSaved();
+  expect([...schedules.schedules.values()][0].end?.local).toBe('2026-09-10T01:00');
+});
+
 test('L2-044: given a lost schedule response, retry confirms one committed save', async ({ page, schedules }) => {
   const schedule = await openSchedule(page);
   await schedule.setEventTimes('UTC', '2026-09-09T23:00', '2026-09-10T01:00'); schedules.loseNextResponse = true;
