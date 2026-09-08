@@ -1,0 +1,13 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers - Accessible event experience
+Person(user, "Participant or administrator", "Uses Chrome with chosen preferences")
+Container(client, "Client application", "Angular", "Participant pages and dialogs")
+Container(admin, "Admin application", "Angular", "Administration pages and dialogs")
+System_Ext(api, "Event API", "Authoritative feature data; see feature designs")
+Rel(user, client, "Uses participant routes")
+Rel(user, admin, "Uses administrator routes")
+Rel(client, api, "Calls through injected service contracts", "HTTPS")
+Rel(admin, api, "Calls through injected service contracts", "HTTPS")
+@enduml
