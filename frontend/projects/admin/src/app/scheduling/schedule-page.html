@@ -1,20 +1,27 @@
 <main id="main"><ft-administrator-session-panel [showDetails]="false" (signedOut)="signedOut()">
   <p><a [routerLink]="['/events', eventId]">Event settings</a></p><p class="eyebrow">SET THE RHYTHM</p>
   <h1>One evening. Many possibilities.</h1><p>Configure scheduled screens, instructions, and links. Event timing never advances a project’s progress.</p>
-  <ft-schedule-editor [eventId]="eventId" (editStage)="openStage($event)" (denied)="signedOut()" />
+  <ft-schedule-editor [eventId]="eventId" (editStage)="openStage($event)" (editStageField)="openStage($event.stage, $event.field)" (denied)="signedOut()" />
 </ft-administrator-session-panel></main>
 <dialog #stageDialog aria-labelledby="stage-title" (cancel)="$event.preventDefault(); cancelStage()">
   <h2 id="stage-title">Shape a moment.</h2>
-  @if (editing(); as stage) { <form (ngSubmit)="applyStage()" novalidate>
-    <label>Stage name<input autofocus name="name" [ngModel]="stage.name" (ngModelChange)="change('name', $event)"></label>
-    <label>Phase<input name="phase" [ngModel]="stage.phase" (ngModelChange)="change('phase', $event)"></label>
-    <label>Stage start<input type="datetime-local" name="start" [ngModel]="stage.start?.local || ''" (ngModelChange)="time('start', $event)"></label>
+  @if (editing(); as stage) { <form #stageForm (ngSubmit)="applyStage()" novalidate>
+    <label>Stage name<input id="stage-name" [attr.aria-invalid]="stageError('name') ? 'true' : null" [attr.aria-describedby]="stageError('name') ? 'stage-name-error' : null" autofocus name="name" [ngModel]="stage.name" (ngModelChange)="change('name', $event)"></label>
+    @if (stageError('name'); as message) { <p id="stage-name-error">{{ message }}</p> }
+    <label>Phase<input id="stage-phase" [attr.aria-invalid]="stageError('phase') ? 'true' : null" [attr.aria-describedby]="stageError('phase') ? 'stage-phase-error' : null" name="phase" [ngModel]="stage.phase" (ngModelChange)="change('phase', $event)"></label>
+    @if (stageError('phase'); as message) { <p id="stage-phase-error">{{ message }}</p> }
+    <label>Stage start<input id="stage-start" [attr.aria-invalid]="stageError('start') ? 'true' : null" [attr.aria-describedby]="stageError('start') ? 'stage-start-error' : null" type="datetime-local" name="start" [ngModel]="stage.start?.local || ''" (ngModelChange)="time('start', $event)"></label>
+    @if (stageError('start'); as message) { <p id="stage-start-error">{{ message }}</p> }
     <label>Stage start UTC offset (minutes)<input type="number" name="startOffset" [ngModel]="stage.start?.offsetMinutes" (ngModelChange)="offset('start', $event)"></label>
-    <label>Stage end<input type="datetime-local" name="end" [ngModel]="stage.end?.local || ''" (ngModelChange)="time('end', $event)"></label>
+    <label>Stage end<input id="stage-end" [attr.aria-invalid]="stageError('end') ? 'true' : null" [attr.aria-describedby]="stageError('end') ? 'stage-end-error' : null" type="datetime-local" name="end" [ngModel]="stage.end?.local || ''" (ngModelChange)="time('end', $event)"></label>
+    @if (stageError('end'); as message) { <p id="stage-end-error">{{ message }}</p> }
     <label>Stage end UTC offset (minutes)<input type="number" name="endOffset" [ngModel]="stage.end?.offsetMinutes" (ngModelChange)="offset('end', $event)"></label>
-    <label>Participant screen<select name="screen" [ngModel]="stage.screenType" (ngModelChange)="change('screenType', $event)"><option value="information">Information</option><option value="welcome">Welcome</option><option value="teams">Team selection</option><option value="projects">Project selection</option><option value="build">Building guidance</option><option value="people">Networking</option><option value="raffle">Raffle</option><option value="demos">Demos</option><option value="recap">Closing and recap</option></select></label>
-    <label>Stage instructions<textarea name="content" [ngModel]="stage.content" (ngModelChange)="change('content', $event)"></textarea></label>
-    <label>Resource URL<input type="url" name="resource" [ngModel]="stage.resourceUrl" (ngModelChange)="change('resourceUrl', $event)"></label>
+    <label>Participant screen<select id="stage-screenType" [attr.aria-invalid]="stageError('screenType') ? 'true' : null" [attr.aria-describedby]="stageError('screenType') ? 'stage-screenType-error' : null" name="screen" [ngModel]="stage.screenType" (ngModelChange)="change('screenType', $event)"><option value="information">Information</option><option value="welcome">Welcome</option><option value="teams">Team selection</option><option value="projects">Project selection</option><option value="build">Building guidance</option><option value="people">Networking</option><option value="raffle">Raffle</option><option value="demos">Demos</option><option value="recap">Closing and recap</option></select></label>
+    @if (stageError('screenType'); as message) { <p id="stage-screenType-error">{{ message }}</p> }
+    <label>Stage instructions<textarea id="stage-content" [attr.aria-invalid]="stageError('content') ? 'true' : null" [attr.aria-describedby]="stageError('content') ? 'stage-content-error' : null" name="content" [ngModel]="stage.content" (ngModelChange)="change('content', $event)"></textarea></label>
+    @if (stageError('content'); as message) { <p id="stage-content-error">{{ message }}</p> }
+    <label>Resource URL<input id="stage-resourceUrl" [attr.aria-invalid]="stageError('resourceUrl') ? 'true' : null" [attr.aria-describedby]="stageError('resourceUrl') ? 'stage-resourceUrl-error' : null" type="url" name="resource" [ngModel]="stage.resourceUrl" (ngModelChange)="change('resourceUrl', $event)"></label>
+    @if (stageError('resourceUrl'); as message) { <p id="stage-resourceUrl-error">{{ message }}</p> }
     <p>Apply stage keeps this change in your draft. Save the schedule to commit all timings together.</p>
     <div class="actions"><button type="button" (click)="cancelStage()">Cancel</button><button type="submit">Apply stage</button></div>
   </form> }

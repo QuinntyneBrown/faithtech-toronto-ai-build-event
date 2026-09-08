@@ -12,22 +12,43 @@ export class ScheduleEditor implements OnInit {
   private readonly summary = viewChild<ElementRef<HTMLElement>>('summary');
   readonly eventId = input.required<string>();
   readonly editStage = output<StageInput>();
+  readonly editStageField = output<{ stage: StageInput; field: string }>();
   readonly denied = output<void>();
   readonly detail = signal<ScheduleDetail | null>(null);
   readonly draft = signal<ScheduleInput | null>(null);
   readonly error = signal('');
   readonly errors = signal<Record<string, string[]>>({});
   readonly issues = computed(() => Object.entries(this.errors()).map(([field, messages]) => ({ field, message: messages.join(' '), label: this.fieldLabel(field) })));
+  readonly stageLabels: Record<string, string> = { name: 'Stage name', phase: 'Phase', start: 'Stage start', end: 'Stage end', screenType: 'Participant screen', content: 'Stage instructions', resourceUrl: 'Resource URL' };
+  stageIssue(key: string) {
+    const match = /^stage\.([0-9a-f-]+)\.(\w+)$/i.exec(key);
+    const stage = match && this.draft()?.stages.find(x => x.id === match[1]);
+    return stage && match ? { stage, field: match[2] in this.stageLabels ? match[2] : 'name' } : null;
+  }
+  stageError(id: string, field: string) { return this.errors()[`stage.${id}.${field}`]?.join(' '); }
+  private retainErrors(errors: Record<string, string[]>, draft: ScheduleInput) {
+    return Object.fromEntries(Object.entries(errors).map(([key, messages]) => {
+      const match = /^stages\[(\d+)\](?:\.(\w+))?$/.exec(key), stage = match && draft.stages[Number(match[1])];
+      return [stage && match ? `stage.${stage.id}.${match[2] && match[2] in this.stageLabels ? match[2] : 'name'}` : key, messages];
+    }));
+  }
   fieldLabel(field: string) {
+    const issue = this.stageIssue(field);
+    if (issue) return (issue.stage.name || 'Unnamed stage') + ' — ' + this.stageLabels[issue.field];
     const window = /^(selection|presentation)\.(start|end)$/.exec(field);
     if (window) return (window[1] === 'selection' ? 'Selection' : 'Demo presentation') + ' ' + window[2];
     return ({ timezone: 'Timezone', start: 'Event start', end: 'Event end', stages: 'Stages and content' } as Record<string, string>)[field] ?? 'Schedule configuration';
   }
   fieldTarget(field: string) {
+    const issue = this.stageIssue(field); if (issue) return 'stage-' + issue.field;
     if (/^(selection|presentation)\.(start|end)$/.test(field)) return 'schedule-' + field.replace('.', '-');
     return ['timezone', 'start', 'end', 'stages'].includes(field) ? 'schedule-' + field : 'schedule-configuration';
   }
-  focusField(event: Event, field: string) { event.preventDefault(); this.host.nativeElement.querySelector<HTMLElement>('#' + this.fieldTarget(field))?.focus(); }
+  focusField(event: Event, field: string) {
+    event.preventDefault(); const issue = this.stageIssue(field);
+    if (issue) this.editStageField.emit(issue);
+    else this.host.nativeElement.querySelector<HTMLElement>('#' + this.fieldTarget(field))?.focus();
+  }
   readonly busy = signal(false);
   readonly uncertain = signal(false);
   readonly saved = signal(false);
@@ -61,7 +82,7 @@ export class ScheduleEditor implements OnInit {
         this.uncertain.set(false); this.conflict.set(error.current); this.error.set('Another administrator changed this event. Compare the latest schedule before reapplying your edits.');
       } else if (error instanceof ScheduleFailure && error.status >= 400 && error.status < 500) {
         this.uncertain.set(false); this.operationId = crypto.randomUUID();
-        this.errors.set(error.errors);
+        this.errors.set(this.retainErrors(error.errors, draft));
         this.error.set(Object.keys(error.errors).length ? 'Check the fields below. Your changes are retained.' : 'The schedule was rejected. Check your access before retrying.');
         afterNextRender(() => this.summary()?.nativeElement.focus(), { injector: this.injector });
       } else { this.uncertain.set(true); this.error.set('The save could not be confirmed. Retry to check its outcome.'); }

@@ -39,6 +39,19 @@ for (const kind of ['selection', 'demo presentation'] as const) {
   });
 }
 
+test('L2-036/AC2: given invalid stage timing, the summary opens the affected stage field for correction', async ({ page, schedules }) => {
+  const schedule = await openSchedule(page);
+  await schedule.setEventTimes('UTC', '2026-09-09T23:00', '2026-09-10T01:00');
+  await schedule.addStage('Arrival', '2026-09-09T23:00', '2026-09-10T00:00', 'Welcome');
+  await schedule.addStage('Build', '2026-09-10T00:00', '2026-09-10T01:00', 'Keep this guidance');
+  schedules.validationErrors = { 'stages[1].start': ['Correct the stage start.'] };
+  await schedule.save(); await schedule.followValidation('Stage start', 'Correct the stage start.', 'Build — Stage start');
+  await schedule.correctStageStart('2026-09-10T00:05'); schedules.validationErrors = null;
+  await schedule.save(); await schedule.expectSaved();
+  await schedule.expectStage('Arrival', 'Welcome'); await schedule.expectStage('Build', 'Keep this guidance');
+  expect([...schedules.schedules.values()][0].stages[1].start?.local).toBe('2026-09-10T00:05');
+});
+
 test('L2-044: given a lost schedule response, retry confirms one committed save', async ({ page, schedules }) => {
   const schedule = await openSchedule(page);
   await schedule.setEventTimes('UTC', '2026-09-09T23:00', '2026-09-10T01:00'); schedules.loseNextResponse = true;

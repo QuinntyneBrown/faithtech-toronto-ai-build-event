@@ -12,13 +12,17 @@ export class SchedulePage {
   readonly editor = viewChild.required(ScheduleEditor);
   readonly editing = signal<StageInput | null>(null);
   private readonly stageDialog = viewChild.required<ElementRef<HTMLDialogElement>>('stageDialog');
+  private readonly stageForm = viewChild<ElementRef<HTMLFormElement>>('stageForm');
   private readonly leaveDialog = viewChild.required<ElementRef<HTMLDialogElement>>('leaveDialog');
   private originalStage = '';
   private discardStage = false;
   private resolveLeave?: (leave: boolean) => void;
-  openStage(stage: StageInput) {
+  stageError(field: string) { const stage = this.editing(); return stage ? this.editor().stageError(stage.id, field) : undefined; }
+  openStage(stage: StageInput, field = 'name') {
     this.originalStage = JSON.stringify(stage); this.editing.set(structuredClone(stage));
-    afterNextRender(() => { if (this.editing()) this.stageDialog().nativeElement.showModal(); }, { injector: this.injector });
+    afterNextRender(() => {
+      if (this.editing()) { this.stageDialog().nativeElement.showModal(); this.stageForm()?.nativeElement.querySelector<HTMLElement>('#stage-' + field)?.focus(); }
+    }, { injector: this.injector });
   }
   change<K extends keyof StageInput>(field: K, value: StageInput[K]) { this.editing.update(stage => stage ? { ...stage, [field]: value } : null); }
   time(field: 'start' | 'end', local: string) { this.change(field, local ? { local, offsetMinutes: null } : null); }
