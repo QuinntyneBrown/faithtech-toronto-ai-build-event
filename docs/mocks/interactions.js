@@ -1,5 +1,6 @@
 import { model, save } from './data.js';
 export function submitParticipant(id,data,item,navigate) {
+  if(id==='quiz'){model.answers[model.questions[model.quizIndex].id]=data.answer;save();navigate('quiz',{state:'feedback'});return true;}
   if(id==='profile'){Object.assign(model.profile,data);Object.assign(model.participants.find(p=>p.id==='alex'),data);save();navigate('profile',{state:'saved'});return true;}
   if(id==='search'){navigate(new URLSearchParams(location.search).get('screen')||'people',{search:data.search});return true;}
   if(id==='new-message'){navigate('messages',{item:data.to,state:'empty'});return true;}
