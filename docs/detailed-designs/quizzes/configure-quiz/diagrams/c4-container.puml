@@ -1,0 +1,18 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers - Configure a quiz lifecycle
+Person(actor, "Administrator", "configure quiz")
+System_Boundary(system, "FaithTech event platform") {
+Container(ui, "Admin application", "Angular", "ConfigureQuizPage")
+Container(api, "Event API", ".NET 10 / MediatR 12.5.0", "Validate draft questions, activate before opening and freeze opened content")
+ContainerDb(db, "Event database", "SQL Server", "Quiz definitions, ordered options, activation state and immutable closure facts")
+ContainerDb(redis, "Fanout backplane", "Redis; multiple API instances only", "Transient notification transport")
+}
+Rel(actor, ui, "Configure quiz")
+Rel(ui, api, "Typed requests and state reads", "JSON / HTTPS")
+Rel(api, db, "Commit or query scoped state", "EF Core")
+Rel(api, redis, "EventHub fanout between instances")
+Rel(api, ui, "Committed outbox invalidations through EventHub", "SignalR / HTTPS")
+
+@enduml

@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components - Configure a quiz lifecycle
+Container(ui, "ConfigureQuizPage", "Angular / IQuizService", "Signals and typed service contract")
+Container_Boundary(api, "Event API") {
+Component(ctrl, "QuizController", "ASP.NET Core", "Bind, MediatR dispatch, return")
+Component(gate, "SessionAuthorizationBehavior", "Application pipeline", "Validate actor, event and ownership")
+Component(handler, "ConfigureQuizHandler", "Application", "Validate draft questions, activate before opening and freeze opened content")
+Component(entity, "Quiz", "Domain", "Quiz definitions, ordered options, activation state and immutable closure facts")
+Component(store, "SqlEventStore", "Infrastructure / IEventStore", "Feature queries, concurrency and transactions")
+}
+ContainerDb(db, "Event database", "SQL Server", "Quiz definitions, ordered options, activation state and immutable closure facts")
+Rel(ui, ctrl, "Configure quiz", "HTTPS")
+Rel(ctrl, gate, "Dispatch request through pipeline")
+Rel(gate, handler, "Continue authorized request")
+Rel(handler, entity, "Apply domain policy")
+Rel(handler, store, "Load and persist through port")
+Rel(store, db, "Query or commit", "EF Core")
+@enduml
