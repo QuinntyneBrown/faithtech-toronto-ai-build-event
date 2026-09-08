@@ -18,8 +18,15 @@ export class ScheduleEditor implements OnInit {
   readonly error = signal('');
   readonly errors = signal<Record<string, string[]>>({});
   readonly issues = computed(() => Object.entries(this.errors()).map(([field, messages]) => ({ field, message: messages.join(' '), label: this.fieldLabel(field) })));
-  fieldLabel(field: string) { return ({ timezone: 'Timezone', start: 'Event start', end: 'Event end', stages: 'Stages and content' } as Record<string, string>)[field] ?? 'Schedule configuration'; }
-  fieldTarget(field: string) { return ['timezone', 'start', 'end', 'stages'].includes(field) ? 'schedule-' + field : 'schedule-configuration'; }
+  fieldLabel(field: string) {
+    const window = /^(selection|presentation)\.(start|end)$/.exec(field);
+    if (window) return (window[1] === 'selection' ? 'Selection' : 'Demo presentation') + ' ' + window[2];
+    return ({ timezone: 'Timezone', start: 'Event start', end: 'Event end', stages: 'Stages and content' } as Record<string, string>)[field] ?? 'Schedule configuration';
+  }
+  fieldTarget(field: string) {
+    if (/^(selection|presentation)\.(start|end)$/.test(field)) return 'schedule-' + field.replace('.', '-');
+    return ['timezone', 'start', 'end', 'stages'].includes(field) ? 'schedule-' + field : 'schedule-configuration';
+  }
   focusField(event: Event, field: string) { event.preventDefault(); this.host.nativeElement.querySelector<HTMLElement>('#' + this.fieldTarget(field))?.focus(); }
   readonly busy = signal(false);
   readonly uncertain = signal(false);

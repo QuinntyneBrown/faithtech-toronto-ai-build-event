@@ -26,6 +26,19 @@ test('L2-036/AC2: given invalid schedule timing, validation focuses a linked sum
   expect([...schedules.schedules.values()][0].end?.local).toBe('2026-09-10T01:00');
 });
 
+for (const kind of ['selection', 'demo presentation'] as const) {
+  test(`L2-036/AC2: given invalid ${kind} timing, the summary reaches the retained window field`, async ({ page, schedules }) => {
+    const schedule = await openSchedule(page);
+    await schedule.setEventTimes('UTC', '2026-09-09T23:00', '2026-09-10T01:00');
+    await schedule.setWindow(kind, '2026-09-09T23:15', '2026-09-10T00:15');
+    const field = kind === 'selection' ? 'selection.end' : 'presentation.end';
+    schedules.validationErrors = { [field]: ['The window end needs correction.'] };
+    await schedule.save(); await schedule.followValidation(kind[0].toUpperCase() + kind.slice(1) + ' end', 'The window end needs correction.');
+    await schedule.expectWindow(kind, '2026-09-09T23:15', '2026-09-10T00:15');
+    schedules.validationErrors = null; await schedule.save(); await schedule.expectSaved();
+  });
+}
+
 test('L2-044: given a lost schedule response, retry confirms one committed save', async ({ page, schedules }) => {
   const schedule = await openSchedule(page);
   await schedule.setEventTimes('UTC', '2026-09-09T23:00', '2026-09-10T01:00'); schedules.loseNextResponse = true;

@@ -16,8 +16,8 @@
         <p>Activity windows are independent of screen boundaries. Disabled selection permits administrator assignment only. Disabling an open selection window closes it permanently.</p>
         @if (detail()?.selectionClosed) { <p>Selection is permanently closed for this event.</p> }
         @if (detail()?.completed) { <p>This event is completed. Timing edits cannot reopen it.</p> }
-        <ft-window-editor label="Selection" [value]="values.selection" [start]="values.start" [end]="values.end" (changed)="change('selection', $event)" />
-        <ft-window-editor label="Demo presentation" [value]="values.presentation" [start]="values.start" [end]="values.end" (changed)="change('presentation', $event)" />
+        <ft-window-editor label="Selection" field="selection" [errors]="errors()" [value]="values.selection" [start]="values.start" [end]="values.end" (changed)="change('selection', $event)" />
+        <ft-window-editor label="Demo presentation" field="presentation" [errors]="errors()" [value]="values.presentation" [start]="values.start" [end]="values.end" (changed)="change('presentation', $event)" />
       </section>
       <section class="card"><h2 id="schedule-stages" tabindex="-1">Stages and content</h2><button type="button" (click)="add()">Add stage</button>
         @if (!values.stages.length) { <p>No stages yet.</p> }
