@@ -7,7 +7,7 @@ skinparam ArrowColor #344054
 skinparam classBackgroundColor #F9FAFB
 skinparam classBorderColor #344054
 skinparam sequenceMessageAlign center
-skinparam maxMessageSize 70
+skinparam maxMessageSize 180
 title Save and publish event configuration
 actor "Administrator" as actor
 box "Frontend - Admin application" #E0F2FE
