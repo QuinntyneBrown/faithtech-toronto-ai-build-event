@@ -32,3 +32,7 @@ export * from './lib/entry/entry-failure';
 export * from './lib/entry/entry-service.contract';
 export * from './lib/entry/entry-service.token';
 export * from './lib/entry/entry.service';
+export * from './lib/participant-session/participant-session-state';
+export * from './lib/participant-session/participant-session-service.contract';
+export * from './lib/participant-session/participant-session-service.token';
+export * from './lib/participant-session/participant-session.service';

@@ -9,14 +9,14 @@ export const test = base.extend<{ events: EventFixture; entry: EntryFixture; par
     await context.exposeBinding('__faithtechEvents', (_source, operation, args) => events.handle(operation, args));
     await use(events);
   }, { auto: true }],
-  entry: [async ({ context, events }, use) => {
-    const entry = new EntryFixture(events);
-    await context.exposeBinding('__faithtechEntry', (_source, operation, args) => entry.handle(operation, args));
-    await use(entry);
-  }, { auto: true }],
   participantSession: [async ({ context }, use) => {
     const participantSession = new ParticipantSessionFixture();
     await context.exposeBinding('__faithtechParticipantSession', (_source, operation, args) => participantSession.handle(operation, args));
     await use(participantSession);
+  }, { auto: true }],
+  entry: [async ({ context, events, participantSession }, use) => {
+    const entry = new EntryFixture(events, participantSession);
+    await context.exposeBinding('__faithtechEntry', (_source, operation, args) => entry.handle(operation, args));
+    await use(entry);
   }, { auto: true }],
 });

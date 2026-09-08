@@ -12,11 +12,6 @@
       <h1 id="unavailable-title">This event isn't available.</h1>
       <p>Check the link from your event host, or contact them for help.</p>
     </section>
-  } @else if (session(); as value) {
-    <section class="card" aria-labelledby="joined-title">
-      <h1 id="joined-title">You're in.</h1>
-      <p role="status">Welcome to {{ header()!.title || 'the event' }}.</p>
-    </section>
   } @else {
     <section class="intro" aria-labelledby="intro-title">
       <p class="eyebrow">{{ header()!.title || 'FaithTech event' }}</p>

@@ -1,4 +1,5 @@
 import { EventFixture } from './event-fixture';
+import { ParticipantSessionFixture } from './participant-session-fixture';
 
 export interface RegistrationFixtureEntry {
   id: string;
@@ -10,7 +11,7 @@ export interface RegistrationFixtureEntry {
 export class EntryFixture {
   unavailable = false;
   readonly registrations = new Map<string, RegistrationFixtureEntry[]>();
-  constructor(private readonly events: EventFixture) {}
+  constructor(private readonly events: EventFixture, private readonly sessions: ParticipantSessionFixture) {}
   handle(operation: string, args: { eventId: string; email?: string; entryCode?: string }) {
     if (this.unavailable) return { status: 503 };
     const event = this.events.events.get(args.eventId);
@@ -29,6 +30,7 @@ export class EntryFixture {
       if (entry.email && entry.email !== normalized) return { status: 401 };
       if (!entry.email && entries.some(x => x.id !== entry.id && x.active && x.email === normalized)) return { status: 401 };
       entry.email = normalized;
+      this.sessions.signIn(entry.id, args.eventId);
       return { result: { participantId: entry.id, eventId: args.eventId, absoluteExpiresAtUtc: new Date(Date.now() + 24 * 60 * 60000).toISOString() } };
     }
     return { status: 404 };
