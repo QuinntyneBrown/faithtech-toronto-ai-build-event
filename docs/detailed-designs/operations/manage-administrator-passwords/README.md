@@ -16,7 +16,7 @@ The shared Identity configuration requires six characters, lowercase, a digit, a
 
 `OperatorExecution` identifies the connected SQL server, database, and principal before account mutation. It disables application logging and reports redacted errors. `WriteCommittedResult` distinguishes output failure after a committed operation. Connection interruption and cancellation return an unconfirmed outcome requiring inspection; the CLI does not replay mutations. Account commands do not modify firewall rules or database grants.
 
-The installed tool uses `ConnectionStrings__EventDatabase` supplied through protected operator configuration. Account operations do not require the participant digest key. Passwords never appear in command arguments, ordinary output, or diagnostic records. The documented default is an explicit product default, not an automatically created account.
+The installed tool uses `ConnectionStrings__EventDatabase` supplied through protected process configuration. The existing application connection is sufficient when its database grants permit account creation, disabling, or password reset. A separate provisioner login is not required for these account commands. Account operations do not require the participant digest key. Passwords never appear in command arguments, ordinary output, or diagnostic records. The documented default is an explicit product default, not an automatically created account.
 
 ## Requirements
 
