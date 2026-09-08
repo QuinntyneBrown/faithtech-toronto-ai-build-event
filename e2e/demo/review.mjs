@@ -11,7 +11,7 @@ for (const input of process.argv.slice(2)) {
   const metadata = JSON.parse(await readFile(resolve(folder, `${slug}-chapters.json`)));
   const qa = resolve(folder, 'review'); await mkdir(qa, { recursive: true });
   const server = await host({ mounts: [{ prefix: '/', root: folder }] });
-  const browser = await chromium.launch({ channel: 'chrome', args: ['--autoplay-policy=no-user-gesture-required'] });
+  const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
   try {
     const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
     await page.setContent(`<body style="margin:0;background:#111"><video width="1280" height="720" controls src="${server.url}/${slug}.webm"></video></body>`);
@@ -34,7 +34,8 @@ for (const input of process.argv.slice(2)) {
     }
     expect(next).toBe(metadata.cues.length);
     await page.screenshot({ path: resolve(qa, 'ending.png') });
-    const posterTime = metadata.cues[Math.min(2, metadata.cues.length - 1)].start + 2;
+    const posterIndex = ({ client: 3, admin: 3 })[slug] ?? 2;
+    const posterTime = metadata.cues[Math.min(posterIndex, metadata.cues.length - 1)].start + 2;
     await run(process.env.FFMPEG || 'ffmpeg', ['-v', 'error', '-y', '-ss', String(posterTime), '-i', videoPath, '-frames:v', '1', resolve(folder, `${slug}-poster.png`)]);
     await run(process.env.FFMPEG || 'ffmpeg', ['-v', 'error', '-y', '-i', videoPath, '-vn', '-c:a', 'libmp3lame', '-b:a', '96k', resolve(qa, 'narration.mp3')]);
     const levels = await run(process.env.FFMPEG || 'ffmpeg', ['-hide_banner', '-i', videoPath, '-vn', '-af', 'volumedetect', '-f', 'null', '-']);

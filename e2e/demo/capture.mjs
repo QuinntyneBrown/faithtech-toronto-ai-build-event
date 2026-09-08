@@ -8,7 +8,7 @@ export async function record(slug, directory, lines, story, { baseURL } = {}) {
   const folder = resolve(directory, slug);
   await mkdir(folder, { recursive: true });
   const clips = await speech(lines, folder);
-  const browser = await chromium.launch({ channel: 'chrome', headless: true });
+  const browser = await chromium.launch({ headless: true });
   let context, page, timer;
   let cues = [];
   try {
@@ -34,8 +34,8 @@ export async function record(slug, directory, lines, story, { baseURL } = {}) {
         const marker = document.createElement('span'); marker.id = 'demo-marker'; marker.setAttribute('popover', 'manual');
         marker.style.cssText = `position:fixed;left:0;top:0;right:auto;bottom:auto;width:16px;height:16px;padding:0;margin:0;border:0;pointer-events:none;background:rgb(${20 + index * 12},10,200)`;
         document.body.append(marker); marker.showPopover();
-      }, { text: clip.text, index });
-      const cue = { ...clip, chapter, start: (performance.now() - start) / 1000 };
+      }, { text: clip.text, index: cues.length });
+      const cue = { ...clip, speechIndex: index, chapter, start: (performance.now() - start) / 1000 };
       cue.end = cue.start + clip.duration; cues.push(cue);
       await page.waitForTimeout((clip.duration + 1.5) * 1000);
       await page.evaluate(() => { document.getElementById('demo-caption')?.remove(); document.getElementById('demo-marker')?.remove(); });
@@ -49,7 +49,7 @@ export async function record(slug, directory, lines, story, { baseURL } = {}) {
     const offset = cues[0].start;
     cues = cues.map(cue => ({ ...cue, start: cue.start - offset, end: cue.end - offset, visibleEnd: cue.visibleEnd - offset }));
     const metadata = await mux(raw, cues, resolve(folder, `${slug}.webm`), offset);
-    const result = { slug, cues: cues.map(({ path, ...cue }) => cue),
+    const result = { slug, browser: browser.version(), cues: cues.map(({ path, ...cue }) => cue),
       duration: Number(metadata.format.duration), size: Number(metadata.format.size),
       streams: metadata.streams.map(({ codec_name, codec_type, width, height }) => ({ codec_name, codec_type, width, height })) };
     await writeFile(resolve(folder, `${slug}-chapters.json`), JSON.stringify(result, null, 2));
