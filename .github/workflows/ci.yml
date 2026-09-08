@@ -10,7 +10,7 @@ concurrency:
   group: faithtech-${{ github.event_name == 'push' && 'production' || github.ref }}
   queue: max
 jobs:
-  verify:
+  release:
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     steps:
@@ -23,10 +23,12 @@ jobs:
       - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
           global-json-file: global.json
+          cache: true
+          cache-dependency-path: 'backend/**/packages.lock.json'
       - name: Install locked dependencies and audit
         run: |
           npm install --global npm@10.9.4
-          for project in frontend e2e design-system; do
+          for project in frontend design-system; do
             npm --prefix "$project" ci
             npm --prefix "$project" audit --audit-level=high
           done
@@ -51,14 +53,8 @@ jobs:
           exit 1
       - name: API acceptance tests
         run: dotnet test backend/FaithTechTorontoAiBuildEvent.slnx -c Release --no-build --logger trx --results-directory artifacts/test-results
-      - name: Browser and recording-helper acceptance tests
+      - name: Recording and release-helper acceptance tests
         run: |
-          cd e2e
-          npx playwright install --with-deps chrome
-          npx playwright test --reporter=list,html
-          cd ../design-system
-          npm test
-          cd ..
           node --test e2e/demo/*.test.mjs
           node --test eng/scripts/*.test.mjs
       - name: Package immutable release
@@ -83,12 +79,65 @@ jobs:
           path: |
             artifacts/test-results/
             artifacts/package.*.log
-            e2e/playwright-report/
-            design-system/playwright-report/
           retention-days: 90
       - name: Remove disposable SQL Server
         if: always()
         run: docker rm -f faithtech-ci-sql || true
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: '**/package-lock.json'
+      - name: Install locked dependencies and audit
+        run: |
+          npm install --global npm@10.9.4
+          for project in frontend e2e design-system; do
+            npm --prefix "$project" ci
+            npm --prefix "$project" audit --audit-level=high
+          done
+      - name: Install browser
+        working-directory: e2e
+        run: npx playwright install --with-deps chrome
+      - name: Build shared Angular libraries
+        working-directory: frontend
+        run: |
+          for project in api components domain; do
+            npx ng build "$project"
+          done
+      - name: Application browser acceptance tests
+        working-directory: e2e
+        run: npx playwright test --shard=${{ matrix.shard }}/2 --reporter=list,html
+      - name: Design system acceptance tests
+        if: matrix.shard == 1
+        run: npm --prefix design-system test
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: browser-${{ matrix.shard }}-${{ github.run_id }}
+          path: |
+            e2e/playwright-report/
+            design-system/playwright-report/
+          retention-days: 90
+  verify:
+    if: always()
+    needs: [release, browser]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Require every verification job to pass
+        env:
+          RELEASE_RESULT: ${{ needs.release.result }}
+          BROWSER_RESULT: ${{ needs.browser.result }}
+        run: test "$RELEASE_RESULT" = success && test "$BROWSER_RESULT" = success
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: verify

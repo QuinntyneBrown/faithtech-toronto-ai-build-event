@@ -17,9 +17,12 @@ below remain useful for recovery; routine releases use the workflows instead.
 Every push to `main` enters the release queue, including documentation-only
 pushes. Pull requests run verification without production access. The pipeline
 installs locked dependencies, audits npm packages, builds Angular/.NET/gallery,
-runs API acceptance against disposable SQL Server, runs both mock-based Angular
-browser suites and gallery tests, then starts and verifies the published package
-against another disposable database. No test database is shared with production.
+runs API acceptance against disposable SQL Server, and starts and verifies the
+published package against another disposable database. Two browser shards run
+the mock-based Angular suites concurrently with release verification; the first
+shard also runs gallery tests. The `verify` check requires the release job and
+both browser shards to pass before deployment. NuGet packages are cached by
+lock-file content and restored in locked mode. No test database is shared with production.
 Builds enforce the existing strict TypeScript and .NET warning settings. The
 repository has no standalone lint command; workflow/script syntax is reviewed
 without inventing architecture tests or suppressing existing behavior tests.
