@@ -88,11 +88,16 @@ and delete its old private key while session keys still require it.
 
 ### Verification and rollback
 
-The initial direct Azure deployment is a bootstrap rehearsal, not proof that
-GitHub's main-triggered deployment has run. Record the successful main workflow
-URL and commit after final end-to-end verification. Requesting an Azure restart
-is asynchronous: `smoke-release.ps1 -Restart` requires a different process instance
-while using the same authenticated session before it reports success.
+The first main-triggered release is recorded in
+[workflow run 34263393987](https://github.com/QuinntyneBrown/faithtech-toronto-ai-build-event/actions/runs/34263393987)
+for commit `0722ecaf14d7db6513be0f800a975cfe078e786e`; the run's deployment job
+and conclusion are the authoritative outcome. The preceding
+[PR verification](https://github.com/QuinntyneBrown/faithtech-toronto-ai-build-event/actions/runs/34262771000)
+passed 139 API tests, 90 application browser tests, three gallery tests, seven
+helper/release tests, and the published-package SQL/authentication smoke test.
+Live Azure session continuity passed on 8 September 2026: requesting a restart
+is asynchronous, so `smoke-release.ps1 -Restart` requires a different process
+instance while using the same authenticated session before it reports success.
 
 GitHub retains release ZIPs, manifests, provisioning bundles and test reports for
 90 days. Keep the current and previous two releases in access-controlled recovery
@@ -157,20 +162,20 @@ A VM also requires OS/.NET/SQL patching, a reverse proxy and certificate renewal
 
 One App Service hosts both Angular bundles and the API; do not create an extra paid plan for each frontend. Retain the admin build's `/admin/` base URL. DNS alone does not choose a frontend or redirect a path. Application host/path routing must implement the table. Same-origin API calls preserve the current relative `/api/admin` requests and secure host-only cookies without adding CORS. A separate admin hostname is not an authorization boundary.
 
-## Application prerequisites: complete before public deployment
+## Application hosting status and public-domain prerequisites
 
-The workspace inspected on the date above includes ongoing static-hosting edits. Recheck the chosen release commit, not just a local working tree. See [implementation evidence](IMPLEMENTATION.md) and the acceptance authority in [L2](specs/L2.md).
+The hosting implementation below is committed in PR #5. Custom domains remain a separate rollout. See [implementation evidence](IMPLEMENTATION.md) and the acceptance authority in [L2](specs/L2.md) for product readiness.
 
 | Area | Observed state and required release behavior |
 | --- | --- |
-| Build and static files | Ongoing edits package `frontend/dist/admin/browser` into `wwwroot/admin` and `frontend/dist/client/browser` into `wwwroot`. Build Angular before publishing .NET. Confirm these edits are committed in the release. |
-| Host/path routing | Admin `/admin/` fallback exists in the inspected edits. Add/verify apex index and client deep-link fallback, admin-host root redirect, and `www` redirect. Never return SPA HTML for unknown `/api` routes or missing assets. Keep a successful root response on the default Azure hostname for Always On. |
-| Proxy HTTPS and client IP | The inspected API rejects non-HTTPS requests and has no explicit forwarded-header middleware. Configure trusted App Service proxy addresses/networks and forwarded scheme/address processing **before** HSTS, HTTPS checks, and authentication. Verify real client IPs for rate limits and reject spoofed forwarded chains; do not blindly clear all proxy trust restrictions. |
-| Hosts and sessions | Limit accepted hosts to the actual Azure default hostname plus the three custom names. Keep Secure, HttpOnly, SameSite and antiforgery behavior. Use durable Data Protection keys outside the deployed ZIP with a stable application name; verify keys persist on this Linux hosting setup and protect/back them up. |
-| Readiness and diagnostics | No readiness route was present in the inspected entry point. Implement a protected operator readiness check that exercises SQL and reports failure without secrets, plus request/error metrics and correlation logs required by L2-045. Do not configure a fictional existing `/health` route. |
-| Event completeness | The client route table was empty; substantial participant/event journeys remain in the implementation queue. Hosting admin sign-in does not satisfy the live-event requirements. Complete and verify the intended event journeys before inviting participants. |
+| Build and static files | CI builds Angular before publishing .NET, packages admin under `wwwroot/admin` and client under `wwwroot`, and starts the published package against disposable SQL before deployment. |
+| Host/path routing | Root, `/events/` deep links, and `/admin/` deep links are implemented and smoke-tested. Unknown APIs and missing assets return 404. Custom admin-host root and `www` redirects must be added when those names are bound. |
+| Proxy HTTPS and client IP | Configured trusted proxies/networks are processed before HSTS, HTTPS checks, and authentication. Acceptance tests cover trusted and untrusted forwarding; live Azure HTTPS succeeds. Reverify client-address behavior if ingress topology changes. |
+| Hosts and sessions | Only the current Azure hostname is allowed. Secure, HttpOnly, SameSite and antiforgery behavior remain enabled. Certificate-encrypted keys persist outside the ZIP with a stable application name; live session continuity across a process restart passed. Add custom names only during their rollout and back up the key recovery material. |
+| Readiness and diagnostics | Administrator-only `/api/admin/readiness` checks SQL, migration currency, revision and process identity. Console logging is enabled. Event monitoring and alerts required by L2-045 remain a separate operational readiness check; no public `/health` route is configured. |
+| Event completeness | Deployment verification does not establish complete event functionality or the 200-participant capacity target. Verify the intended event journeys and load criteria before inviting participants. |
 
-Follow [Microsoft's App Service .NET hosting guidance](https://learn.microsoft.com/en-us/azure/app-service/configure-language-dotnetcore) and [forwarded-header configuration](https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-10.0). For key persistence and encryption choices use [Data Protection configuration](https://learn.microsoft.com/en-us/aspnet/core/security/data-protection/configuration/overview?view=aspnetcore-10.0). These are prerequisites, not changes made by this documentation task.
+Follow [Microsoft's App Service .NET hosting guidance](https://learn.microsoft.com/en-us/azure/app-service/configure-language-dotnetcore) and [forwarded-header configuration](https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-10.0) when changing ingress. For key persistence and encryption choices use [Data Protection configuration](https://learn.microsoft.com/en-us/aspnet/core/security/data-protection/configuration/overview?view=aspnetcore-10.0).
 
 ## 1. Create the Azure resources
 
