@@ -32,9 +32,7 @@ public sealed class AdministratorSessionController(ISender sender) : ControllerB
     public async Task<IActionResult> Read(CancellationToken cancellationToken)
     {
         var session = await sender.Send(new GetAdministratorSessionQuery(Guid.Parse(User.FindFirstValue(ClaimTypes.Sid)!)), cancellationToken);
-        if (session is null) return Unauthorized();
-        return Ok(new { actorId = session.AdministratorId, absoluteExpiresAtUtc = session.AuthenticatedAtUtc.AddHours(8),
-            idleExpiresAtUtc = session.LastInteractionAtUtc.AddMinutes(30) });
+        return session is null ? Unauthorized() : Ok(session);
     }
 
     [HttpDelete, Authorize(Roles = "Administrator"), ValidateAntiForgeryToken]

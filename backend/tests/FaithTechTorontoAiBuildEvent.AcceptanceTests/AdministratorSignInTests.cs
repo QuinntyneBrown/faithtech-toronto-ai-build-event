@@ -24,6 +24,7 @@ public sealed class AdministratorSignInTests(EventApiFactory factory) : IClassFi
         Assert.True(session.GetProperty("actorId").TryGetGuid(out _));
         Assert.False(session.TryGetProperty("password", out _));
         Assert.False(session.TryGetProperty("sessionId", out _));
+        Assert.True(session.GetProperty("serverNow").GetDateTimeOffset() < session.GetProperty("idleExpiresAtUtc").GetDateTimeOffset());
     }
 
     [Fact, Trait("Requirement", "L2-038/AC4;L2-042/AC4")]
