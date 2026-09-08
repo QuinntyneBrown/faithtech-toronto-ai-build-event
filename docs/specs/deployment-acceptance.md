@@ -20,3 +20,16 @@ completion of the live-event performance or product requirements.
    interrupting active migrations and never overwrite a newer release with an
    older one. Given a failed release, an operator can restore a retained compatible
    artifact without rebuilding or reversing database migrations.
+7. Given a pull request, when CI runs, then application browser tests execute in
+   two shards concurrently with backend tests and release packaging. Every
+   existing acceptance suite and dependency audit remains required; the `verify`
+   check fails if any release or browser job fails, is canceled, or is skipped.
+8. Given unchanged NuGet lock files, when a subsequent run restores dependencies,
+   then it reuses the package cache while still enforcing locked restore.
+
+The `release` job builds production applications, tests the API, runs recording
+and release-helper tests, and smoke-tests the actual published package against
+disposable SQL. The browser jobs build their own shared Angular libraries and
+run all application cases across two shards; the first also checks the design
+system. Reports are retained separately per job. Deployment waits for the
+aggregate `verify` check, and main pushes retain serialized production execution.

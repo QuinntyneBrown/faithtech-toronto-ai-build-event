@@ -1,0 +1,46 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+ BorderColor #344054
+ FontColor #101828
+ BackgroundColor #F9FAFB
+}
+title Manage roster credentials and administrator access - issue and recover credentials
+actor Operator as op
+box "Frontend - Windows terminal" #E0F2FE
+participant "Access command" as cli
+end box
+box "Backend - Application" #ECFDF3
+participant OperatorAccessHandler as handler
+end box
+box "Backend - Infrastructure" #FFF4E5
+participant SqlOperatorAccessStore as store
+participant "Credential or Identity services" as security
+database EventDbContext as db
+end box
+op -> cli : Apply reviewed add or replace-code
+cli -> handler : Explicit clear-email setting
+handler -> security : Resolve required digest key before mutation
+security --> handler : Valid key or failure
+handler -> store : Apply issuance
+store -> db : Check operator receipt under lock
+alt Already committed
+db --> store : Nonsecret issuance receipt
+store --> handler : Completed; code unavailable
+else New issuance
+store -> security : Generate code and digest [L2-053]
+security --> store : Plaintext in memory and digest
+store -> db : Save digest; bump version; revoke sessions
+opt Explicit clear-email
+store -> db : Clear this registration binding
+end
+store -> db : Commit receipt without code and audit
+store --> handler : Initial RosterIssuance with code
+end
+handler --> cli : Explicit issuance result
+cli --> op : Code once or recovery guidance
+@enduml

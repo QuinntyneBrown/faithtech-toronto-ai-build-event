@@ -1,0 +1,11 @@
+@startuml
+title Install and update the operator tool - context
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+Person(op, "Database operator")
+System(tool, "FaithTech operator tool", "Locally installed commands")
+System_Ext(sdk, ".NET SDK and tool registry", "Builds packages and registers executable")
+Rel(op, sdk, "Runs installation script")
+Rel(sdk, tool, "Installs or updates local package")
+Rel(op, tool, "Requests help and version")
+@enduml

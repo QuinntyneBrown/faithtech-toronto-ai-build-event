@@ -1,0 +1,17 @@
+@startuml
+title Install and update the operator tool - containers
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+Person(op, "Operator")
+System_Boundary(machine, "Windows machine") {
+Container(script, "Install-OperatorTool.ps1", "PowerShell 7", "Build, package, install or update")
+Container(sdk, ".NET SDK", ".NET 10", "Build and tool registration")
+ContainerDb(feed, "Local package directory", "NuGet package", "Fresh versioned artifact")
+Container(cli, "faithtech-admin", ".NET tool", "Installed Provisioning application")
+}
+Rel(op, script, "Runs")
+Rel(script, sdk, "Invokes without secret arguments")
+Rel(sdk, feed, "Writes package")
+Rel(sdk, cli, "Installs exact version from local feed")
+Rel(op, cli, "Invokes outside repository")
+@enduml

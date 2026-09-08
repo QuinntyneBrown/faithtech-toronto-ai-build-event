@@ -1,0 +1,45 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+ BorderColor #344054
+ FontColor #101828
+ BackgroundColor #F9FAFB
+}
+title Manage roster credentials and administrator access - create or disable administrator
+actor Operator as op
+box "Frontend - Windows terminal" #E0F2FE
+participant "Access command" as cli
+end box
+box "Backend - Application" #ECFDF3
+participant OperatorAccessHandler as handler
+end box
+box "Backend - Infrastructure" #FFF4E5
+participant SqlOperatorAccessStore as store
+participant "Credential or Identity services" as security
+database EventDbContext as db
+end box
+op -> cli : Apply reviewed create-admin or disable-admin
+cli -> handler : Verified actor and bound account intent
+handler -> store : Begin access mutation
+store -> db : Lock operation/account; check receipt
+alt Create
+store -> security : Validate unique username and password
+security --> store : Identity result
+else Disable
+store -> db : Recheck ID and concurrency stamp
+store -> security : Set Enabled=false
+store -> db : Revoke administrator sessions
+end
+alt Validation or concurrency failure
+store -> db : Roll back
+else Valid mutation
+store -> db : Commit account + receipt + audit
+end
+store --> handler : Nonsecret result
+handler --> cli : Outcome
+cli --> op : Account ID or actionable failure
+@enduml

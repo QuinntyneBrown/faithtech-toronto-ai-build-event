@@ -1,0 +1,46 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+ BorderColor #344054
+ FontColor #101828
+ BackgroundColor #F9FAFB
+}
+title Connect to an explicit operator target - types
+class OperatorTargetOptions {
+ +Dictionary<string, TargetProfile> Targets
+}
+class TargetProfile {
+ +string Server
+ +string Database
+ +string Environment
+ +string ConnectionSecret
+}
+class OperatorPrincipal {
+ +string TargetFingerprint
+ +byte[] PrincipalSid
+ +byte[] DatabasePrincipalSid
+ +string DisplayName
+}
+interface IOperatorConnectionFactory {
+ +Open(profile: TargetProfile): Task<VerifiedConnection>
+}
+class SqlOperatorConnectionFactory
+class VerifiedConnection {
+ +OperatorPrincipal Principal
+}
+class OperatorIdentity {
+ +Guid ActorId
+ +string TargetFingerprint
+ +byte[] PrincipalSid
+ +byte[] DatabasePrincipalSid
+}
+OperatorTargetOptions "1" *-- "*" TargetProfile
+SqlOperatorConnectionFactory ..|> IOperatorConnectionFactory
+IOperatorConnectionFactory ..> VerifiedConnection
+VerifiedConnection *-- OperatorPrincipal
+OperatorIdentity ..> OperatorPrincipal : maps verified identity
+@enduml

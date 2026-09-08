@@ -1,0 +1,16 @@
+@startuml
+title Connect to an explicit operator target - components
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+Container_Boundary(local_process, "Local Provisioning process") {
+Component(cmd, "TargetInspectCommand", "Provisioning", "Binds explicit target")
+Component(handler, "ResolveOperatorTargetHandler", "Application", "Checks resolved identity")
+Component(factory, "SqlOperatorConnectionFactory", "Infrastructure", "Opens encrypted connection")
+Component(secrets, "ProtectedOperatorSecretStore", "Infrastructure", "Decrypts current-user secret")
+}
+ContainerDb(db, "Event database", "SQL Server", "Durable data")
+Rel(cmd, handler, "Dispatches target query")
+Rel(handler, factory, "Opens selected target")
+Rel(factory, secrets, "Resolves connection reference")
+Rel(factory, db, "Authenticates and reads identity")
+@enduml

@@ -1,0 +1,53 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+ BorderColor #344054
+ FontColor #101828
+ BackgroundColor #F9FAFB
+}
+title Manage roster credentials and administrator access - types
+class OperatorAccessIntent {
+ +OperatorAccessKind Kind
+ +Guid? EventId
+ +Guid? RegistrationId
+ +string ExpectedVersion
+ +bool ClearEmail
+}
+class OperatorAccessHandler {
+ +Handle(intent: OperatorAccessIntent): Task<OperatorResult>
+}
+interface IOperatorAccessStore {
+ +Apply(intent: OperatorAccessIntent): Task<OperatorResult>
+}
+class SqlOperatorAccessStore
+class RosterIssuance {
+ +RosterEntry Entry
+ +string? Code
+ +bool PreviouslyCompleted
+}
+class Registration {
+ +Guid Id
+ +Guid EventId
+ +bool Active
+ +string CodeDigest
+}
+OperatorAccessHandler ..> OperatorAccessIntent
+OperatorAccessHandler --> IOperatorAccessStore
+SqlOperatorAccessStore ..|> IOperatorAccessStore
+SqlOperatorAccessStore --> Registration : changes
+SqlOperatorAccessStore ..> RosterIssuance : returns once
+enum OperatorAccessKind {
+ AddRegistration
+ RenameRegistration
+ DeactivateRegistration
+ ReactivateRegistration
+ ReplaceCode
+ CreateAdministrator
+ DisableAdministrator
+}
+OperatorAccessIntent --> OperatorAccessKind
+@enduml

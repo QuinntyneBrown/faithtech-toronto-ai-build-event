@@ -1,0 +1,15 @@
+@startuml
+title Install and update the operator tool - components
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+Container_Boundary(cli, "Provisioning") {
+Component(program, "Program", "Composition root", "Parses before database resolution")
+Component(root, "OperatorRootCommand", "System.CommandLine", "Registers command-per-file tree")
+Component(writer, "CommandResultWriter", "Terminal adapter", "Formats output and exit status")
+Component(handler, "Application handlers", "MediatR 12.5.0", "Dispatches valid database intents")
+}
+Rel(program, root, "Parses arguments")
+Rel(root, writer, "Returns help or parse failure")
+Rel(root, handler, "Dispatches valid action after target checks")
+Rel(handler, writer, "Returns typed result")
+@enduml

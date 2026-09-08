@@ -1,0 +1,22 @@
+- generic [ref=e2]:
+  - link "Skip to content" [ref=e3] [cursor=pointer]:
+    - /url: "#main"
+  - banner [ref=e4]:
+    - strong [ref=e5]: FaithTech
+    - generic [ref=e6]: Toronto / Build night
+  - main [ref=e8]:
+    - region "Make room for possibility." [ref=e9]:
+      - paragraph [ref=e10]: FaithTech / Event hosts
+      - heading "Make room for possibility." [level=1] [ref=e11]:
+        - text: Make room
+        - text: for possibility.
+      - paragraph [ref=e12]: Bring the people, the ideas, and the evening together.
+    - generic [ref=e15]:
+      - heading "Welcome back." [level=2] [ref=e16]
+      - paragraph [ref=e17]: Sign in with your event administrator account.
+      - generic [ref=e18]: Username
+      - textbox "Username" [ref=e19]
+      - generic [ref=e20]: Password
+      - textbox "Password" [ref=e21]
+      - button "Sign in" [ref=e23] [cursor=pointer]
+  - contentinfo [ref=e24]: Made for community. Built with purpose.

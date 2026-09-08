@@ -1,0 +1,18 @@
+@startuml
+title Manage event data through validated commands - components
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+Container_Boundary(local_process, "Local Provisioning process") {
+Component(cli, "Event command types", "Provisioning", "Read or preview event intent")
+Component(handler, "EventMaintenanceHandler", "Application", "Composes validation and maintenance port")
+Component(rules, "PublicationValidator and existing validators", "Application", "Validates complete proposed state")
+Component(store, "SqlEventMaintenanceStore", "Infrastructure", "One transaction and operator receipt")
+Component(mutations, "SqlEventMutations", "Infrastructure", "Shared noncommitting entity changes")
+}
+ContainerDb(db, "Event database", "SQL Server", "Durable data")
+Rel(cli, handler, "Dispatches intent")
+Rel(handler, rules, "Validates")
+Rel(handler, store, "Applies reviewed mutation")
+Rel(store, mutations, "Changes tracked entities")
+Rel(store, db, "Commits data, receipt and invalidation")
+@enduml

@@ -1,0 +1,42 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+ BorderColor #344054
+ FontColor #101828
+ BackgroundColor #F9FAFB
+}
+title Review, apply and reconcile operator operations - verify routine writes and restored data
+actor "Acceptance runner" as run
+box "Frontend - Operator and participant clients" #E0F2FE
+participant "Installed CLI" as cli
+participant "Load clients" as clients
+end box
+box "Backend - API and operator application" #D1FADF
+participant "Event API" as api
+end box
+box "Backend - Isolated SQL infrastructure" #FFF4E5
+database "Disposable or restored database" as db
+end box
+run -> db : Prepare synthetic data or isolated restore
+run -> cli : Configure isolated target and inspect
+cli -> db : Verify schema and operator identity
+db --> cli : Compatible target
+run -> clients : Start L2-060 recorded baseline
+clients -> api : Reads and valid participant mutations
+api -> db : Read/write durable state
+loop One CLI content update per minute
+run -> cli : Preview then explicit apply
+cli -> db : Atomic validated update
+db --> cli : Commit confirmed
+clients -> api : Observe updated event
+api --> clients : Fresh authorized state
+end
+run -> api : Representative restored-data verification
+api --> run : Coherent saved state
+clients --> run : Latency, failures and connected-update evidence
+cli --> run : CLI duration and outcomes
+@enduml

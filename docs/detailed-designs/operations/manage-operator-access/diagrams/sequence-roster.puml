@@ -1,0 +1,50 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+ BorderColor #344054
+ FontColor #101828
+ BackgroundColor #F9FAFB
+}
+title Manage roster credentials and administrator access - inspect, add and rename registrations
+actor Operator as op
+box "Frontend - Windows terminal" #E0F2FE
+participant "Access command" as cli
+end box
+box "Backend - Application" #ECFDF3
+participant OperatorAccessHandler as handler
+end box
+box "Backend - Infrastructure" #FFF4E5
+participant SqlOperatorAccessStore as store
+participant "Credential or Identity services" as security
+database EventDbContext as db
+end box
+op -> cli : roster list or show
+cli -> handler : Selected event and registration
+handler -> store : Read roster
+store -> db : Query event-scoped projection
+db --> store : Entries without codes
+store --> handler : Entries and versions
+handler --> cli : Roster result
+cli --> op : Inspect stable IDs
+op -> cli : Preview add or rename
+cli -> handler : Display name and explicit identifiers
+handler --> cli : New ID or reviewed existing version
+cli --> op : Proposed change
+op -> cli : Apply reviewed intent
+cli -> handler : Approved operation
+handler -> store : Atomic apply [L2-053]
+store -> db : Check receipt, lock event and check version
+alt Invalid event or stale edit
+store --> handler : Reject without write
+else Valid
+store -> db : Save one registration + audit + receipt
+store -> db : Commit
+store --> handler : Stable ID and version
+end
+handler --> cli : Result
+cli --> op : Outcome
+@enduml

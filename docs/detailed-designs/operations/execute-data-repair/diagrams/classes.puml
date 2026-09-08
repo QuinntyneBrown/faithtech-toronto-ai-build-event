@@ -1,0 +1,42 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+ BorderColor #344054
+ FontColor #101828
+ BackgroundColor #F9FAFB
+}
+title Execute explicitly reviewed SQL data repairs - types
+class SqlRepairIntent {
+ +Guid OperationId
+ +string ScriptHash
+ +List<SqlBatch> Batches
+ +List<SqlParameterValue> Parameters
+}
+class SqlBatch {
+ +int Index
+ +string Text
+}
+class SqlParameterValue {
+ +string Name
+ +string SqlType
+ +object? Value
+}
+interface ISqlRepairExecutor {
+ +Execute(intent: SqlRepairIntent): Task<SqlRepairOutcome>
+}
+class SqlRepairExecutor
+class SqlRepairOutcome {
+ +string Outcome
+ +List<int> CommittedBatches
+ +bool CurrentBatchUnconfirmed
+}
+SqlRepairIntent *-- SqlBatch
+SqlRepairIntent *-- SqlParameterValue
+SqlRepairExecutor ..|> ISqlRepairExecutor
+ISqlRepairExecutor ..> SqlRepairIntent
+ISqlRepairExecutor ..> SqlRepairOutcome
+@enduml
