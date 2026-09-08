@@ -1,4 +1,4 @@
-import { model, save, reset } from './data.js';
+import { model, save, reset, currentId } from './data.js';
 import { eventScreens } from './client-event.js';
 import { projectScreens } from './client-projects.js';
 import { socialScreens } from './client-social.js';
@@ -41,7 +41,8 @@ document.addEventListener('click',e=>{
   if(a==='next-question'){if(model.quizIndex<model.questions.length-1){model.quizIndex++;save();navigate('quiz');}else navigate('quiz',{state:'results'});}
   if(a==='next-draw')navigate('admin-raffle');
   if(a==='sound')toggleSound(b);
-  if(a==='retry-message'||a==='reconnect')navigate(query().get('screen'),{item:query().get('item')||'sarah'});
+  if(a==='retry-message'){const pending=model.pendingMessage||{to:query().get('item')||'sarah',text:'I would love to hear more about your project.'};model.messages.push({from:currentId(),to:pending.to,text:pending.text,time:model.clock});delete model.pendingMessage;save();navigate('messages',{item:pending.to});}
+  if(a==='reconnect')navigate(query().get('screen'),{item:query().get('item')||'sarah'});
   if(a==='reset')requestLeave(()=>{clean();reset();navigate('catalog');});
   if(a==='switch-event')requestLeave(()=>{clean();switchEvent(Number(b.dataset.item));navigate('admin-overview');});
   if(a==='pause-clock'){model.followClock=false;save();b.textContent='Paused';}
