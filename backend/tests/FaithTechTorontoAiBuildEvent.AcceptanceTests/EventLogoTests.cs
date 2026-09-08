@@ -3,11 +3,74 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using SkiaSharp;
+using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FaithTechTorontoAiBuildEvent.AcceptanceTests;
 
 public sealed class EventLogoTests(EventApiFactory factory) : IClassFixture<EventApiFactory>
 {
+    [Theory, Trait("Requirement", "L2-040/AC3")]
+    [InlineData("image/jpeg", "venue.jpg", false)]
+    [InlineData("image/png", "venue.exe", false)]
+    [InlineData("image/png", "venue.png", true)]
+    public async Task Given_mismatched_or_truncated_image_content_when_uploaded_then_no_logo_is_committed(string mediaType, string name, bool truncated)
+    {
+        using var client = await factory.AdministratorBrowser();
+        var original = await Create(client);
+        var bytes = Image(SKEncodedImageFormat.Png, 100, 100);
+        if (truncated) bytes = bytes[..(bytes.Length / 2)];
+        using var response = await Upload(client, original, bytes, mediaType, name);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.True((await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("errors").TryGetProperty("logo", out _));
+        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync($"/api/admin/events/{original.GetProperty("id").GetGuid()}/logo")).StatusCode);
+    }
+
+    [Fact, Trait("Requirement", "L2-044/AC4;L2-044/AC6;L2-045/AC3")]
+    public async Task Given_concurrent_logo_uploads_when_retried_then_one_asset_and_audit_are_committed_and_changed_payload_is_rejected()
+    {
+        using var client = await factory.AdministratorBrowser();
+        var original = await Create(client);
+        var bytes = Image(SKEncodedImageFormat.Png, 3, 2);
+        var key = Guid.NewGuid().ToString();
+        var responses = await Task.WhenAll(Upload(client, original, bytes, "image/png", operationId: key),
+            Upload(client, original, bytes, "image/png", operationId: key));
+        foreach (var response in responses) response.EnsureSuccessStatusCode();
+        Assert.Equal(await responses[0].Content.ReadAsStringAsync(), await responses[1].Content.ReadAsStringAsync());
+        using var stale = await Upload(client, original, bytes, "image/png");
+        Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
+        Assert.Equal("stale-version", (await stale.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("code").GetString());
+        using var changed = await Upload(client, original, Image(SKEncodedImageFormat.Png, 4, 2), "image/png", operationId: key);
+        Assert.Equal(HttpStatusCode.Conflict, changed.StatusCode);
+        Assert.Equal("operation-key-reused", (await changed.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("code").GetString());
+        var id = original.GetProperty("id").GetGuid();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<EventDbContext>();
+        var audit = await db.AuditRecords.Where(x => x.EventId == id && x.Action == "event-logo-saved").SingleAsync();
+        Assert.NotEqual(Guid.Empty, audit.ActorId);
+        Assert.Equal("succeeded", audit.Outcome);
+        Assert.Single(await db.OperationReceipts.Where(x => x.EventId == id).ToListAsync());
+        var stored = await db.Events.Where(x => x.Id == id).SingleAsync();
+        Assert.Equal(3, (await db.Logos.SingleAsync(x => x.Id == stored.LogoId)).Width);
+        foreach (var response in responses) response.Dispose();
+    }
+
+    [Fact, Trait("Requirement", "L2-038;L2-041;L2-044/AC4")]
+    public async Task Given_a_logo_upload_when_authorization_or_antiforgery_is_missing_then_no_image_is_saved()
+    {
+        using var client = await factory.AdministratorBrowser();
+        var original = await Create(client);
+        var bytes = Image(SKEncodedImageFormat.Png, 3, 2);
+        using var anonymous = factory.Browser();
+        using var denied = await Upload(anonymous, original, bytes, "image/png");
+        Assert.Equal(HttpStatusCode.Unauthorized, denied.StatusCode);
+        client.DefaultRequestHeaders.Remove("X-CSRF-TOKEN");
+        using var noCsrf = await Upload(client, original, bytes, "image/png");
+        Assert.Equal(HttpStatusCode.BadRequest, noCsrf.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync($"/api/admin/events/{original.GetProperty("id").GetGuid()}/logo")).StatusCode);
+    }
+
     [Theory, Trait("Requirement", "L2-040/AC3")]
     [InlineData(1, 1, 2097152, true)]
     [InlineData(1, 1, 2097153, false)]
