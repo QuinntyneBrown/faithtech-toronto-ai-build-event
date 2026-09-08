@@ -16,7 +16,15 @@ public static class SaveEventValidator
             throw new InputValidationException("latitude", "Use a latitude between -90 and 90.");
         if (input.Longitude is { } longitude && (!double.IsFinite(longitude) || longitude is < -180 or > 180))
             throw new InputValidationException("longitude", "Use a longitude between -180 and 180.");
-        return result;
+        var timezone = Text(input.Timezone, "timezone", 200);
+        var zone = LocalTimeResolver.Zone(timezone);
+        var start = LocalTimeResolver.Resolve(input.Start, zone, "start");
+        var end = LocalTimeResolver.Resolve(input.End, zone, "end");
+        if (start?.ToUtc() is { } startsAt && end?.ToUtc() is { } endsAt && endsAt <= startsAt)
+            throw new InputValidationException("end", "Event end must be after event start.");
+        if (start is not null && end is not null && (start.OffsetMinutes is null || end.OffsetMinutes is null) && end.Local <= start.Local)
+            throw new InputValidationException("end", "Event end must be after event start.");
+        return result with { Timezone = timezone, Start = start, End = end };
     }
 
     private static string? Text(string? value, string field, int limit)

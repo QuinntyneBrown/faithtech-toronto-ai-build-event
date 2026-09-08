@@ -31,6 +31,9 @@ public sealed class SqlEventStore(EventDbContext db) : IEventStore
         item.Title = input.Title; item.VenueName = input.VenueName; item.Address = input.Address;
         item.Latitude = input.Latitude; item.Longitude = input.Longitude;
         item.WaitingContent = input.WaitingContent; item.ClosingContent = input.ClosingContent; item.DirectionsUrl = input.DirectionsUrl;
+        item.Timezone = input.Timezone; item.StartLocal = input.Start?.Local; item.EndLocal = input.End?.Local;
+        item.StartOffsetMinutes = input.Start?.OffsetMinutes; item.EndOffsetMinutes = input.End?.OffsetMinutes;
+        item.StartsAtUtc = input.Start?.ToUtc(); item.EndsAtUtc = input.End?.ToUtc();
         await db.SaveChangesAsync(cancellationToken);
         var result = Detail(item);
         var now = await db.Database.SqlQuery<DateTimeOffset>($"SELECT TODATETIMEOFFSET(SYSUTCDATETIME(), '+00:00') AS Value").SingleAsync(cancellationToken);
@@ -44,7 +47,9 @@ public sealed class SqlEventStore(EventDbContext db) : IEventStore
 
     private EventDetail Detail(BuildEvent item) => new(item.Id, item.Title, item.Published, item.UseLiturgy,
         Convert.ToBase64String(db.Entry(item).Property<byte[]>("Version").CurrentValue!), item.VenueName, item.Address,
-        item.Latitude, item.Longitude, item.WaitingContent, item.ClosingContent, item.DirectionsUrl);
+        item.Latitude, item.Longitude, item.WaitingContent, item.ClosingContent, item.DirectionsUrl, item.Timezone,
+        item.StartLocal is { } start ? new(start, item.StartOffsetMinutes) : null,
+        item.EndLocal is { } end ? new(end, item.EndOffsetMinutes) : null, item.StartsAtUtc, item.EndsAtUtc);
 
     public async Task<EventDetail?> GetEvent(Guid eventId, CancellationToken cancellationToken)
     {
