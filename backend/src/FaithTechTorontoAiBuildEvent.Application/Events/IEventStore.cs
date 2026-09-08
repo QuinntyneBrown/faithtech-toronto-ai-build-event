@@ -7,4 +7,5 @@ public interface IEventStore
     Task<EventSummary> CreateDraft(Guid actorId, Guid operationId, string? title, CancellationToken cancellationToken);
     Task<EventDetail> CopyEvent(Guid actorId, Guid sourceEventId, Guid operationId, LocalTimeInput newStart, CancellationToken cancellationToken);
     Task<IReadOnlyList<EventSummary>> ListEvents(CancellationToken cancellationToken);
+    Task<EntryHeader?> GetPublishedHeader(Guid eventId, CancellationToken cancellationToken);
 }

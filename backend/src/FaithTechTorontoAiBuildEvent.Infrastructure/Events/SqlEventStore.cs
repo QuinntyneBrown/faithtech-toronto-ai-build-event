@@ -140,6 +140,12 @@ public sealed class SqlEventStore(EventDbContext db) : IEventStore
         return result;
     }
 
+    public async Task<EntryHeader?> GetPublishedHeader(Guid eventId, CancellationToken cancellationToken)
+    {
+        var item = await db.Events.AsNoTracking().SingleOrDefaultAsync(x => x.Id == eventId && x.Published, cancellationToken);
+        return item is null ? null : new EntryHeader(item.Id, item.Title);
+    }
+
     public async Task<IReadOnlyList<EventSummary>> ListEvents(CancellationToken cancellationToken) =>
         await db.Events.AsNoTracking().OrderBy(x => x.Title).ThenBy(x => x.Id)
             .Select(x => new EventSummary(x.Id, x.Title, x.Published, x.UseLiturgy, Convert.ToBase64String(EF.Property<byte[]>(x, "Version")),
