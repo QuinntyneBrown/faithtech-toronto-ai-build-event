@@ -22,7 +22,7 @@ class FollowLiveEventHandler {
   +Handle(request: GetEventSnapshotQuery): Task<EventSnapshot>
 }
 interface IEventStore {
-  +LoadAuthorized(scope: ActorEventScope): Task<EventSnapshot>
+  +LoadEventSnapshot(scope: ActorEventScope): Task<EventSnapshot>
   +Commit(intent: OperationContext): Task<CommitResult>
 }
 class EventSnapshot {

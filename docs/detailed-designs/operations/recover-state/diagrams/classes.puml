@@ -22,7 +22,7 @@ class RecoverStateHandler {
   +Handle(request: GetOperationResultQuery): Task<RecoveryResult>
 }
 interface IEventStore {
-  +LoadAuthorized(scope: ActorEventScope): Task<OperationReceipt>
+  +LoadOperationReceipt(scope: ActorEventScope): Task<OperationReceipt>
   +Commit(intent: OperationContext): Task<CommitResult>
 }
 class OperationReceipt {

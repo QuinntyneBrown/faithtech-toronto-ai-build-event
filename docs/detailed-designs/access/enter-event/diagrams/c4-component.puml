@@ -5,7 +5,7 @@ title Components - Enter an event
 Container(ui, "EnterEventPage", "Angular / IEntryService", "Signals and typed service contract")
 Container_Boundary(api, "Event API") {
 Component(ctrl, "EntryController", "ASP.NET Core", "Bind, MediatR dispatch, return")
-Component(gate, "SessionAuthorizationBehavior", "Application pipeline", "Validate actor, event and ownership")
+Component(gate, "SessionAuthorizationBehavior", "Application pipeline", "Explicit anonymous entry; protected destination checks")
 Component(handler, "EnterEventHandler", "Application", "Resolve published event access and bind an email atomically")
 Component(entity, "Registration", "Domain", "Published event headers, registrations, bindings and participant sessions")
 Component(store, "SqlEventStore", "Infrastructure / IEventStore", "Feature queries, concurrency and transactions")

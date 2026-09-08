@@ -22,7 +22,7 @@ class DrawWinnerHandler {
   +Handle(request: DrawWinnerCommand): Task<RaffleResult>
 }
 interface IEventStore {
-  +LoadAuthorized(scope: ActorEventScope): Task<RaffleAward>
+  +LoadRaffleAward(scope: ActorEventScope): Task<RaffleAward>
   +Commit(intent: OperationContext): Task<CommitResult>
 }
 class RaffleAward {

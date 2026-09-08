@@ -22,7 +22,7 @@ class ExchangeMessagesHandler {
   +Handle(request: SendMessageCommand): Task<MessageView>
 }
 interface IEventStore {
-  +LoadAuthorized(scope: ActorEventScope): Task<Conversation>
+  +LoadConversation(scope: ActorEventScope): Task<Conversation>
   +Commit(intent: OperationContext): Task<CommitResult>
 }
 class Conversation {

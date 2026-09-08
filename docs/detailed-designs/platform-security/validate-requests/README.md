@@ -6,9 +6,9 @@ Validation prevents malformed content from becoming durable state. Abuse limits 
 
 ## Description
 
-This proposed slice is part of existing endpoint pipelines and adds no product route. `ValidateRequestsPage` denotes ordinary forms consuming `ProblemDetails`. Each feature service maps transport errors into typed field feedback; no separate HTTP feedback service is required. `ValidateRequestsHandler` summarizes application validators and the infrastructure rate-limit adapter in the diagrams.
+This proposed slice is part of existing endpoint pipelines and adds no product route. Ordinary feature forms consuming `ProblemDetails`. Each feature service maps transport errors into typed field feedback; no separate HTTP feedback service is required. `RequestValidationBehavior` invokes typed application validators; `SqlAbuseLimitStore` implements shared counters and `LogoValidator` performs bounded decoding.
 
-`TextRules` trims surrounding whitespace, converts line endings to LF, and counts Unicode scalar values rather than UTF-16 code units. Required names and options contain 1–200 values; ordinary prose is at most 5,000; messages contain 1–2,000. Optional values may be empty. Draft publication/question exceptions apply only where L2-001/L2-017 permit missing fields. Tags enforce 40-character values and at most 20 distinct normalized values across the three categories. Validation reports stable field paths, including question/option indices.
+`TextRules` trims surrounding whitespace, converts line endings to LF, and counts Unicode scalar values rather than UTF-16 code units. Required names and options contain 1–200 characters; ordinary prose is at most 5,000; messages contain 1–2,000. Optional values may be empty. Draft publication/question exceptions apply only where L2-001/L2-017 permit missing fields. Tags enforce 40-character values and at most 20 distinct normalized values across the three categories. Validation reports stable field paths, including question/option indices.
 
 `HttpsLinkValidator` accepts only absolute HTTPS URLs at most 2,048 characters with no user information. The API never dereferences submitted links. Plain text containing markup-like characters remains literal text in Angular interpolation/native text nodes; it is not converted into executable HTML. Parameterized SQL receives all submitted text. Coordinates are finite latitude −90..90 and longitude −180..180.
 
@@ -41,11 +41,11 @@ The Client and admin applications calls the API for authoritative state. SQL Ser
 
 ![Validate input and enforce abuse limits: c4-container](diagrams/c4-container.png)
 
-`RequestFeedbackController` dispatches through the application pipeline. `ValidateRequestsHandler` owns the feature policy and uses the persistence port.
+Existing feature controllers dispatch through request validation and authorization. Infrastructure adapters enforce distributed counters and decode accepted image formats.
 
 ![Validate input and enforce abuse limits: c4-component](diagrams/c4-component.png)
 
-`ValidationResult` carries stable identity and feature state. The service interface separates Angular consumers from HTTP; `IEventStore` represents the application persistence boundary. Method shapes are slice-specific views of the shared contracts.
+`ValidationResult` carries stable identity and feature state. Typed validators share literal-content rules. Infrastructure implements the abuse-limit port and bounded image decoder without introducing a feedback HTTP service.
 
 ![Validate input and enforce abuse limits: classes](diagrams/classes.png)
 

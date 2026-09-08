@@ -11,7 +11,6 @@ skinparam maxMessageSize 180
 title Structure - Publish the standalone design gallery
 class "gallery.js" as Gallery <<module>> {
   +root: HTMLElement
-  +computedSwatch(role: string): string
 }
 class "gallery-patterns.js" as Patterns <<module>> {
   +patterns: string

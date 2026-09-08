@@ -22,7 +22,7 @@ class ManageRosterHandler {
   +Handle(request: SetRegistrationActiveCommand): Task<RosterEntry>
 }
 interface IEventStore {
-  +LoadAuthorized(scope: ActorEventScope): Task<Registration>
+  +LoadRegistration(scope: ActorEventScope): Task<Registration>
   +Commit(intent: OperationContext): Task<CommitResult>
 }
 class Registration {

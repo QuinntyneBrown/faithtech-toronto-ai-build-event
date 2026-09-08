@@ -22,7 +22,7 @@ class ChooseProjectHandler {
   +Handle(request: SelectProjectCommand): Task<ProjectDetail>
 }
 interface IEventStore {
-  +LoadAuthorized(scope: ActorEventScope): Task<ProjectChoice>
+  +LoadProjectChoice(scope: ActorEventScope): Task<ProjectChoice>
   +Commit(intent: OperationContext): Task<CommitResult>
 }
 class ProjectChoice {

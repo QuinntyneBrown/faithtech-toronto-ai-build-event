@@ -22,7 +22,7 @@ class FindPeopleHandler {
   +Handle(request: SearchPeopleQuery): Task<DirectoryEntry[]>
 }
 interface IEventStore {
-  +LoadAuthorized(scope: ActorEventScope): Task<DirectoryEntry>
+  +LoadDirectoryEntry(scope: ActorEventScope): Task<DirectoryEntry>
   +Commit(intent: OperationContext): Task<CommitResult>
 }
 class DirectoryEntry {

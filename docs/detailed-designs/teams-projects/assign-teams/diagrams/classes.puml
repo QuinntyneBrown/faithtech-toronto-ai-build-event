@@ -22,7 +22,7 @@ class AssignTeamsHandler {
   +Handle(request: SetMembershipCommand): Task<TeamView>
 }
 interface IEventStore {
-  +LoadAuthorized(scope: ActorEventScope): Task<Team>
+  +LoadTeam(scope: ActorEventScope): Task<Team>
   +Commit(intent: OperationContext): Task<CommitResult>
 }
 class Team {

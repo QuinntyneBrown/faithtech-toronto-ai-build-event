@@ -22,7 +22,7 @@ class ProtectAccessHandler {
   +Handle(request: AuthorizeResourceRequest): Task<AuthorizationDecision>
 }
 interface IEventStore {
-  +LoadAuthorized(scope: ActorEventScope): Task<AuthorizationScope>
+  +LoadAuthorizationScope(scope: ActorEventScope): Task<AuthorizationScope>
   +Commit(intent: OperationContext): Task<CommitResult>
 }
 class AuthorizationScope {

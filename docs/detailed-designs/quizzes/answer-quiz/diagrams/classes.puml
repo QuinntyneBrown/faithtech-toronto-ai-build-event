@@ -10,7 +10,7 @@ skinparam sequenceMessageAlign center
 skinparam maxMessageSize 180
 title Structure - Answer a quiz and read final results
 interface IQuizService {
-  +state: Signal<QuizView>
+  +participantState: Signal<QuizView>
   +refresh(): Promise<void>
 }
 class QuizService {
@@ -22,7 +22,7 @@ class AnswerQuizHandler {
   +Handle(request: SubmitQuizAnswerCommand): Task<SavedQuizChoice>
 }
 interface IEventStore {
-  +LoadAuthorized(scope: ActorEventScope): Task<QuizAnswer>
+  +LoadQuizAnswer(scope: ActorEventScope): Task<QuizAnswer>
   +Commit(intent: OperationContext): Task<CommitResult>
 }
 class QuizAnswer {

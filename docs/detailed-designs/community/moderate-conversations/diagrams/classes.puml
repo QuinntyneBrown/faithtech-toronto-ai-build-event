@@ -22,7 +22,7 @@ class ModerateConversationsHandler {
   +Handle(request: ResolveReportCommand): Task<ReportDetail>
 }
 interface IEventStore {
-  +LoadAuthorized(scope: ActorEventScope): Task<MessageReport>
+  +LoadMessageReport(scope: ActorEventScope): Task<MessageReport>
   +Commit(intent: OperationContext): Task<CommitResult>
 }
 class MessageReport {

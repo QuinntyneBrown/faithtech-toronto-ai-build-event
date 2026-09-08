@@ -22,7 +22,7 @@ class ConfigurePrizesHandler {
   +Handle(request: SavePrizeCommand): Task<PrizeView>
 }
 interface IEventStore {
-  +LoadAuthorized(scope: ActorEventScope): Task<Prize>
+  +LoadPrize(scope: ActorEventScope): Task<Prize>
   +Commit(intent: OperationContext): Task<CommitResult>
 }
 class Prize {

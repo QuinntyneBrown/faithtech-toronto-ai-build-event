@@ -22,7 +22,7 @@ class ConfigureScheduleHandler {
   +Handle(request: SaveScheduleCommand): Task<ScheduleDetail>
 }
 interface IEventStore {
-  +LoadAuthorized(scope: ActorEventScope): Task<EventSchedule>
+  +LoadEventSchedule(scope: ActorEventScope): Task<EventSchedule>
   +Commit(intent: OperationContext): Task<CommitResult>
 }
 class EventSchedule {

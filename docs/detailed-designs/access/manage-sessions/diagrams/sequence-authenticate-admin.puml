@@ -1,0 +1,53 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam classBackgroundColor #F9FAFB
+skinparam classBorderColor #344054
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+title Authenticate an operator-provisioned administrator
+actor "Administrator" as actor
+box "Frontend - Admin application" #E0F2FE
+participant "Administrator access page" as page
+participant "ISessionService" as client
+end box
+box "Backend - Event API" #D1FADF
+participant "SessionController" as controller
+end box
+box "Backend - Application and Domain" #ECFDF3
+participant "Authentication validation pipeline" as gate
+participant "ManageSessionsHandler" as handler
+end box
+box "Backend - Infrastructure" #FFF4E5
+participant "Identity password verifier" as identity
+database "SQL session and abuse stores" as db
+end box
+actor -> page : Submit provisioned username and password [L2-038]
+page -> client : AuthenticateAdministratorCommand
+client -> controller : HTTPS body plus antiforgery header
+controller -> gate : MediatR dispatch; explicit anonymous endpoint
+gate -> db : Lock and check source/account rolling limits [L2-042]
+db --> gate : Remaining budget or positive Retry-After
+alt Throttled or invalid antiforgery token
+gate --> controller : Reject before password verification
+controller --> client : 429 or antiforgery denial
+client --> page : Generic actionable feedback
+else Admission permitted
+gate -> handler : Authenticate provisioned account
+handler -> identity : Verify password and enabled administrator role
+identity --> handler : Valid or generic denial
+alt Invalid credential or disabled account
+handler -> db : Record failed attempt; no session
+handler --> controller : Generic authentication failure
+else Valid administrator
+handler -> db : Commit session with 30-minute idle / eight-hour absolute limits
+db --> handler : Durable session reference
+handler --> controller : Session result; protected cookie issued by response adapter
+end
+controller --> client : Cookie and safe SessionState or generic denial
+client --> page : Authorized admin route or retry feedback
+end
+@enduml

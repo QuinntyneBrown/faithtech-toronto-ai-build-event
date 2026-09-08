@@ -22,7 +22,7 @@ class EnterEventHandler {
   +Handle(request: AuthenticateParticipantCommand): Task<EntryResult>
 }
 interface IEventStore {
-  +LoadAuthorized(scope: ActorEventScope): Task<Registration>
+  +LoadRegistration(scope: ActorEventScope): Task<Registration>
   +Commit(intent: OperationContext): Task<CommitResult>
 }
 class Registration {
@@ -41,12 +41,12 @@ class EntryCredential {
   +CodeDigest: byte[]
   +CredentialVersion: long
 }
-class ParticipantSession {
+class Session {
   +Id: Guid
   +RegistrationId: Guid
   +ExpiresAtUtc: DateTimeOffset
 }
 Registration "1" *-- "1" EntryCredential
-Registration "1" --> "0..*" ParticipantSession
+Registration "1" --> "0..*" Session
 
 @enduml

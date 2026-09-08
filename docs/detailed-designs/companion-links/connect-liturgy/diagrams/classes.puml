@@ -22,7 +22,7 @@ class ConnectLiturgyHandler {
   +Handle(request: SetCompanionEnabledCommand): Task<CompanionSettingsView>
 }
 interface IEventStore {
-  +LoadAuthorized(scope: ActorEventScope): Task<CompanionSettings>
+  +LoadCompanionSettings(scope: ActorEventScope): Task<CompanionSettings>
   +Commit(intent: OperationContext): Task<CommitResult>
 }
 class CompanionSettings {

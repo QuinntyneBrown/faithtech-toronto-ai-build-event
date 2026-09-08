@@ -8,7 +8,7 @@ Component(ctrl, "SessionController", "ASP.NET Core", "Bind, MediatR dispatch, re
 Component(gate, "SessionAuthorizationBehavior", "Application pipeline", "Validate actor, event and ownership")
 Component(handler, "ManageSessionsHandler", "Application", "Restore authorized sessions and enforce exact expiry and sign-out")
 Component(entity, "Session", "Domain", "SQL sessions, administrator Identity records and revocations")
-Component(store, "SqlEventStore", "Infrastructure / IEventStore", "Feature queries, concurrency and transactions")
+Component(store, "SqlSessionStore", "Infrastructure / ISessionStore", "Feature queries, concurrency and transactions")
 }
 ContainerDb(db, "Event database", "SQL Server", "SQL sessions, administrator Identity records and revocations")
 Rel(ui, ctrl, "Manage sessions", "HTTPS")

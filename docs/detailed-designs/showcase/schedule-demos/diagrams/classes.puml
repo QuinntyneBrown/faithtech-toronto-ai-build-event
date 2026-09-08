@@ -22,7 +22,7 @@ class ScheduleDemosHandler {
   +Handle(request: SaveDemoSlotCommand): Task<DemoScheduleView>
 }
 interface IEventStore {
-  +LoadAuthorized(scope: ActorEventScope): Task<DemoSlot>
+  +LoadDemoSlot(scope: ActorEventScope): Task<DemoSlot>
   +Commit(intent: OperationContext): Task<CommitResult>
 }
 class DemoSlot {

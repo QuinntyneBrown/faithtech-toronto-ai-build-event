@@ -7,7 +7,7 @@ Container_Boundary(api, "Event API") {
 Component(ctrl, "SessionController", "ASP.NET Core", "Bind, MediatR dispatch, return")
 Component(gate, "SessionAuthorizationBehavior", "Application pipeline", "Validate actor, event and ownership")
 Component(handler, "ProtectAccessHandler", "Application", "Enforce every resource boundary and keep credentials out of public state")
-Component(entity, "AuthorizationScope", "Domain", "SQL session authority, credential digests and scoped resource relationships")
+Component(entity, "AuthorizationScope", "Application projection / policy", "SQL session authority, credential digests and scoped resource relationships")
 Component(store, "SqlEventStore", "Infrastructure / IEventStore", "Feature queries, concurrency and transactions")
 }
 ContainerDb(db, "Event database", "SQL Server", "SQL session authority, credential digests and scoped resource relationships")

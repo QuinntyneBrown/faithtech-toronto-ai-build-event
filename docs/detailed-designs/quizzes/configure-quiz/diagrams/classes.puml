@@ -10,7 +10,7 @@ skinparam sequenceMessageAlign center
 skinparam maxMessageSize 180
 title Structure - Configure a quiz lifecycle
 interface IQuizService {
-  +state: Signal<QuizDefinition>
+  +administrationState: Signal<QuizDefinition>
   +refresh(): Promise<void>
 }
 class QuizService {
@@ -22,7 +22,7 @@ class ConfigureQuizHandler {
   +Handle(request: SaveQuizCommand): Task<QuizDefinition>
 }
 interface IEventStore {
-  +LoadAuthorized(scope: ActorEventScope): Task<Quiz>
+  +LoadQuiz(scope: ActorEventScope): Task<Quiz>
   +Commit(intent: OperationContext): Task<CommitResult>
 }
 class Quiz {

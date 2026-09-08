@@ -62,3 +62,7 @@ Sign out the current session applies identify current session only [l2-004]. Tem
 Record deliberate administrator activity applies check idle and absolute deadlines before renewal [l2-038]. Expired session; background traffic is not an interaction leaves committed state unchanged; the client retains enough context to recover.
 
 ![Manage participant and administrator sessions: sequence-admin-interaction](diagrams/sequence-admin-interaction.png)
+
+Administrator authentication checks the provisioned account and abuse budget before creating a session. Passwords and session secrets remain outside diagnostic and receipt projections.
+
+![Authenticate an administrator](diagrams/sequence-authenticate-admin.png)

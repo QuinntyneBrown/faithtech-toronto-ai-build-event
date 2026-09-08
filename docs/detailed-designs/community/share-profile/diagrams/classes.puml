@@ -22,7 +22,7 @@ class ShareProfileHandler {
   +Handle(request: SaveProfileCommand): Task<OwnProfile>
 }
 interface IEventStore {
-  +LoadAuthorized(scope: ActorEventScope): Task<ParticipantProfile>
+  +LoadParticipantProfile(scope: ActorEventScope): Task<ParticipantProfile>
   +Commit(intent: OperationContext): Task<CommitResult>
 }
 class ParticipantProfile {

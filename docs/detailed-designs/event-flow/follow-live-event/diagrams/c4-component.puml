@@ -7,7 +7,7 @@ Container_Boundary(api, "Event API") {
 Component(ctrl, "LiveEventController", "ASP.NET Core", "Bind, MediatR dispatch, return")
 Component(gate, "SessionAuthorizationBehavior", "Application pipeline", "Validate actor, event and ownership")
 Component(handler, "FollowLiveEventHandler", "Application", "Display authoritative countdowns, stages and recap without losing activity drafts")
-Component(entity, "EventSnapshot", "Domain", "Event timing, stage content, venue branding and authorized snapshot projections")
+Component(entity, "EventSnapshot", "Application projection / policy", "Event timing, stage content, venue branding and authorized snapshot projections")
 Component(store, "SqlEventStore", "Infrastructure / IEventStore", "Feature queries, concurrency and transactions")
 }
 ContainerDb(db, "Event database", "SQL Server", "Event timing, stage content, venue branding and authorized snapshot projections")

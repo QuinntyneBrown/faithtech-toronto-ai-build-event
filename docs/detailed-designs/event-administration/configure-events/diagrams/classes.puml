@@ -22,7 +22,7 @@ class ConfigureEventsHandler {
   +Handle(request: SaveEventCommand): Task<EventDetail>
 }
 interface IEventStore {
-  +LoadAuthorized(scope: ActorEventScope): Task<Event>
+  +LoadEvent(scope: ActorEventScope): Task<Event>
   +Commit(intent: OperationContext): Task<CommitResult>
 }
 class Event {

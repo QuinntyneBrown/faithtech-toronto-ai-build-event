@@ -11,15 +11,15 @@ skinparam maxMessageSize 180
 title Validate typed text and link input
 actor "Participant and administrator" as actor
 box "Frontend - Client and admin applications" #E0F2FE
-participant "ValidateRequestsPage" as page
-participant "IRequestFeedbackService" as client
+participant "Feature forms" as page
+participant "Injected feature service" as client
 end box
 box "Backend - Event API" #D1FADF
-participant "RequestFeedbackController" as controller
+participant "Feature controllers" as controller
 end box
 box "Backend - Application and Domain" #ECFDF3
 participant "Authorization / validation pipeline" as gate
-participant "ValidateRequestsHandler" as handler
+participant "RequestValidationBehavior / feature handler" as handler
 participant "ValidationResult" as entity
 end box
 box "Backend - Infrastructure" #FFF4E5

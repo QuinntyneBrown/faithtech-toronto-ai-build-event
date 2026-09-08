@@ -7,7 +7,7 @@ Container_Boundary(api, "Event API") {
 Component(ctrl, "DirectoryController", "ASP.NET Core", "Bind, MediatR dispatch, return")
 Component(gate, "SessionAuthorizationBehavior", "Application pipeline", "Validate actor, event and ownership")
 Component(handler, "FindPeopleHandler", "Application", "Search active roster names and rank actual shared tag intersections")
-Component(entity, "DirectoryEntry", "Domain", "Active registrations, shared profile projections and block exclusions")
+Component(entity, "DirectoryEntry", "Application projection / policy", "Active registrations, shared profile projections and block exclusions")
 Component(store, "SqlEventStore", "Infrastructure / IEventStore", "Feature queries, concurrency and transactions")
 }
 ContainerDb(db, "Event database", "SQL Server", "Active registrations, shared profile projections and block exclusions")

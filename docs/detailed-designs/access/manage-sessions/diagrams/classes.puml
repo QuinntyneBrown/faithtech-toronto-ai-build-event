@@ -22,7 +22,7 @@ class ManageSessionsHandler {
   +Handle(request: GetSessionQuery): Task<SessionState>
 }
 interface ISessionStore {
-  +LoadAuthorized(scope: ActorEventScope): Task<Session>
+  +LoadSession(scope: ActorEventScope): Task<Session>
   +Commit(intent: OperationContext): Task<CommitResult>
 }
 class Session {

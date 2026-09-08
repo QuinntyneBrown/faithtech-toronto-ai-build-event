@@ -23,7 +23,7 @@ participant "ManageSessionsHandler" as handler
 participant "Session" as entity
 end box
 box "Backend - Infrastructure" #FFF4E5
-database "SQL Server / IEventStore" as db
+database "SQL Server / ISessionStore" as db
 participant "OutboxDispatcher / EventHub" as push
 end box
 actor -> page : Perform an explicit UI action

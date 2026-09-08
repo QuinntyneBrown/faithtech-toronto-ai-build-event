@@ -2,13 +2,13 @@
 !include <C4/C4_Component>
 LAYOUT_WITH_LEGEND()
 title Components - Validate input and enforce abuse limits
-Container(ui, "ValidateRequestsPage", "Angular / IRequestFeedbackService", "Signals and typed service contract")
+Container(ui, "Feature forms", "Angular / Injected feature service", "Signals and typed service contract")
 Container_Boundary(api, "Event API") {
-Component(ctrl, "RequestFeedbackController", "ASP.NET Core", "Bind, MediatR dispatch, return")
+Component(ctrl, "Feature controllers", "ASP.NET Core", "Bind, MediatR dispatch, return")
 Component(gate, "SessionAuthorizationBehavior", "Application pipeline", "Validate actor, event and ownership")
-Component(handler, "ValidateRequestsHandler", "Application", "Validate literal content and enforce shared rolling limits before side effects")
-Component(entity, "ValidationResult", "Domain", "SQL failure/send timestamps and validated input outcomes")
-Component(store, "SqlEventStore", "Infrastructure / IEventStore", "Feature queries, concurrency and transactions")
+Component(handler, "RequestValidationBehavior / feature handler", "Application", "Validate literal content and enforce shared rolling limits before side effects")
+Component(entity, "ValidationResult", "Application value", "SQL failure/send timestamps and validated input outcomes")
+Component(store, "SqlAbuseLimitStore / LogoValidator", "Infrastructure", "Shared counters and bounded image decoding")
 }
 ContainerDb(db, "Event database", "SQL Server", "SQL failure/send timestamps and validated input outcomes")
 Rel(ui, ctrl, "Validate requests", "HTTPS")

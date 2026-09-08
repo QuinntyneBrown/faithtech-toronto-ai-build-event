@@ -56,3 +56,7 @@ Admit and commit an immutable answer applies record server admission within open
 Finalize and read per-quiz results applies require durable closure and all earlier admissions resolved [l2-019]. Quiz open or finalization unavailable leaves committed state unchanged; the client retains enough context to recover.
 
 ![Answer a quiz and read final results: sequence-results](diagrams/sequence-results.png)
+
+Closure permanently stops admission before final scores are published. Durable pre-close admissions resolve once, including after a worker restart, so no provisional score is presented as final.
+
+![Close admissions and finalize quiz scores](diagrams/sequence-finalize.png)

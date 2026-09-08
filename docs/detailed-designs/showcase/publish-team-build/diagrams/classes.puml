@@ -22,7 +22,7 @@ class PublishTeamBuildHandler {
   +Handle(request: SaveTeamBuildCommand): Task<TeamBuildView>
 }
 interface IEventStore {
-  +LoadAuthorized(scope: ActorEventScope): Task<TeamBuild>
+  +LoadTeamBuild(scope: ActorEventScope): Task<TeamBuild>
   +Commit(intent: OperationContext): Task<CommitResult>
 }
 class TeamBuild {
