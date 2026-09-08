@@ -1,0 +1,5 @@
+@if (detail(); as event) {
+  <p>{{ event.published ? 'Published' : 'Draft' }}</p>
+  <section class="card"><h2>Event essentials</h2><label>Event title<input [value]="event.title || ''" readonly></label></section>
+} @else if (error()) { <p role="alert">{{ error() }}</p><button (click)="load()">Retry</button> }
+@else { <p role="status">Loading event…</p> }

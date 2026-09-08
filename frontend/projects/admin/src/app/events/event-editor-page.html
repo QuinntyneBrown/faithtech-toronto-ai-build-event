@@ -1,0 +1,5 @@
+<main id="main"><ft-administrator-session-panel [showDetails]="false" (signedOut)="signedOut()">
+  <p><a routerLink="/events">All events</a></p><p class="eyebrow">MAKE THE EVENING YOUR OWN</p>
+  <h1>The details make it yours.</h1><p>Configure this event independently. Save incomplete settings as a draft.</p>
+  <ft-event-editor [eventId]="eventId" (denied)="signedOut()" />
+</ft-administrator-session-panel></main>

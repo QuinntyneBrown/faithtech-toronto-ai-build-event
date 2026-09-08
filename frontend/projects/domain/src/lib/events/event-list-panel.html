@@ -1,5 +1,5 @@
 @if (error()) { <p role="alert">{{ error() }}</p><button (click)="refresh()">Retry</button> }
 @else if (events(); as items) {
   @if (items.length === 0) { <p>No events yet.</p><p>Create an event and save its configuration as a draft.</p> }
-  @else { <ul>@for (event of items; track event.id) { <li class="card"><h2>{{ event.title || 'Untitled event' }}</h2><span>{{ event.published ? 'Published' : 'Draft' }}</span></li> }</ul> }
+  @else { <ul>@for (event of items; track event.id) { <li class="card"><h2>{{ event.title || 'Untitled event' }}</h2><span>{{ event.published ? 'Published' : 'Draft' }}</span><p><a [routerLink]="['/events', event.id]">Open event</a></p></li> }</ul> }
 } @else { <p role="status">Loading events…</p> }

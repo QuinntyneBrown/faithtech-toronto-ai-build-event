@@ -1,0 +1,3 @@
+main { padding-block: var(--cs-space-8); }
+h1 { font-size: var(--cs-heading-hero); }
+.eyebrow { font-size: var(--cs-text-xs); letter-spacing: var(--cs-label-tracking); font-weight: var(--cs-weight-bold); }

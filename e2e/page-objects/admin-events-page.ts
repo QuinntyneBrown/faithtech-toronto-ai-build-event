@@ -4,6 +4,9 @@ export class AdminEventsPage {
   constructor(private readonly page: Page) {}
   async open() { await this.page.getByRole('link', { name: 'Manage events' }).click(); }
   async expectEmpty() { await expect(this.page.getByText('No events yet.')).toBeVisible(); }
+  async openEvent(title: string) {
+    await this.page.getByRole('listitem').filter({ hasText: title }).getByRole('link', { name: 'Open event' }).click();
+  }
   async createDraft(title: string) {
     await this.page.getByRole('button', { name: 'Create event', exact: true }).click();
     await this.page.getByLabel('Event title', { exact: true }).fill(title);

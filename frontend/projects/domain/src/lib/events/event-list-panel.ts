@@ -1,7 +1,8 @@
 import { Component, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { EVENT_SERVICE, EventSummary } from '@faithtech/api';
 
-@Component({ selector: 'ft-event-list-panel', templateUrl: './event-list-panel.html', styleUrl: './event-list-panel.css' })
+@Component({ selector: 'ft-event-list-panel', imports: [RouterLink], templateUrl: './event-list-panel.html', styleUrl: './event-list-panel.css' })
 export class EventListPanel {
   private readonly service = inject(EVENT_SERVICE);
   readonly events = signal<EventSummary[] | null>(null);

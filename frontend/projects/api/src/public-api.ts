@@ -7,3 +7,5 @@ export * from './lib/events/event-summary';
 export * from './lib/events/event-service.contract';
 export * from './lib/events/event-service.token';
 export * from './lib/events/event.service';
+export * from './lib/events/event-input';
+export * from './lib/events/event-detail';
