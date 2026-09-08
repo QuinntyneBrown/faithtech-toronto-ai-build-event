@@ -1,4 +1,6 @@
 using FaithTechTorontoAiBuildEvent.Application.Access;
+using FaithTechTorontoAiBuildEvent.Application.Events;
+using FaithTechTorontoAiBuildEvent.Infrastructure.Events;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Access;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
@@ -17,6 +19,7 @@ public static class ServiceCollectionExtensions
             configuration.GetConnectionString("EventDatabase") ?? throw new InvalidOperationException("Configure ConnectionStrings:EventDatabase.")));
         services.AddIdentityCore<AdministratorAccount>().AddRoles<IdentityRole<Guid>>().AddEntityFrameworkStores<EventDbContext>();
         services.AddScoped<IAdministratorStore, SqlAdministratorStore>();
+        services.AddScoped<IEventStore, SqlEventStore>();
         services.AddScoped<IAdministratorProvisioner, SqlAdministratorProvisioner>();
         services.AddScoped<AuthenticationBudget>();
         services.AddScoped<IRequestSource, OperatorRequestSource>();

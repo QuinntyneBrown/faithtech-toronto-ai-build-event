@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace FaithTechTorontoAiBuildEvent.AcceptanceTests;
 
@@ -38,6 +40,20 @@ public sealed class EventApiFactory : WebApplicationFactory<Program>, IAsyncLife
     }
 
     public HttpClient Browser() => CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+
+    public async Task<HttpClient> AdministratorBrowser()
+    {
+        var password = $"Valid9!{Guid.NewGuid():N}";
+        var username = await ProvisionAdministrator(password);
+        var client = Browser();
+        var token = await client.GetFromJsonAsync<JsonElement>("/api/admin/antiforgery");
+        client.DefaultRequestHeaders.Add("X-CSRF-TOKEN", token.GetProperty("requestToken").GetString());
+        (await client.PostAsJsonAsync("/api/admin/session", new { username, password })).EnsureSuccessStatusCode();
+        token = await client.GetFromJsonAsync<JsonElement>("/api/admin/antiforgery");
+        client.DefaultRequestHeaders.Remove("X-CSRF-TOKEN");
+        client.DefaultRequestHeaders.Add("X-CSRF-TOKEN", token.GetProperty("requestToken").GetString());
+        return client;
+    }
 
     public async Task<string> ProvisionAdministrator(string password)
     {
