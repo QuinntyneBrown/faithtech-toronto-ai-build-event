@@ -18,11 +18,11 @@ export class EntryService implements IEntryService {
     }
   }
 
-  async authenticate(eventId: string, email: string, entryCode: string): Promise<EntryResult> {
+  async authenticate(eventId: string, email: string, entryCode: string, returnTo?: string): Promise<EntryResult> {
     try {
       const token = await firstValueFrom(this.http.get<{ requestToken: string }>(`/api/events/${encodeURIComponent(eventId)}/antiforgery`));
       return await firstValueFrom(this.http.post<EntryResult>(`/api/events/${encodeURIComponent(eventId)}/session`,
-        { email, entryCode }, { headers: { 'X-CSRF-TOKEN': token.requestToken } }));
+        { email, entryCode, returnTo }, { headers: { 'X-CSRF-TOKEN': token.requestToken } }));
     } catch (error) { throw this.failure(error); }
   }
 

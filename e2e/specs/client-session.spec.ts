@@ -56,6 +56,6 @@ test("L2-004: a session known to be expired requires re-authentication and shows
   await shell.expectCurrentEvent();
   participantSession.expires = Date.now() - 1000;
   await page.reload();
-  await expect(page).toHaveURL(/\/events\/build-night\/access$/);
+  await expect(page).toHaveURL(/\/events\/build-night\/access(\?|$)/);
   await expect(page.getByRole('heading', { name: "You're in.", exact: true })).toHaveCount(0);
 });

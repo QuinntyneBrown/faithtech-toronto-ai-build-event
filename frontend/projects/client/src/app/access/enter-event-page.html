@@ -17,6 +17,6 @@
       <p class="eyebrow">{{ header()!.title || 'FaithTech event' }}</p>
       <h1 id="intro-title">Good people. Big questions. Let's build.</h1>
     </section>
-    <section class="card"><ft-participant-access-form [eventId]="eventId" (authenticated)="authenticated($event)" /></section>
+    <section class="card"><ft-participant-access-form [eventId]="eventId" [returnTo]="returnTo" (authenticated)="authenticated($event)" /></section>
   }
 </main>

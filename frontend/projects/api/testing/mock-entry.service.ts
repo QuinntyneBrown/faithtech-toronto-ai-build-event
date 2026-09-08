@@ -10,8 +10,8 @@ export class MockEntryService implements IEntryService {
       throw error;
     }
   }
-  authenticate(eventId: string, email: string, entryCode: string) {
-    return this.call<EntryResult>('authenticate', { eventId, email, entryCode });
+  authenticate(eventId: string, email: string, entryCode: string, returnTo?: string) {
+    return this.call<EntryResult>('authenticate', { eventId, email, entryCode, returnTo });
   }
   private async call<T>(operation: string, args: object): Promise<T> {
     const bridge = window as unknown as { __faithtechEntry(operation: string, args: object): Promise<{

@@ -7,7 +7,9 @@ import { ParticipantAccessForm } from '@faithtech/domain';
 export class EnterEventPage implements OnInit {
   private readonly service = inject(ENTRY_SERVICE);
   private readonly router = inject(Router);
-  readonly eventId = inject(ActivatedRoute).snapshot.paramMap.get('eventId')!;
+  private readonly route = inject(ActivatedRoute);
+  readonly eventId = this.route.snapshot.paramMap.get('eventId')!;
+  readonly returnTo = this.route.snapshot.queryParamMap.get('returnTo') ?? undefined;
   /** undefined = still loading, null = unknown/draft (identical generic response), otherwise the published event's header. */
   readonly header = signal<EntryHeader | null | undefined>(undefined);
   readonly loadError = signal(false);
@@ -22,8 +24,8 @@ export class EnterEventPage implements OnInit {
   }
 
   authenticated(result: EntryResult) {
-    // The authoritative countdown/current-stage/recap screen is computed in a later increment; land on the
-    // event shell's index route for now, which the session guard has already confirmed is reachable.
-    void this.router.navigate(['/events', result.eventId], { replaceUrl: true });
+    // The server already validated authorizedInitialRoute (a requested deep link only if it's a recognized,
+    // same-event route; otherwise its own computed default), so it's safe to navigate to directly.
+    void this.router.navigateByUrl(result.authorizedInitialRoute, { replaceUrl: true });
   }
 }

@@ -9,6 +9,7 @@ import { ENTRY_SERVICE, EntryFailure, EntryResult } from '@faithtech/api';
 export class ParticipantAccessForm {
   private readonly service = inject(ENTRY_SERVICE);
   readonly eventId = input.required<string>();
+  readonly returnTo = input<string>();
   readonly authenticated = output<EntryResult>();
   readonly email = signal('');
   readonly code = signal('');
@@ -20,7 +21,7 @@ export class ParticipantAccessForm {
     if (this.busy()) return;
     this.busy.set(true); this.error.set(''); this.fieldError.set('');
     try {
-      const result = await this.service.authenticate(this.eventId(), this.email().trim(), this.code());
+      const result = await this.service.authenticate(this.eventId(), this.email().trim(), this.code(), this.returnTo());
       this.code.set('');
       this.authenticated.emit(result);
     } catch (error) {
