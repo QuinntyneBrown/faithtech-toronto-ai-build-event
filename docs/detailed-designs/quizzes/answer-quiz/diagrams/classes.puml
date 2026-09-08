@@ -1,0 +1,62 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam classBackgroundColor #F9FAFB
+skinparam classBorderColor #344054
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+title Structure - Answer a quiz and read final results
+interface IQuizService {
+  +state: Signal<QuizView>
+  +refresh(): Promise<void>
+}
+class QuizService {
+  -http: HttpClient
+  +refresh(): Promise<void>
+}
+class AnswerQuizHandler {
+  -store: IEventStore
+  +Handle(request: SubmitQuizAnswerCommand): Task<SavedQuizChoice>
+}
+interface IEventStore {
+  +LoadAuthorized(scope: ActorEventScope): Task<QuizAnswer>
+  +Commit(intent: OperationContext): Task<CommitResult>
+}
+class QuizAnswer {
+  +Id: Guid
+  +EventId: Guid
+  +QuizId: Guid
+  +QuestionId: Guid
+  +ParticipantId: Guid
+  +OptionId: Guid
+  +ReceivedAtUtc: DateTimeOffset
+  +Matches(optionId: Guid): bool
+}
+QuizService ..|> IQuizService
+AnswerQuizHandler --> IEventStore : queries / commits through
+AnswerQuizHandler --> QuizAnswer : enforces policy on
+class QuizAnswerAdmission {
+  +OperationId: Guid
+  +ReceivedAtUtc: DateTimeOffset
+  +PayloadHash: byte[]
+  +Resolution: string
+}
+class QuizResult {
+  +QuizId: Guid
+  +ParticipantId: Guid
+  +Score: int
+  +QuestionCount: int
+}
+class LeaderboardRow {
+  +DisplayName: string
+  +Score: int
+  +Rank: int
+}
+QuizAnswerAdmission "1" --> "0..1" QuizAnswer : resolved accepted answer
+QuizResult ..> QuizAnswer : scores immutable choices
+QuizResult ..> LeaderboardRow : same quiz aggregate only
+
+@enduml

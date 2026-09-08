@@ -1,0 +1,9 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Context - Answer a quiz and read final results
+Person(actor, "Participant", "answer quiz")
+System(system, "FaithTech event platform", "Admit one immutable answer per question and disclose scores only after closure")
+Rel(actor, system, "Answer quiz", "HTTPS")
+
+@enduml
