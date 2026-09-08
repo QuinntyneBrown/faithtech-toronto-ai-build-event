@@ -1,0 +1,19 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:09.833
+The provisioning command line tool prepares storage and controls administrator accounts. This display streams output from the actual local executable.
+
+00:00:10.520 --> 00:00:22.197
+Migration completed successfully. This isolated database was initialized during setup; running migration again confirms it can safely apply any pending schema changes.
+
+00:00:27.720 --> 00:00:36.978
+The new operator account was created. Its password arrived through redirected standard input and was never echoed or passed as a command argument.
+
+00:00:41.240 --> 00:00:49.593
+A real API sign in verifies that the provisioned account can authenticate. No authentication response has been simulated.
+
+00:00:52.560 --> 00:01:03.132
+Disabling the operator completed successfully. A request using its existing authenticated session is now denied, confirming that disabling revokes access.
+
+00:01:04.640 --> 00:01:15.158
+The tool has completed migration, account creation, and account disabling. This disposable database and the owned API process are cleaned up after the recording.

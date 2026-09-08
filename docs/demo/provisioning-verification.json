@@ -1,0 +1,14 @@
+{
+  "duration": 78.168,
+  "width": 1280,
+  "height": 720,
+  "elapsed": 78.641,
+  "chapters": 6,
+  "decodedToEnd": true,
+  "audio": {
+    "meanDb": -21.4,
+    "maxDb": -2.5
+  },
+  "sha256": "e602a7868d648bcd2360028f71c23bff1615bad162f04318f5ef44e9abea29fa",
+  "visualReview": "Reviewed all six chapter frames and ending from the normal-speed playback. Live command output, successful authentication and revoked-session response are readable and match narration. Password never displayed."
+}
