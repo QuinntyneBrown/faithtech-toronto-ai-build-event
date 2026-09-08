@@ -74,7 +74,7 @@ Cookie authority is revalidated on each request using the framework's supported 
 
 ## Feature index
 
-All 26 feature designs own primary coverage for the 48 L2 requirements. Each includes the three C4 levels, a typed structure diagram, and behavior sequences with rendered PNG siblings. Shared constraints apply across the tree.
+All 26 feature designs own primary coverage for the 48 L2 requirements. Each includes the three C4 levels, a typed structure diagram, and behavior sequences with rendered PNG siblings. Shared constraints apply across the tree. The [verification record](REVIEW.md) records scope and asset checks.
 
 | Subsystem | Feature design | Primary requirements |
 |---|---|---|
