@@ -40,7 +40,9 @@ db --> handler : Updated migration history
 handler -> files : Record completed migration ID
 else Failure or cancellation
 db --> handler : Failure; inspect history if reachable
-handler -> handler : Stop; retain completed IDs and uncertainty
+break Stop on failure
+handler -> handler : Retain completed IDs and uncertainty
+end
 end
 end
 handler --> cli : Completed/remaining IDs and actual outcome

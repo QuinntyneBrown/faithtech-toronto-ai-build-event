@@ -2,7 +2,7 @@
 title Connect to an explicit operator target - components
 !include <C4/C4_Component>
 LAYOUT_WITH_LEGEND()
-Container_Boundary(cli, "Local Provisioning process") {
+Container_Boundary(local_process, "Local Provisioning process") {
 Component(cmd, "TargetInspectCommand", "Provisioning", "Binds explicit target")
 Component(handler, "ResolveOperatorTargetHandler", "Application", "Checks resolved identity")
 Component(factory, "SqlOperatorConnectionFactory", "Infrastructure", "Opens encrypted connection")

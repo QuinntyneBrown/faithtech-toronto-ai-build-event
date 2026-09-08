@@ -11,6 +11,7 @@ skinparam class {
 }
 title Manage roster credentials and administrator access - types
 class OperatorAccessIntent {
+ +OperatorAccessKind Kind
  +Guid? EventId
  +Guid? RegistrationId
  +string ExpectedVersion
@@ -39,4 +40,14 @@ OperatorAccessHandler --> IOperatorAccessStore
 SqlOperatorAccessStore ..|> IOperatorAccessStore
 SqlOperatorAccessStore --> Registration : changes
 SqlOperatorAccessStore ..> RosterIssuance : returns once
+enum OperatorAccessKind {
+ AddRegistration
+ RenameRegistration
+ DeactivateRegistration
+ ReactivateRegistration
+ ReplaceCode
+ CreateAdministrator
+ DisableAdministrator
+}
+OperatorAccessIntent --> OperatorAccessKind
 @enduml

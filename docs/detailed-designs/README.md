@@ -1,8 +1,8 @@
 # FaithTech Toronto software design
 
-These designs refine the [L1 scope](../specs/L1.md) and [48 L2 requirements](../specs/L2.md). The requirements remain normative, including every acceptance criterion. Quoted requirement excerpts retain their original wording.
+These designs refine the [L1 scope](../specs/L1.md) and [60 L2 requirements](../specs/L2.md). The requirements remain normative, including every acceptance criterion. Quoted requirement excerpts retain their original wording.
 
-The API and Angular applications are proposed components. The existing standalone `design-system/` and static `docs/mocks/` provide design evidence; neither establishes production acceptance. Feature designs below share the following contracts.
+Feature pages distinguish proposed components from inspected source behavior. The operator CLI designs identify existing provisioning, event, schedule, and access code alongside their proposed extensions. The standalone `design-system/` and static `docs/mocks/` provide design evidence; neither establishes production acceptance. Feature designs below share the following contracts.
 
 ## Architecture decisions
 
@@ -66,6 +66,16 @@ Load acceptance uses 200 participants and two administrators, a two-minute warm-
 
 SQL backups include all authoritative entities, receipts, and outbox rows. Operators restore into an isolated environment with outbound notifications disabled, verify identities and retained state, then enable traffic deliberately. Redis is rebuilt rather than restored as authoritative data. Schema migrations run once before application rollout; rollback uses a compatible application build or an explicitly rehearsed database restore. The operations feature defines the recovery procedure in detail.
 
+## Local Super admin CLI
+
+The seven operator feature designs cover L2-049 through L2-060. The installed command is `faithtech-admin`, packaged from the existing Provisioning project. It connects directly to an explicitly selected database with a separate operator identity. It does not use browser authentication or add a SQL HTTP endpoint. The API retains its existing role and event boundaries.
+
+The [target design](operations/connect-operator-target/README.md) defines protected profiles and a database-operator actor registry. The [operation protocol](operations/review-and-reconcile-operations/README.md) owns preview/apply, ActorKind-compatible receipt changes, atomic unit-of-work behavior, migrations, output, journals, and recovery. These operator rules refine the application-only GUID actor description earlier in this index; existing application actors remain distinct.
+
+The [event maintenance design](operations/manage-event-data/README.md) defines shared noncommitting mutation helpers used by API and operator transaction wrappers. [Seed import](operations/import-event-seed/README.md) commits event settings and schedule together. Validated writes reuse application validation and the proposed platform outbox; raw [SQL repairs](operations/execute-data-repair/README.md) preserve operator transaction control and do not promise application-invariant enforcement or automatic invalidation.
+
+The CLI's L2-060 performance scenario uses two ten-minute intervals after warm-up. Existing broader platform measurement designs remain separate. The documents define implementation and behavioral acceptance obligations; diagram rendering does not demonstrate a successful deployment, database mutation, or load test.
+
 ## Technical sources
 
 .NET 10 is the selected supported LTS baseline ([Microsoft support policy](https://dotnet.microsoft.com/en-us/platform/support/policy)). SQL concurrency uses EF Core concurrency tokens and conflict handling ([EF Core concurrency](https://learn.microsoft.com/en-us/ef/core/saving/concurrency)); transactional persistence follows [EF Core transaction guidance](https://learn.microsoft.com/en-us/ef/core/saving/transactions), with MARS disabled for savepoint compatibility. SignalR deployment follows the [ASP.NET Core scale guidance](https://learn.microsoft.com/en-us/aspnet/core/signalr/scale?view=aspnetcore-10.0). Outbox durability and resynchronization are application design decisions supporting L2-044.
@@ -74,7 +84,7 @@ Cookie authority is revalidated on each request using the framework's supported 
 
 ## Feature index
 
-All 26 feature designs own primary coverage for the 48 L2 requirements. Each includes the three C4 levels, a typed structure diagram, and behavior sequences with rendered PNG siblings. Shared constraints apply across the tree. The [verification record](REVIEW.md) records scope and asset checks.
+All 33 feature designs own primary coverage for the 60 L2 requirements. Each includes the three C4 levels, a typed structure diagram, and behavior sequences with rendered PNG siblings. Shared constraints apply across the tree. The [verification record](REVIEW.md) records scope and asset checks.
 
 | Subsystem | Feature design | Primary requirements |
 |---|---|---|
@@ -104,3 +114,10 @@ All 26 feature designs own primary coverage for the 48 L2 requirements. Each inc
 | platform-security | [Validate input and enforce abuse limits](platform-security/validate-requests/README.md) | L2-040, L2-042 |
 | operations | [Operate and measure the event platform](operations/operate-event/README.md) | L2-043, L2-045 |
 | operations | [Recover committed state after interruption](operations/recover-state/README.md) | L2-044 |
+| operations | [Install and update the operator tool](operations/install-operator-tool/README.md) | L2-049 |
+| operations | [Connect to an explicit operator target](operations/connect-operator-target/README.md) | L2-050, L2-051 |
+| operations | [Manage event data through validated commands](operations/manage-event-data/README.md) | L2-052 |
+| operations | [Manage roster credentials and administrator access](operations/manage-operator-access/README.md) | L2-053 |
+| operations | [Import an event seed without losing event history](operations/import-event-seed/README.md) | L2-054, L2-055 |
+| operations | [Execute explicitly reviewed SQL data repairs](operations/execute-data-repair/README.md) | L2-056 |
+| operations | [Review, apply and reconcile operator operations](operations/review-and-reconcile-operations/README.md) | L2-057, L2-058, L2-059, L2-060 |

@@ -11,12 +11,13 @@ skinparam class {
 }
 title Manage event data through validated commands - types
 class EventPatch {
- +Dictionary<string, JsonValue> PresentFields
+ +Dictionary<string, JsonElement> PresentFields
 }
 class EventMaintenanceHandler {
  +Handle(intent: EventMaintenanceIntent): Task<OperatorResult>
 }
 class EventMaintenanceIntent {
+ +EventMaintenanceKind Kind
  +Guid EventId
  +string ExpectedVersion
  +EventPatch Patch
@@ -39,4 +40,12 @@ EventMaintenanceHandler --> IEventMaintenanceStore
 SqlEventMaintenanceStore ..|> IEventMaintenanceStore
 SqlEventMaintenanceStore ..> SqlEventMutations
 SqlEventMutations --> BuildEvent : changes tracked state
+enum EventMaintenanceKind {
+ Create
+ Update
+ ReplaceSchedule
+ ReplaceLogo
+ Publish
+}
+EventMaintenanceIntent --> EventMaintenanceKind
 @enduml

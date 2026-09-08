@@ -22,6 +22,7 @@ class TargetProfile {
 class OperatorPrincipal {
  +string TargetFingerprint
  +byte[] PrincipalSid
+ +byte[] DatabasePrincipalSid
  +string DisplayName
 }
 interface IOperatorConnectionFactory {
@@ -35,6 +36,7 @@ class OperatorIdentity {
  +Guid ActorId
  +string TargetFingerprint
  +byte[] PrincipalSid
+ +byte[] DatabasePrincipalSid
 }
 OperatorTargetOptions "1" *-- "*" TargetProfile
 SqlOperatorConnectionFactory ..|> IOperatorConnectionFactory
