@@ -1,10 +1,6 @@
 using FaithTechTorontoAiBuildEvent.Api.Access;
-using FaithTechTorontoAiBuildEvent.Application.Access;
-using FaithTechTorontoAiBuildEvent.Infrastructure.Access;
-using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
+using FaithTechTorontoAiBuildEvent.Infrastructure;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 
 namespace FaithTechTorontoAiBuildEvent.Api;
 
@@ -21,11 +17,7 @@ public partial class Program
             options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             options.Cookie.SameSite = SameSiteMode.Strict;
         });
-        builder.Services.AddMediatR(options => options.RegisterServicesFromAssemblyContaining<AuthenticateAdministratorCommand>());
-        builder.Services.AddDbContext<EventDbContext>(options => options.UseSqlServer(
-            builder.Configuration.GetConnectionString("EventDatabase") ?? throw new InvalidOperationException("Configure ConnectionStrings:EventDatabase.")));
-        builder.Services.AddIdentityCore<AdministratorAccount>().AddRoles<IdentityRole<Guid>>().AddEntityFrameworkStores<EventDbContext>();
-        builder.Services.AddScoped<IAdministratorStore, SqlAdministratorStore>();
+        builder.Services.AddEventInfrastructure(builder.Configuration);
         builder.Services.AddScoped<AdministratorCookieEvents>();
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
         {

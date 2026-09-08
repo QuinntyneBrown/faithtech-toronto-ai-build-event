@@ -9,6 +9,8 @@ requirements, including their cross-cutting criteria.
 | Increment | Evidence |
 |---|---|
 | Backend build foundation | .NET 10.0.400 solution build: zero warnings/errors; no product behavior claimed. |
+| Administrator access and sessions | 10 API acceptance cases pass against isolated, migrated SQL Server databases: access denial, CSRF, secure sign-in, unknown account, expiry, interaction, sign-out and account disabling. |
+| Operator CLI | Migrate, create-admin and disable-admin executed against a disposable SQL database; disabled state verified in SQL. |
 
 ## Delivery queue
 
