@@ -45,3 +45,18 @@ Review: checked the complete set for actor, precondition, timing, and observable
 Review: compared prompt, requirements, local tokens, design-system README, and reference checkout metadata. Cornerstone HEAD is `554636edf74af788e83aa33a4380a05b031db16a`; inspected tracked styles have no reported changes, while card/choice-card directories are untracked. Existing local reference specimens remain the reproducible artifact baseline; no external repository was modified. All remaining Liturgy requirements govern optional companion links and independence, not the visual source.
 
 The local `design-system/tests/reference/cornerstone-light.css` specimen inspected for provenance has SHA-256 `3678174BA58E048318B4AD7CCB574FDF78E5CFA5B6708FE18A850667032E236A`. This identifies the existing specimen, not proof of exhaustive component parity.
+
+## Pass 4 — Lifecycle, ownership, and edge cases
+
+| Finding and evidence | Requirements | Resolution |
+| --- | --- | --- |
+| Editing times could reopen completed selection/quizzes or evade closure after downtime. | L2-006, L2-017, L2-044 | **User decision:** closed activities stay closed. Determine closure from the previous committed schedule; retain closure across restart. Completed-event edits also cannot reopen participant mutations. |
+| Team/project switching had no rule for existing build links; shared project fields in mocks hide the ownership issue. | L2-009, L2-024-L2-025 | **User decision:** retain each pairing's links; show the selected pairing only, with one showcase entry per team. Membership changes never transfer team data. |
+| Team/project corrections could leave demo references inconsistent. | L2-009, L2-012, L2-023 | Update a slot's project atomically with selection; require explicit slot removal before clearing its selection; reject team removal while dependencies remain. |
+| Reactivation can collide with an email rebound while inactive; removing a roster entry could erase history. | L2-002-L2-004 | Retain history, reject conflicting reactivation, permit explicit binding recovery, and never reactivate revoked sessions. |
+| Changing assignment mode, confirming random assignment, and adding unassigned participants were insufficiently distinguished. | L2-009-L2-010 | Mode changes preserve memberships; full reassignment and unassigned-only assignment are separate, version-checked administrator actions. |
+| Turning proposals off could invalidate accepted choices; proposer ownership was unclear. | L2-011 | Accepted proposals join the managed catalog and persist; disable creation only. Proposing does not automatically select or require a team. |
+| Missing moderation mock conceals report lifecycle and limited administrator visibility. | L2-016 | Define pending/resolved states, report identity, optional reason/notes, received-history reporting, and reported-message-only review. |
+| Draft retention conflicted with sign-out cleanup; retry semantics did not distinguish changed input from replay. | L2-004, L2-044 | Invalidation clears private drafts, not durable history. Preserve operation identity on retry, return committed outcomes, reject changed reuse, and require explicit reapplication of stale edits. |
+
+Review: followed each retained entity through create, edit, selection change, removal/deactivation, expiry, closing, interruption, retry, and return. Existing raffle persistence/fairness and same-event privacy requirements remain authoritative even where mock behavior differs.
