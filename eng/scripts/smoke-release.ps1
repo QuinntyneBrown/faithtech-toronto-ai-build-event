@@ -1,6 +1,7 @@
 param([Parameter(Mandatory)][string]$Url, [Parameter(Mandatory)][string]$Revision,
     [switch]$Restart, [string]$AppName, [string]$ResourceGroup, [switch]$TrustLocalCertificate)
 $ErrorActionPreference = 'Stop'
+Import-Module Microsoft.PowerShell.Utility
 if (-not $env:SMOKE_USERNAME -or -not $env:SMOKE_PASSWORD) { throw 'Configure smoke credentials.' }
 if ($TrustLocalCertificate -and ([uri]$Url).Host -notin @('127.0.0.1', 'localhost')) { throw 'Certificate bypass is restricted to loopback.' }
 $session = [Microsoft.PowerShell.Commands.WebRequestSession]::new()
@@ -32,10 +33,22 @@ foreach ($path in @('/', '/admin/sign-in', '/events/00000000-0000-0000-0000-0000
 }
 foreach ($path in @('/api/missing', '/missing.js', '/admin/missing.js')) { ExpectStatus (Request $path) 404 }
 ExpectStatus (Request '/api/admin/readiness') 401
-$csrfResponse = Request '/api/admin/antiforgery'; ExpectStatus $csrfResponse 200
-$token = ($csrfResponse.Content | ConvertFrom-Json).requestToken
-$headers = @{'X-CSRF-TOKEN' = $token}
-ExpectStatus (Request '/api/admin/session' 'POST' @{username = $env:SMOKE_USERNAME; password = $env:SMOKE_PASSWORD} $headers) 204
+$deadline = [DateTimeOffset]::UtcNow.AddMinutes(3)
+for ($attempt = 0; $attempt -lt 36; $attempt++) {
+    $csrfResponse = $null; $response = $null
+    try {
+        $csrfResponse = Request '/api/admin/antiforgery'
+        if ($csrfResponse.StatusCode -eq 200) {
+            $token = ($csrfResponse.Content | ConvertFrom-Json).requestToken
+            $response = Request '/api/admin/session' 'POST' @{username = $env:SMOKE_USERNAME; password = $env:SMOKE_PASSWORD} @{'X-CSRF-TOKEN' = $token}
+        }
+    } catch { }
+    if ($response -and $response.StatusCode -eq 204) { break }
+    if ($csrfResponse -and $csrfResponse.StatusCode -notin @(200, 502, 503, 504)) { ExpectStatus $csrfResponse 200 }
+    if ($response -and $response.StatusCode -notin @(502, 503, 504)) { ExpectStatus $response 204 }
+    if ($attempt -eq 35 -or [DateTimeOffset]::UtcNow -ge $deadline) { throw 'Sign-in startup deadline exceeded.' }
+    Start-Sleep -Seconds 5
+}
 try {
     if ($Restart) {
         $previousInstance = ((Request '/api/admin/readiness').Content | ConvertFrom-Json).instance

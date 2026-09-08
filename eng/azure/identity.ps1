@@ -10,11 +10,16 @@ $principals = @(Invoke-Azure ad sp list --filter "appId eq '$($identity.appId)'"
 $principal = if ($principals.Count) { $principals[0] } else { Invoke-Azure ad sp create --id $identity.appId }
 $directory = Join-Path $env:LOCALAPPDATA 'FaithTech/production-secrets'
 $federationFile = Join-Path $directory 'federation.json'
+$oidc = Invoke-GitHub api "repos/$Repository/actions/oidc/customization/sub" | ConvertFrom-Json
+if (-not $oidc.use_default -or -not $oidc.sub_claim_prefix) { throw 'Configure the repository default OIDC subject before bootstrap.' }
 @{name = 'github-production'; issuer = 'https://token.actions.githubusercontent.com';
-  subject = "repo:${Repository}:environment:production"; audiences = @('api://AzureADTokenExchange')} |
+  subject = "$($oidc.sub_claim_prefix):environment:production"; audiences = @('api://AzureADTokenExchange')} |
     ConvertTo-Json | Set-Content -LiteralPath $federationFile
 $federations = @(Invoke-Azure ad app federated-credential list --id $identity.id)
-if (-not ($federations | Where-Object name -eq 'github-production')) {
+$federation = $federations | Where-Object name -eq 'github-production'
+if ($federation) {
+    $null = Invoke-Azure ad app federated-credential update --id $identity.id --federated-credential-id $federation.id --parameters "@$federationFile"
+} else {
     $null = Invoke-Azure ad app federated-credential create --id $identity.id --parameters "@$federationFile"
 }
 $null = Invoke-Azure role assignment create --assignee-object-id $principal.id --assignee-principal-type ServicePrincipal --role 'Website Contributor' --scope $resources.appId.value
