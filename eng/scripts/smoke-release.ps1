@@ -1,6 +1,7 @@
 param([Parameter(Mandatory)][string]$Url, [Parameter(Mandatory)][string]$Revision,
     [switch]$Restart, [string]$AppName, [string]$ResourceGroup, [switch]$TrustLocalCertificate)
 $ErrorActionPreference = 'Stop'
+Import-Module Microsoft.PowerShell.Utility
 if (-not $env:SMOKE_USERNAME -or -not $env:SMOKE_PASSWORD) { throw 'Configure smoke credentials.' }
 if ($TrustLocalCertificate -and ([uri]$Url).Host -notin @('127.0.0.1', 'localhost')) { throw 'Certificate bypass is restricted to loopback.' }
 $session = [Microsoft.PowerShell.Commands.WebRequestSession]::new()
