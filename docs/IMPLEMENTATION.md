@@ -4,6 +4,25 @@ Requirements in `specs/L2.md` remain the acceptance authority. Detailed designs
 and mocks supply implementation and visual inputs. Completion requires all 48
 requirements, including their cross-cutting criteria.
 
+## Current completion boundary
+
+The full implementation plan is **incomplete**. The participant application's
+route table is empty. Administrator functionality currently covers provisioned
+access, session management, and creation/listing of event drafts with a title.
+There is no event editing or publication yet. Passing tests below establish only
+the implemented behaviors, not completion of any entire cross-cutting requirement.
+
+Latest verification on 7 September 2026: **19 API acceptance cases** against
+isolated SQL Server databases, **19 Playwright cases** with injected mock adapters,
+and successful builds of all .NET projects and all five Angular projects. Browser:
+Chrome **152.0.7977.76**, Windows ARM64. No performance/load acceptance is claimed.
+
+Continue with event configuration/editing/publication, then the ordered delivery
+queue below. Remaining shared work includes distributed notifications/outbox,
+authentication completion receipts, production key/proxy configuration, complete
+error/state matrices, and operational recovery/load verification. Preserve the
+separate Azure deployment runbook being maintained alongside implementation.
+
 ## Verified increments
 
 | Increment | Evidence |
@@ -15,6 +34,7 @@ requirements, including their cross-cutting criteria.
 | Administrator browser access | 17 browser scenarios pass: access, session restoration, expiry, failed sign-out, keyboard navigation, ten viewport widths and event draft creation. Desktop rendering inspected against the input mock. |
 | Event drafts | SQL-backed creation and listing, normalized title validation, durable identical retries, changed-operation conflicts and transactional creation audit records. |
 | Same-origin hosting | 18 API cases pass. Published HTTPS process verified with isolated SQL: Angular shell, provisioned sign-in, draft creation/retry and sign-out. |
+| Review fixes | 19 API / 19 browser cases pass. Database Options reject missing configuration at startup; explicit administrator interaction renews idle expiry; discard confirmation restores keyboard focus. |
 
 ## Delivery queue
 
