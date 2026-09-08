@@ -17,6 +17,20 @@ async function openEditor(page: Page) {
   return new AdminEventEditorPage(page);
 }
 
+test('L2-036/044: given unsaved event changes, leaving requires an explicit discard', async ({ page }) => {
+  const editor = await openEditor(page);
+  await editor.editContent('Unsaved title', 'Unsaved venue', 'Unsaved welcome');
+  await editor.returnToEvents();
+  await editor.keepEditing();
+  await editor.expectContent('Unsaved venue', 'Unsaved welcome');
+  await editor.returnToEvents();
+  await editor.discardChanges();
+  const list = new AdminEventsPage(page);
+  await list.expectDraft('Toronto build night');
+  await list.openEvent('Toronto build night');
+  await editor.expectContent('', '');
+});
+
 test('L2-044/AC4: given a stale editor, conflict recovery preserves proposed changes for explicit reapplication', async ({ page, events }) => {
   const editor = await openEditor(page);
   await editor.editContent('My proposed title', 'My venue', 'My welcome');

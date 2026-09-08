@@ -16,6 +16,7 @@ export class EventEditor implements OnInit {
   readonly saved = signal(false);
   readonly errors = signal<Record<string, string[]>>({});
   readonly conflict = signal<EventDetail | null>(null);
+  hasUnsavedChanges() { return this.busy() || this.uncertain() || JSON.stringify(this.draft()) !== JSON.stringify(this.detail()); }
   reapply() {
     const current = this.conflict();
     if (current) this.detail.set(current);

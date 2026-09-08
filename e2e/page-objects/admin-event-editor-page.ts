@@ -25,6 +25,12 @@ export class AdminEventEditorPage {
   async retrySave() { await this.page.getByRole('button', { name: 'Retry save', exact: true }).click(); }
   async expectSaved() { await expect(this.page.getByRole('status')).toHaveText('Draft saved.'); }
   async returnToEvents() { await this.page.getByRole('link', { name: 'All events' }).click(); }
+  async keepEditing() {
+    await expect(this.page.getByRole('dialog', { name: 'Leave unsaved changes?' })).toBeVisible();
+    await expect(this.page.getByRole('button', { name: 'Keep editing', exact: true })).toBeFocused();
+    await this.page.getByRole('button', { name: 'Keep editing', exact: true }).click();
+  }
+  async discardChanges() { await this.page.getByRole('button', { name: 'Discard changes', exact: true }).click(); }
   async expectContent(venue: string, waiting: string) {
     await expect(this.page.getByLabel('Venue name', { exact: true })).toHaveValue(venue);
     await expect(this.page.getByLabel('Waiting content', { exact: true })).toHaveValue(waiting);
