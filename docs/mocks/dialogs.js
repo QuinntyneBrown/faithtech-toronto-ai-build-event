@@ -3,6 +3,7 @@ import { esc, field, area, button, link, select } from './ui.js';
 export function dialogContent(id,item) {
   const team=model.teams.find(t=>t.id===item)||model.teams[0], project=model.projects.find(p=>p.id===item)||model.projects[0];
   const definitions={
+    'new-message': ['Start a conversation',select('to','Who would you like to meet?',model.participants.filter(p=>p.id!=='alex').map(p=>[p.id,p.name]),'sarah'),'Open conversation'],
     'join-team': ['A place at '+(team?.name||'your table'),`<p>Join ${esc(team?.name)} and bring your skills to the table. ${model.team?'You’ll leave your current team.':''}</p>`,'Join team'],
     'leave-team': ['Find another team?','<p>You’ll leave your current table and can choose a new team.</p>','Leave team'],
     'assign': ['Let’s find your people.','<p>We’ll place you in a team with an available seat.</p>','Assign my team'],

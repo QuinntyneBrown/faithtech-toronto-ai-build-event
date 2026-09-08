@@ -1,5 +1,9 @@
 import { model, save } from './data.js';
 export function submitParticipant(id,data,item,navigate) {
+  if(id==='profile'){Object.assign(model.profile,data);Object.assign(model.participants.find(p=>p.id==='alex'),data);save();navigate('profile',{state:'saved'});return true;}
+  if(id==='search'){navigate(new URLSearchParams(location.search).get('screen')||'people',{search:data.search});return true;}
+  if(id==='new-message'){navigate('messages',{item:data.to,state:'empty'});return true;}
+  if(id==='message'){if(!data.text.trim())return 'Write a message before sending.';model.messages.push({from:'alex',to:data.to,text:data.text,time:model.clock});save();navigate('messages',{item:data.to});return true;}
   if(id==='access') {
     const p=model.participants.find(p=>p.email.toLowerCase()===data.email.toLowerCase()&&p.code===data.code);
     if(!p)return 'We couldn’t match those details. Check your email and entry code.';
