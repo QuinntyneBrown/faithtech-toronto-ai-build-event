@@ -1,0 +1,24 @@
+<main id="main"><ft-administrator-session-panel [showDetails]="false" (signedOut)="signedOut()">
+  <p><a [routerLink]="['/events', eventId]">Event settings</a></p><p class="eyebrow">A PLACE FOR EVERY BUILDER</p>
+  <h1>Your people.</h1><p>Manage participant identities and event access. Entry codes are shown only when issued.</p>
+  <ft-roster-panel [eventId]="eventId" (requestAdd)="openAdd()" (issued)="showCode($event)" (denied)="signedOut()" />
+</ft-administrator-session-panel></main>
+<dialog #addDialog aria-labelledby="add-title" (cancel)="$event.preventDefault(); cancelAdd()">
+  <h2 id="add-title">Add participant</h2>
+  @if (panel(); as editor) { <form (ngSubmit)="editor.add()" novalidate>
+    <fieldset [disabled]="editor.busy() || editor.uncertain()"><legend>Participant identity</legend>
+      <label>Participant name<input #nameInput autofocus name="name" [ngModel]="editor.name()" (ngModelChange)="editor.name.set($event)" [attr.aria-invalid]="editor.fieldError() ? 'true' : null" [attr.aria-describedby]="editor.fieldError() ? 'name-error' : null"></label>
+      @if (editor.fieldError()) { <p id="name-error">{{ editor.fieldError() }}</p> }
+    </fieldset>
+    @if (editor.error()) { <section #summary role="alert" tabindex="-1"><p>{{ editor.error() }}</p>@if (editor.fieldError()) { <a href="#" (click)="$event.preventDefault(); nameInput.focus()">Participant name: {{ editor.fieldError() }}</a> }</section> }
+    <div class="actions"><button type="button" [disabled]="editor.busy()" (click)="cancelAdd()">Cancel</button><button type="submit" [disabled]="editor.busy()">{{ editor.uncertain() ? 'Check addition outcome' : 'Save participant' }}</button></div>
+  </form> }
+</dialog>
+<dialog #codeDialog aria-labelledby="code-title" (cancel)="$event.preventDefault(); clearCode()">
+  @if (issuance(); as value) {
+    <h2 id="code-title">Entry code for {{ value.entry.displayName }}</h2>
+    @if (value.code) { <p>Save this code now and share it privately with this participant. It cannot be retrieved after closing this dialog.</p><label>New entry code<input autofocus readonly [value]="value.code"></label> }
+    @else { <p role="alert">The participant was added and a code was already issued. It cannot be shown again. Replace the entry code before sharing access.</p> }
+    <button [autofocus]="!value.code" (click)="clearCode()">Done</button>
+  }
+</dialog>

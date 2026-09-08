@@ -25,7 +25,12 @@ export class SessionFixture {
   }
 }
 
-export const test = base.extend<{session: SessionFixture; events: EventFixture; schedules: ScheduleFixture}>({
+export const test = base.extend<{session: SessionFixture; events: EventFixture; schedules: ScheduleFixture; roster: RosterFixture}>({
+  roster: [async ({ context, events }, use) => {
+    const roster = new RosterFixture(events);
+    await context.exposeBinding('__faithtechRoster', (_source, operation, args) => roster.handle(operation, args));
+    await use(roster);
+  }, { auto: true }],
   schedules: [async ({ context, events }, use) => {
     const schedules = new ScheduleFixture(events);
     await context.exposeBinding('__faithtechSchedule', (_source, operation, args) => schedules.handle(operation, args));
@@ -42,3 +47,4 @@ export const test = base.extend<{session: SessionFixture; events: EventFixture; 
     await use(session);
   }, { auto: true }],
 });
+import { RosterFixture } from './roster-fixture';

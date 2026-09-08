@@ -1,0 +1,9 @@
+main { padding-block: var(--cs-space-8); }
+h1 { font-size: var(--cs-text-xl); }
+.eyebrow { font-size: var(--cs-text-xs); letter-spacing: var(--cs-label-tracking); font-weight: var(--cs-weight-bold); }
+dialog { width: min(var(--cs-dialog-width), calc(var(--cs-full) - var(--cs-space-6))); max-height: var(--cs-dialog-height); overflow: auto; border: var(--cs-line) solid var(--cs-border); border-radius: var(--cs-radius-md); padding: var(--cs-space-5); color: var(--cs-ink); background: var(--cs-paper); }
+dialog::backdrop { background: var(--cs-scrim); }
+fieldset { border: none; margin: var(--cs-zero); padding: var(--cs-zero); min-width: var(--cs-zero); }
+label, legend { display: block; margin-bottom: var(--cs-space-4); }
+.actions { display: flex; flex-wrap: wrap; gap: var(--cs-space-3); }
+[role="alert"], #name-error { color: var(--cs-error); }
