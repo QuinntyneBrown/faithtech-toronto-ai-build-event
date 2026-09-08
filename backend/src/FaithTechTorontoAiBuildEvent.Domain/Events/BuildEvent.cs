@@ -1,3 +1,5 @@
+using FaithTechTorontoAiBuildEvent.Domain.Scheduling;
+
 namespace FaithTechTorontoAiBuildEvent.Domain.Events;
 
 public sealed class BuildEvent
@@ -21,4 +23,10 @@ public sealed class BuildEvent
     public DateTimeOffset? EndsAtUtc { get; set; }
     public bool Published { get; set; }
     public bool UseLiturgy { get; set; }
+    public List<EventStage> Stages { get; set; } = [];
+    public TimeWindow? SelectionWindow { get; set; }
+    public TimeWindow? PresentationWindow { get; set; }
+    public DateTimeOffset? SelectionOpenedAtUtc { get; set; }
+    public DateTimeOffset? SelectionClosedAtUtc { get; set; }
+    public DateTimeOffset? CompletedAtUtc { get; set; }
 }

@@ -1,6 +1,7 @@
 using FaithTechTorontoAiBuildEvent.Domain.Access;
 using FaithTechTorontoAiBuildEvent.Domain.Events;
 using FaithTechTorontoAiBuildEvent.Domain.Operations;
+using FaithTechTorontoAiBuildEvent.Domain.Scheduling;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Access;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -15,6 +16,7 @@ public sealed class EventDbContext(DbContextOptions<EventDbContext> options)
     public DbSet<AuthenticationFailure> AuthenticationFailures => Set<AuthenticationFailure>();
     public DbSet<BuildEvent> Events => Set<BuildEvent>();
     public DbSet<LogoAsset> Logos => Set<LogoAsset>();
+    public DbSet<EventStage> Stages => Set<EventStage>();
     public DbSet<OperationReceipt> OperationReceipts => Set<OperationReceipt>();
     public DbSet<AuditRecord> AuditRecords => Set<AuditRecord>();
 
@@ -31,6 +33,15 @@ public sealed class EventDbContext(DbContextOptions<EventDbContext> options)
         builder.Entity<BuildEvent>().Property(x => x.ClosingContent).HasMaxLength(10000);
         builder.Entity<BuildEvent>().Property(x => x.DirectionsUrl).HasMaxLength(4096);
         builder.Entity<BuildEvent>().Property<byte[]>("Version").IsRowVersion();
+        builder.Entity<BuildEvent>().OwnsOne(x => x.SelectionWindow);
+        builder.Entity<BuildEvent>().OwnsOne(x => x.PresentationWindow);
+        builder.Entity<BuildEvent>().HasMany(x => x.Stages).WithOne().HasForeignKey(x => x.EventId);
+        builder.Entity<EventStage>().OwnsOne(x => x.Interval);
+        builder.Entity<EventStage>().Property(x => x.Name).HasMaxLength(400);
+        builder.Entity<EventStage>().Property(x => x.Phase).HasMaxLength(400);
+        builder.Entity<EventStage>().Property(x => x.ScreenType).HasMaxLength(50);
+        builder.Entity<EventStage>().Property(x => x.Content).HasMaxLength(10000);
+        builder.Entity<EventStage>().Property(x => x.ResourceUrl).HasMaxLength(4096);
         builder.Entity<OperationReceipt>().HasIndex(x => new { x.ActorId, x.EventId, x.OperationId }).IsUnique().HasFilter(null);
         builder.Entity<OperationReceipt>().Property(x => x.Target).HasMaxLength(200);
         builder.Entity<OperationReceipt>().Property(x => x.PayloadHash).HasMaxLength(64);

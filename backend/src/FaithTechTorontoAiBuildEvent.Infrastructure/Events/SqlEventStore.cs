@@ -3,6 +3,8 @@ using System.Text;
 using System.Text.Json;
 using FaithTechTorontoAiBuildEvent.Application.Events;
 using FaithTechTorontoAiBuildEvent.Application.Operations;
+using FaithTechTorontoAiBuildEvent.Application.Scheduling;
+using FaithTechTorontoAiBuildEvent.Infrastructure.Scheduling;
 using FaithTechTorontoAiBuildEvent.Domain.Events;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -18,7 +20,7 @@ public sealed class SqlEventStore(EventDbContext db) : IEventStore
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         var resource = $"event:{command.EventId}";
         await db.Database.ExecuteSqlInterpolatedAsync($"DECLARE @result int; EXEC @result = sp_getapplock @Resource={resource}, @LockMode='Exclusive', @LockOwner='Transaction', @LockTimeout=5000; IF @result < 0 THROW 51000, 'Operation unavailable', 1;", cancellationToken);
-        var item = await db.Events.SingleOrDefaultAsync(x => x.Id == command.EventId, cancellationToken) ?? throw new ResourceNotFoundException();
+        var item = await db.Events.Include(x => x.Stages).SingleOrDefaultAsync(x => x.Id == command.EventId, cancellationToken) ?? throw new ResourceNotFoundException();
         var receipt = await db.OperationReceipts.SingleOrDefaultAsync(x => x.ActorId == command.ActorId && x.EventId == command.EventId && x.OperationId == command.OperationId, cancellationToken);
         if (receipt is not null)
         {
@@ -28,6 +30,7 @@ public sealed class SqlEventStore(EventDbContext db) : IEventStore
         var current = await Detail(item, cancellationToken);
         if (current.Version != command.Version) throw new StaleVersionException(current);
         var input = command.Input;
+        _ = ScheduleValidator.Normalize(ScheduleMapping.Input(item) with { Timezone = input.Timezone, Start = input.Start, End = input.End });
         item.Title = input.Title; item.VenueName = input.VenueName; item.Address = input.Address;
         item.UseLiturgy = input.UseLiturgy;
         item.Latitude = input.Latitude; item.Longitude = input.Longitude;
