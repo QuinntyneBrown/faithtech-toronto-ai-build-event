@@ -3,6 +3,8 @@ using FaithTechTorontoAiBuildEvent.Application.Events;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Events;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Scheduling;
 using FaithTechTorontoAiBuildEvent.Application.Scheduling;
+using FaithTechTorontoAiBuildEvent.Application.Roster;
+using FaithTechTorontoAiBuildEvent.Infrastructure.Roster;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Access;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
@@ -26,6 +28,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAdministratorStore, SqlAdministratorStore>();
         services.AddScoped<IEventStore, SqlEventStore>();
         services.AddScoped<IScheduleStore, SqlScheduleStore>();
+        services.AddScoped<IRosterStore, SqlRosterStore>();
+        services.AddSingleton<IEntryCodeGenerator, EntryCodeGenerator>();
         services.AddScoped<IEventLogoStore, SqlEventLogoStore>();
         services.AddSingleton<ILogoDecoder, SkiaLogoDecoder>();
         services.AddScoped<IAdministratorProvisioner, SqlAdministratorProvisioner>();

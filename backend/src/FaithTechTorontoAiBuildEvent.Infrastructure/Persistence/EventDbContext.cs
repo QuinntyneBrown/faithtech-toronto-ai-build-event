@@ -2,6 +2,7 @@ using FaithTechTorontoAiBuildEvent.Domain.Access;
 using FaithTechTorontoAiBuildEvent.Domain.Events;
 using FaithTechTorontoAiBuildEvent.Domain.Operations;
 using FaithTechTorontoAiBuildEvent.Domain.Scheduling;
+using FaithTechTorontoAiBuildEvent.Domain.Roster;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Access;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -17,12 +18,21 @@ public sealed class EventDbContext(DbContextOptions<EventDbContext> options)
     public DbSet<BuildEvent> Events => Set<BuildEvent>();
     public DbSet<LogoAsset> Logos => Set<LogoAsset>();
     public DbSet<EventStage> Stages => Set<EventStage>();
+    public DbSet<Registration> Registrations => Set<Registration>();
     public DbSet<OperationReceipt> OperationReceipts => Set<OperationReceipt>();
     public DbSet<AuditRecord> AuditRecords => Set<AuditRecord>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        builder.Entity<Registration>().HasOne<BuildEvent>().WithMany().HasForeignKey(x => x.EventId).OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<Registration>().Property(x => x.DisplayName).HasMaxLength(400);
+        builder.Entity<Registration>().Property(x => x.Email).HasMaxLength(640);
+        builder.Entity<Registration>().Property(x => x.NormalizedEmail).HasMaxLength(640);
+        builder.Entity<Registration>().Property(x => x.CodeDigest).HasMaxLength(64);
+        builder.Entity<Registration>().Property<byte[]>("Version").IsRowVersion();
+        builder.Entity<Registration>().HasIndex(x => new { x.EventId, x.CodeDigest }).IsUnique();
+        builder.Entity<Registration>().HasIndex(x => new { x.EventId, x.NormalizedEmail }).IsUnique().HasFilter("[Active] = 1 AND [NormalizedEmail] IS NOT NULL");
         builder.Entity<BuildEvent>().Property(x => x.Title).HasMaxLength(400);
         builder.Entity<BuildEvent>().HasOne<LogoAsset>().WithMany().HasForeignKey(x => x.LogoId).OnDelete(DeleteBehavior.Restrict);
         builder.Entity<LogoAsset>().Property(x => x.MediaType).HasMaxLength(50);
