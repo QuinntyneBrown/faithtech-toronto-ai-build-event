@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components - Enter an event
+Container(ui, "EnterEventPage", "Angular / IEntryService", "Signals and typed service contract")
+Container_Boundary(api, "Event API") {
+Component(ctrl, "EntryController", "ASP.NET Core", "Bind, MediatR dispatch, return")
+Component(gate, "SessionAuthorizationBehavior", "Application pipeline", "Validate actor, event and ownership")
+Component(handler, "EnterEventHandler", "Application", "Resolve published event access and bind an email atomically")
+Component(entity, "Registration", "Domain", "Published event headers, registrations, bindings and participant sessions")
+Component(store, "SqlEventStore", "Infrastructure / IEventStore", "Feature queries, concurrency and transactions")
+}
+ContainerDb(db, "Event database", "SQL Server", "Published event headers, registrations, bindings and participant sessions")
+Rel(ui, ctrl, "Enter event", "HTTPS")
+Rel(ctrl, gate, "Dispatch request through pipeline")
+Rel(gate, handler, "Continue authorized request")
+Rel(handler, entity, "Apply domain policy")
+Rel(handler, store, "Load and persist through port")
+Rel(store, db, "Query or commit", "EF Core")
+@enduml

@@ -1,0 +1,52 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam classBackgroundColor #F9FAFB
+skinparam classBorderColor #344054
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+title Structure - Enter an event
+interface IEntryService {
+  +state: Signal<EntryHeader>
+  +refresh(): Promise<void>
+}
+class EntryService {
+  -http: HttpClient
+  +refresh(): Promise<void>
+}
+class EnterEventHandler {
+  -store: IEventStore
+  +Handle(request: AuthenticateParticipantCommand): Task<EntryResult>
+}
+interface IEventStore {
+  +LoadAuthorized(scope: ActorEventScope): Task<Registration>
+  +Commit(intent: OperationContext): Task<CommitResult>
+}
+class Registration {
+  +Id: Guid
+  +EventId: Guid
+  +Active: bool
+  +NormalizedEmail: string?
+  +FirstAccessAtUtc: DateTimeOffset?
+  +BindEmail(normalizedEmail: string): ValidationResult
+  +RecordFirstAccess(now: DateTimeOffset): void
+}
+EntryService ..|> IEntryService
+EnterEventHandler --> IEventStore : queries / commits through
+EnterEventHandler --> Registration : enforces policy on
+class EntryCredential {
+  +CodeDigest: byte[]
+  +CredentialVersion: long
+}
+class ParticipantSession {
+  +Id: Guid
+  +RegistrationId: Guid
+  +ExpiresAtUtc: DateTimeOffset
+}
+Registration "1" *-- "1" EntryCredential
+Registration "1" --> "0..*" ParticipantSession
+
+@enduml

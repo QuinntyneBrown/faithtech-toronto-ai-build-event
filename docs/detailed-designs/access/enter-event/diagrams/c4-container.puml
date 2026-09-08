@@ -1,0 +1,17 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers - Enter an event
+Person(actor, "Participant", "enter event")
+System_Boundary(system, "FaithTech event platform") {
+Container(ui, "Client application", "Angular", "EnterEventPage")
+Container(api, "Event API", ".NET 10 / MediatR 12.5.0", "Resolve published event access and bind an email atomically")
+ContainerDb(db, "Event database", "SQL Server", "Published event headers, registrations, bindings and participant sessions")
+ContainerDb(redis, "Fanout backplane", "Redis; multiple API instances only", "Transient notification transport")
+}
+Rel(actor, ui, "Enter event")
+Rel(ui, api, "Typed requests and state reads", "JSON / HTTPS")
+Rel(api, db, "Commit or query scoped state", "EF Core")
+Rel(api, redis, "EventHub fanout between instances")
+Rel(api, ui, "Committed outbox invalidations through EventHub", "SignalR / HTTPS")
+@enduml
