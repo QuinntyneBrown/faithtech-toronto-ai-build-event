@@ -14,10 +14,16 @@ public partial class Program
     {
         var builder = WebApplication.CreateBuilder(args);
         builder.Services.AddControllersWithViews();
-        builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
+        builder.Services.AddAntiforgery(options =>
+        {
+            options.HeaderName = "X-CSRF-TOKEN";
+            options.Cookie.Name = "FaithTech.Antiforgery";
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            options.Cookie.SameSite = SameSiteMode.Strict;
+        });
         builder.Services.AddMediatR(options => options.RegisterServicesFromAssemblyContaining<AuthenticateAdministratorCommand>());
         builder.Services.AddDbContext<EventDbContext>(options => options.UseSqlServer(
-            builder.Configuration.GetConnectionString("EventDatabase") ?? "Server=.\\SQLEXPRESS;Database=FaithTech;Integrated Security=true;TrustServerCertificate=true"));
+            builder.Configuration.GetConnectionString("EventDatabase") ?? throw new InvalidOperationException("Configure ConnectionStrings:EventDatabase.")));
         builder.Services.AddIdentityCore<AdministratorAccount>().AddRoles<IdentityRole<Guid>>().AddEntityFrameworkStores<EventDbContext>();
         builder.Services.AddScoped<IAdministratorStore, SqlAdministratorStore>();
         builder.Services.AddScoped<AdministratorCookieEvents>();
