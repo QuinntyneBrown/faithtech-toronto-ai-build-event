@@ -1,7 +1,11 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using FaithTechTorontoAiBuildEvent.Application.Events;
 using FaithTechTorontoAiBuildEvent.Application.Roster;
+using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FaithTechTorontoAiBuildEvent.AcceptanceTests;
 
@@ -61,11 +65,57 @@ public sealed class RosterLifecycleTests(EventApiFactory factory) : IClassFixtur
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
+    [Fact, Trait("Requirement", "L2-002/AC3")]
+    public async Task Given_a_deactivated_entry_when_its_credential_or_existing_session_is_used_then_event_access_is_denied()
+    {
+        using var admin = await factory.AdministratorBrowser();
+        var item = await CreatePublished(admin);
+        var (client, registrationId, code) = await factory.ParticipantBrowser(admin, item.Id, "Alex", "alex@example.com");
+        using (client)
+        {
+            (await client.GetFromJsonAsync<JsonElement>($"/api/events/{item.Id}/session")).GetProperty("participantId").GetGuid();
+
+            var entries = (await admin.GetFromJsonAsync<RosterEntry[]>($"/api/admin/events/{item.Id}/roster"))!;
+            var version = entries.Single(x => x.Id == registrationId).Version;
+            var deactivated = await Deactivate(admin, item.Id, registrationId, version);
+            deactivated.EnsureSuccessStatusCode();
+            var result = (await deactivated.Content.ReadFromJsonAsync<RosterEntry>())!;
+            Assert.False(result.Active);
+
+            using var afterDeactivation = await client.GetAsync($"/api/events/{item.Id}/session");
+            Assert.Equal(HttpStatusCode.Unauthorized, afterDeactivation.StatusCode);
+        }
+
+        using var freshAttempt = factory.Browser();
+        var token = await freshAttempt.GetFromJsonAsync<JsonElement>($"/api/events/{item.Id}/antiforgery");
+        freshAttempt.DefaultRequestHeaders.Add("X-CSRF-TOKEN", token.GetProperty("requestToken").GetString());
+        using var reauthenticate = await freshAttempt.PostAsJsonAsync($"/api/events/{item.Id}/session", new { email = "alex@example.com", entryCode = code });
+        Assert.Equal(HttpStatusCode.Unauthorized, reauthenticate.StatusCode);
+    }
+
+    private async Task<EventSummary> CreatePublished(HttpClient admin)
+    {
+        var item = await Create(admin);
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<EventDbContext>();
+        (await db.Events.SingleAsync(x => x.Id == item.Id)).Published = true;
+        await db.SaveChangesAsync();
+        return item;
+    }
+
     private static async Task<EventSummary> Create(HttpClient client)
     {
         client.DefaultRequestHeaders.Add("Idempotency-Key", Guid.NewGuid().ToString());
         using var response = await client.PostAsJsonAsync("/api/admin/events", new { title = "Roster lifecycle" }); response.EnsureSuccessStatusCode();
         client.DefaultRequestHeaders.Remove("Idempotency-Key"); return (await response.Content.ReadFromJsonAsync<EventSummary>())!;
+    }
+
+    private static async Task<HttpResponseMessage> Deactivate(HttpClient client, Guid eventId, Guid registrationId, string version)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"/api/admin/events/{eventId}/roster/{registrationId}/deactivate");
+        request.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString());
+        request.Headers.Add("If-Match", $"\"{version}\"");
+        return await client.SendAsync(request);
     }
 
     private static async Task<RosterIssuance> Add(HttpClient client, Guid eventId, string name)

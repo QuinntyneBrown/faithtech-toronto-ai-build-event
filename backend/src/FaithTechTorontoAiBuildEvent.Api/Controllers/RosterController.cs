@@ -24,4 +24,10 @@ public sealed class RosterController(ISender sender) : ControllerBase
         [FromHeader(Name = "If-Match")] string? version, CancellationToken cancellationToken) =>
         Ok(await sender.Send(new RenameRegistrationCommand(Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!),
             eventId, registrationId, operationId!.Value, version, input.DisplayName), cancellationToken));
+    [HttpPost("{registrationId:guid}/deactivate"), ValidateAntiForgeryToken]
+    public async Task<IActionResult> Deactivate(Guid eventId, Guid registrationId,
+        [FromHeader(Name = "Idempotency-Key"), Required] Guid? operationId,
+        [FromHeader(Name = "If-Match")] string? version, CancellationToken cancellationToken) =>
+        Ok(await sender.Send(new DeactivateRegistrationCommand(Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!),
+            eventId, registrationId, operationId!.Value, version), cancellationToken));
 }

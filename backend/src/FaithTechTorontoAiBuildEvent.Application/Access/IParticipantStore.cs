@@ -9,4 +9,5 @@ public interface IParticipantStore
     Task<DateTimeOffset> GetUtcNow(CancellationToken cancellationToken);
     Task<bool> IsActiveRegistration(Guid registrationId, CancellationToken cancellationToken);
     Task RevokeSession(Guid sessionId, CancellationToken cancellationToken);
+    Task RevokeSessionsForRegistration(Guid registrationId, CancellationToken cancellationToken);
 }
