@@ -1,0 +1,45 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam class {
+ BorderColor #344054
+ FontColor #101828
+ BackgroundColor #F9FAFB
+}
+title Execute explicitly reviewed SQL data repairs - partial and uncertain execution
+actor Operator as op
+box "Frontend - Windows terminal" #E0F2FE
+participant "SqlExecuteCommand" as cli
+end box
+box "Backend - Application" #ECFDF3
+participant ExecuteSqlRepairHandler as handler
+end box
+box "Backend - Infrastructure" #FFF4E5
+participant SqlRepairExecutor as sql
+database "Operator journal" as journal
+database "Verified SQL connection" as db
+end box
+op -> cli : Apply reviewed multi-batch repair
+cli -> handler : Approved execution
+handler -> sql : Run batches
+sql -> journal : Record Started
+sql -> db : Execute first batch outside a transaction
+db --> sql : Success and no open transaction
+sql -> journal : First batch committed
+sql -> db : Execute next batch
+alt SQL failure with usable connection
+db --> sql : Error
+sql -> db : Inspect and roll back remaining transaction
+sql -> journal : Known prior commit; current uncertainty if unresolved
+sql --> handler : Partial or unconfirmed current batch
+else Connection lost
+db --> sql : Connection failure
+sql -> journal : Unconfirmed; retain committed checkpoint
+sql --> handler : Unconfirmed outcome, no retry
+end
+handler --> cli : Outcome and reconciliation instructions
+cli --> op : Inspect target before approving a new operation
+@enduml
