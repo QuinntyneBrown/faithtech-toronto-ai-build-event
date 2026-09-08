@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, input, OnInit, output, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, inject, input, OnInit, output, signal, viewChild } from '@angular/core';
 import { ROSTER_SERVICE, RosterEntry, RosterFailure, RosterIssuance } from '@faithtech/api';
 
 @Component({ selector: 'ft-roster-panel', templateUrl: './roster-panel.html', styleUrl: './roster-panel.css' })
@@ -17,7 +17,10 @@ export class RosterPanel implements OnInit {
   readonly busy = signal(false);
   readonly uncertain = signal(false);
   private operationId = crypto.randomUUID();
-  beginAdd() { if (!this.uncertain()) { this.name.set(''); this.error.set(''); this.fieldError.set(''); this.operationId = crypto.randomUUID(); } }
+  private readonly addButton = viewChild<ElementRef<HTMLButtonElement>>('addButton');
+  focusAdd() { this.addButton()?.nativeElement.focus(); }
+  discardDraft() { if (!this.uncertain()) { this.name.set(''); this.error.set(''); this.fieldError.set(''); this.operationId = crypto.randomUUID(); } }
+  beginAdd() { if (!this.name() && !this.uncertain()) this.discardDraft(); }
   ngOnInit() { void this.load(); }
   async load() {
     this.loadError.set('');

@@ -14,6 +14,10 @@
     <div class="actions"><button type="button" [disabled]="editor.busy()" (click)="cancelAdd()">Cancel</button><button type="submit" [disabled]="editor.busy()">{{ editor.uncertain() ? 'Check addition outcome' : 'Save participant' }}</button></div>
   </form> }
 </dialog>
+<dialog #leaveDialog aria-labelledby="leave-title" (cancel)="$event.preventDefault(); finishLeave(false)">
+  <h2 id="leave-title">Leave unsaved changes?</h2><p>Unsaved input and any displayed entry code will be lost when you leave this page. An unconfirmed addition may already have reached the server; closing its form keeps the pending outcome available for review here.</p>
+  <div class="actions"><button autofocus (click)="finishLeave(false)">Keep editing</button><button (click)="finishLeave(true)">Discard changes</button></div>
+</dialog>
 <dialog #codeDialog aria-labelledby="code-title" (cancel)="$event.preventDefault(); clearCode()">
   @if (issuance(); as value) {
     <h2 id="code-title">Entry code for {{ value.entry.displayName }}</h2>

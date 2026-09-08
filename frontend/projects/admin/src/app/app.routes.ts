@@ -7,6 +7,7 @@ import { eventEditorLeaveGuard } from './events/event-editor-leave.guard';
 import { SchedulePage } from './scheduling/schedule-page';
 import { scheduleLeaveGuard } from './scheduling/schedule-leave.guard';
 import { RosterPage } from './roster/roster-page';
+import { rosterLeaveGuard } from './roster/roster-leave.guard';
 
 export const routes: Routes = [
   { path: 'sign-in', component: SignInPage },
@@ -14,6 +15,6 @@ export const routes: Routes = [
   { path: 'events', component: EventsPage },
   { path: 'events/:eventId', component: EventEditorPage, canDeactivate: [eventEditorLeaveGuard] },
   { path: 'events/:eventId/schedule', component: SchedulePage, canDeactivate: [scheduleLeaveGuard] },
-  { path: 'events/:eventId/roster', component: RosterPage },
+  { path: 'events/:eventId/roster', component: RosterPage, canDeactivate: [rosterLeaveGuard] },
   { path: '', pathMatch: 'full', redirectTo: 'sign-in' },
 ];

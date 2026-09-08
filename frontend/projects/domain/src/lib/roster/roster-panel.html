@@ -1,5 +1,5 @@
 @if (entries(); as roster) {
-  <button type="button" [disabled]="busy()" (click)="requestAdd.emit()">{{ uncertain() ? 'Review pending addition' : 'Add participant' }}</button>
+  <button #addButton type="button" [disabled]="busy()" (click)="requestAdd.emit()">{{ uncertain() ? 'Review pending addition' : 'Add participant' }}</button>
   <section class="card"><h2>Event participants</h2>
     @if (!roster.length) { <p>No participants yet.</p> }
     @else { <div class="table-scroll" role="region" aria-label="Event participants" tabindex="0"><table><caption>Participant identities and access</caption>
