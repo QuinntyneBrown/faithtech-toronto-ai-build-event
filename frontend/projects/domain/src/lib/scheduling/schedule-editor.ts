@@ -13,6 +13,8 @@ export class ScheduleEditor implements OnInit {
   readonly eventId = input.required<string>();
   readonly editStage = output<StageInput>();
   readonly editStageField = output<{ stage: StageInput; field: string }>();
+  readonly referenceRequested = output<void>();
+  readonly operation = signal<'save' | 'reference'>('save');
   readonly denied = output<void>();
   readonly detail = signal<ScheduleDetail | null>(null);
   readonly draft = signal<ScheduleInput | null>(null);
@@ -73,6 +75,7 @@ export class ScheduleEditor implements OnInit {
     afterNextRender(() => this.host.nativeElement.querySelector<HTMLElement>('#schedule-stages')?.focus(), { injector: this.injector });
   }
   reapply() { const current = this.conflict(); if (current) this.detail.set(current); this.conflict.set(null); this.error.set(''); this.operationId = crypto.randomUUID(); }
+  reapplyReference() { this.reapply(); this.referenceRequested.emit(); }
   useCurrent() { const current = this.conflict(); this.reapply(); if (current) this.draft.set(current); }
   ngOnInit() { void this.load(); }
   async load() {
@@ -80,11 +83,14 @@ export class ScheduleEditor implements OnInit {
     try { const value = await this.service.get(this.eventId()); if (!this.destroy.destroyed) { this.detail.set(value); this.draft.set(value); } }
     catch (error) { if (error instanceof ScheduleFailure && error.status === 401) this.denied.emit(); else this.error.set('The schedule could not be loaded. Retry to continue.'); }
   }
-  async save() {
+  save() { return this.persist(this.uncertain() ? this.operation() : 'save'); }
+  applyReference() { return this.persist('reference'); }
+  private async persist(operation: 'save' | 'reference') {
     const draft = this.draft(), current = this.detail(); if (!draft || !current || this.busy() || this.conflict()) return;
-    this.busy.set(true); this.error.set(''); this.errors.set({}); this.saved.set(false);
+    this.operation.set(operation); this.busy.set(true); this.error.set(''); this.errors.set({}); this.saved.set(false);
     try {
-      const value = await this.service.save(current.id, draft, current.version, this.operationId);
+      const value = operation === 'reference' ? await this.service.applyReference(current.id, current.version, this.operationId)
+        : await this.service.save(current.id, draft, current.version, this.operationId);
       if (this.destroy.destroyed) return;
       this.detail.set(value); this.draft.set(value); this.uncertain.set(false); this.saved.set(true); this.operationId = crypto.randomUUID();
     } catch (error) {

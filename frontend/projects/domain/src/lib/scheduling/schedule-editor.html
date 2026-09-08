@@ -1,5 +1,6 @@
 @if (draft(); as values) {
   <form (ngSubmit)="save()" novalidate>
+    <button type="button" [disabled]="busy() || uncertain() || !!conflict()" (click)="referenceRequested.emit()">Apply September 9 reference</button>
     <fieldset [disabled]="busy() || uncertain() || !!conflict()"><legend id="schedule-configuration" tabindex="-1">Schedule configuration</legend>
       <section class="card"><h2>Event timing</h2>
         <label>Timezone<input id="schedule-timezone" name="timezone" [attr.aria-invalid]="errors()['timezone'] ? 'true' : null" [attr.aria-describedby]="errors()['timezone'] ? 'schedule-timezone-error' : null" [ngModel]="values.timezone" (ngModelChange)="change('timezone', $event)"></label>
@@ -32,9 +33,11 @@
     </section> }
     @if (conflict(); as latest) { <section class="card" aria-label="Latest saved schedule"><h2>Latest saved schedule</h2><p>{{ latest.timezone }} · {{ latest.start?.local }} – {{ latest.end?.local }}</p>
       @for (stage of latest.stages; track stage.id) { <p>{{ stage.name }} · {{ stage.start?.local }} – {{ stage.end?.local }} · {{ stage.content }}</p> }
-      <button type="button" (click)="reapply()">Reapply my schedule</button><button type="button" (click)="useCurrent()">Use latest schedule</button></section> }
+      @if (operation() === 'reference') { <button type="button" (click)="reapplyReference()">Apply reference to latest version</button> }
+      @else { <button type="button" (click)="reapply()">Reapply my schedule</button> }
+      <button type="button" (click)="useCurrent()">Use latest schedule</button></section> }
     @if (saved()) { <p role="status">Schedule saved.</p> }
-    <button type="submit" [disabled]="busy() || !!conflict()">{{ uncertain() ? 'Retry schedule save' : 'Save schedule' }}</button>
+    <button type="submit" [disabled]="busy() || !!conflict()">{{ uncertain() ? (operation() === 'reference' ? 'Retry reference application' : 'Retry schedule save') : 'Save schedule' }}</button>
   </form>
 } @else if (error()) { <p role="alert">{{ error() }}</p><button type="button" (click)="load()">Retry</button> }
 @else { <p role="status">Loading schedule…</p> }

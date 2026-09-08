@@ -16,6 +16,20 @@ async function openSchedule(page: Page) {
   return schedule;
 }
 
+test('L2-008/036: given a proposed schedule, applying the reference requires confirmation and renders its saved values', async ({ page, schedules }) => {
+  const schedule = await openSchedule(page);
+  await schedule.setEventTimes('UTC', '2026-09-09T23:00', '2026-09-10T01:00');
+  await schedule.addStage('Custom draft', '2026-09-09T23:00', '2026-09-10T01:00', 'Keep until confirmed');
+  await schedule.requestReference(); await schedule.cancelReference();
+  await schedule.expectStage('Custom draft', 'Keep until confirmed'); expect(schedules.references).toBe(0);
+  await schedule.requestReference(); await schedule.confirmReference(); await schedule.expectSaved();
+  await schedule.expectStage('Reference arrival', 'Welcome from the reference service');
+  await schedule.expectWindow('selection', '2026-09-09T18:05', '2026-09-09T18:15');
+  await schedule.expectWindow('demo presentation', '2026-09-09T20:30', '2026-09-09T20:50');
+  await page.reload(); await schedule.expectStage('Reference arrival', 'Welcome from the reference service');
+  expect(schedules.references).toBe(1);
+});
+
 test('L2-036/AC2: given invalid schedule timing, validation focuses a linked summary and retains the draft', async ({ page, schedules }) => {
   const schedule = await openSchedule(page);
   await schedule.setEventTimes('UTC', '2026-09-09T23:00', '2026-09-10T01:00');

@@ -13,12 +13,16 @@ export class ScheduleService implements IScheduleService {
     try { return await firstValueFrom(this.http.get<ScheduleDetail>(`/api/admin/events/${encodeURIComponent(id)}/schedule`)); }
     catch (error) { throw new ScheduleFailure(error instanceof HttpErrorResponse ? error.status : 0); }
   }
-  async save(id: string, input: ScheduleInput, version: string, operationId: string): Promise<ScheduleDetail> {
+  save(id: string, input: ScheduleInput, version: string, operationId: string) { return this.write(id, input, version, operationId); }
+  applyReference(id: string, version: string, operationId: string) { return this.write(id, null, version, operationId); }
+  private async write(id: string, input: ScheduleInput | null, version: string, operationId: string): Promise<ScheduleDetail> {
     try {
       const token = await firstValueFrom(this.http.get<{ requestToken: string }>('/api/admin/antiforgery'));
-      return await firstValueFrom(this.http.put<ScheduleDetail>(`/api/admin/events/${encodeURIComponent(id)}/schedule`, input, {
+      const options = {
         headers: { 'X-CSRF-TOKEN': token.requestToken, 'Idempotency-Key': operationId, 'If-Match': `"${version}"` },
-      }));
+      };
+      const url = `/api/admin/events/${encodeURIComponent(id)}`;
+      return await firstValueFrom(input ? this.http.put<ScheduleDetail>(url + '/schedule', input, options) : this.http.post<ScheduleDetail>(url + '/reference-schedule', null, options));
     } catch (error) {
       if (error instanceof HttpErrorResponse) throw new ScheduleFailure(error.status, error.error?.code, error.error?.errors, error.error?.current);
       throw new ScheduleFailure(0);

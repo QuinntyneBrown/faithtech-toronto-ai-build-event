@@ -14,9 +14,13 @@ export class SchedulePage {
   private readonly stageDialog = viewChild.required<ElementRef<HTMLDialogElement>>('stageDialog');
   private readonly stageForm = viewChild<ElementRef<HTMLFormElement>>('stageForm');
   private readonly leaveDialog = viewChild.required<ElementRef<HTMLDialogElement>>('leaveDialog');
+  private readonly referenceDialog = viewChild.required<ElementRef<HTMLDialogElement>>('referenceDialog');
   private originalStage = '';
   private discardStage = false;
   private resolveLeave?: (leave: boolean) => void;
+  openReference() { this.referenceDialog().nativeElement.showModal(); }
+  cancelReference() { this.referenceDialog().nativeElement.close(); }
+  applyReference() { this.cancelReference(); void this.editor().applyReference(); }
   stageError(field: string) { const stage = this.editing(); return stage ? this.editor().stageError(stage.id, field) : undefined; }
   openStage(stage: StageInput, field = 'name') {
     this.originalStage = JSON.stringify(stage); this.editing.set(structuredClone(stage));
@@ -34,7 +38,7 @@ export class SchedulePage {
     else { this.discardStage = true; this.leaveDialog().nativeElement.showModal(); }
   }
   canLeave(nextUrl: string): boolean | Promise<boolean> {
-    if (nextUrl === '/sign-in') { this.closeStage(); this.finishLeave(false); return true; }
+    if (nextUrl === '/sign-in') { this.closeStage(); this.cancelReference(); this.finishLeave(false); return true; }
     if (!this.editor().hasUnsavedChanges() && !this.editing()) return true;
     this.resolveLeave?.(false); this.discardStage = false; this.leaveDialog().nativeElement.showModal();
     return new Promise(resolve => { this.resolveLeave = resolve; });

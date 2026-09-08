@@ -1,7 +1,7 @@
 <main id="main"><ft-administrator-session-panel [showDetails]="false" (signedOut)="signedOut()">
   <p><a [routerLink]="['/events', eventId]">Event settings</a></p><p class="eyebrow">SET THE RHYTHM</p>
   <h1>One evening. Many possibilities.</h1><p>Configure scheduled screens, instructions, and links. Event timing never advances a project’s progress.</p>
-  <ft-schedule-editor [eventId]="eventId" (editStage)="openStage($event)" (editStageField)="openStage($event.stage, $event.field)" (denied)="signedOut()" />
+  <ft-schedule-editor [eventId]="eventId" (editStage)="openStage($event)" (editStageField)="openStage($event.stage, $event.field)" (referenceRequested)="openReference()" (denied)="signedOut()" />
 </ft-administrator-session-panel></main>
 <dialog #stageDialog aria-labelledby="stage-title" (cancel)="$event.preventDefault(); cancelStage()">
   <h2 id="stage-title">Shape a moment.</h2>
@@ -25,6 +25,12 @@
     <p>Apply stage keeps this change in your draft. Save the schedule to commit all timings together.</p>
     <div class="actions"><button type="button" (click)="cancelStage()">Cancel</button><button type="submit">Apply stage</button></div>
   </form> }
+</dialog>
+<dialog #referenceDialog aria-labelledby="reference-title" (cancel)="$event.preventDefault(); cancelReference()">
+  <h2 id="reference-title">Apply the September 9 reference?</h2>
+  <p>This replaces your saved and unsaved schedule with 21 entries for September 9, 2026, 17:00–21:00 America/Toronto. Selection runs 18:05–18:15 and demo presentations 20:30–20:50.</p>
+  <p>It sets the venue name to Stone Church and turns Use Liturgy off. Other event details, including any location and logo you supplied, are retained. It does not publish the event.</p>
+  <div class="actions"><button autofocus (click)="cancelReference()">Keep my schedule</button><button (click)="applyReference()">Replace schedule</button></div>
 </dialog>
 <dialog #leaveDialog aria-labelledby="leave-title" (cancel)="$event.preventDefault(); finishLeave(false)">
   <h2 id="leave-title">Leave unsaved changes?</h2><p>Your proposed changes will be discarded. An unconfirmed save may already have reached the server.</p>

@@ -5,6 +5,13 @@ export class AdminSchedulePage {
   constructor(private readonly page: Page) {}
   async open() { await this.page.getByRole('link', { name: 'Edit schedule', exact: true }).click(); }
   async expectEmpty() { await expect(this.page.getByText('No stages yet.', { exact: true })).toBeVisible(); }
+  async requestReference() { await this.page.getByRole('button', { name: 'Apply September 9 reference', exact: true }).click(); }
+  async cancelReference() {
+    const dialog = this.page.getByRole('dialog', { name: 'Apply the September 9 reference?', exact: true });
+    await expect(dialog.getByRole('button', { name: 'Keep my schedule', exact: true })).toBeFocused();
+    await dialog.getByRole('button', { name: 'Keep my schedule', exact: true }).click();
+  }
+  async confirmReference() { await this.page.getByRole('dialog', { name: 'Apply the September 9 reference?', exact: true }).getByRole('button', { name: 'Replace schedule', exact: true }).click(); }
   async setWindow(kind: 'selection' | 'demo presentation', start: string, end: string) {
     await this.page.getByRole('checkbox', { name: 'Enable ' + kind, exact: true }).check();
     const label = kind[0].toUpperCase() + kind.slice(1);
