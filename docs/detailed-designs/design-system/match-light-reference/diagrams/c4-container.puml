@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers - Match the recorded Cornerstone light reference
+Person(reviewer, "Designer or developer", "Reviews the static gallery")
+System_Boundary(ds, "Standalone design system") {
+Container(site, "Gallery browser page", "HTML / CSS / JavaScript", "Local styles, patterns and native controls")
+Container(host, "Static hosting", "Independent dist/site artifact", "Serves only gallery assets")
+Container(build, "Build and browser checks", "Node / Playwright", "Repository-local build inputs and reference fixture")
+}
+Rel(reviewer, site, "Reviews visual and interaction states")
+Rel(site, host, "Loads local assets", "HTTPS")
+Rel(build, host, "Publishes verified static artifact")
+Rel(build, site, "Exercises representative browser behavior")
+@enduml

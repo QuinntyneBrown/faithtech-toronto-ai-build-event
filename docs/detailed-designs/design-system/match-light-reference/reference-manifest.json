@@ -1,0 +1,71 @@
+{
+  "inspected_on": "2026-09-07",
+  "revision": "554636edf74af788e83aa33a4380a05b031db16a",
+  "files": [
+    {
+      "path": "README.md",
+      "working_tree_status": "M README.md",
+      "raw_sha256": "11f92e9ba8a8d99e54a456e8197196d5bc972397a3a3a9b8bea34b829e2e6b5b",
+      "lf_normalized_sha256": "11f92e9ba8a8d99e54a456e8197196d5bc972397a3a3a9b8bea34b829e2e6b5b"
+    },
+    {
+      "path": "docs/specs/migration.md",
+      "working_tree_status": "M docs/specs/migration.md",
+      "raw_sha256": "d7f08e7c57eabda4c86e9524c44c98a6cf9d1bd6888e95860ed3e85adc6d59fa",
+      "lf_normalized_sha256": "d7f08e7c57eabda4c86e9524c44c98a6cf9d1bd6888e95860ed3e85adc6d59fa"
+    },
+    {
+      "path": "projects/cornerstone/src/styles/tokens.scss",
+      "working_tree_status": "clean tracked source",
+      "raw_sha256": "9e35f5b3e94cfdddc0b75ab76ef5c6e91d09910b83c8ea13e5b9ec413161a413",
+      "lf_normalized_sha256": "9e35f5b3e94cfdddc0b75ab76ef5c6e91d09910b83c8ea13e5b9ec413161a413"
+    },
+    {
+      "path": "projects/cornerstone/src/styles/_tokens.scss",
+      "working_tree_status": "clean tracked source",
+      "raw_sha256": "9dd15b329f5275b8b456f8e72170ad8592b17fa864483eacd1d7484130fe2285",
+      "lf_normalized_sha256": "9dd15b329f5275b8b456f8e72170ad8592b17fa864483eacd1d7484130fe2285"
+    },
+    {
+      "path": "projects/cornerstone/src/styles/theme.scss",
+      "working_tree_status": "clean tracked source",
+      "raw_sha256": "44122339e0a04e027edc9fc980d73e3a9a3a3c3c6a2487875995f3883276875b",
+      "lf_normalized_sha256": "44122339e0a04e027edc9fc980d73e3a9a3a3c3c6a2487875995f3883276875b"
+    },
+    {
+      "path": "projects/cornerstone/src/lib/foundations/cs-button.directive.ts",
+      "working_tree_status": "clean tracked source",
+      "raw_sha256": "ad5311a6e77a5a52530dde774c2591c38affd8fd4b5d17a724a36bef9f34d5f4",
+      "lf_normalized_sha256": "ad5311a6e77a5a52530dde774c2591c38affd8fd4b5d17a724a36bef9f34d5f4"
+    },
+    {
+      "path": "projects/cornerstone/src/lib/foundations/card/card.component.ts",
+      "working_tree_status": "?? projects/cornerstone/src/lib/foundations/card/card.component.ts",
+      "raw_sha256": "4bf273546a9abf91f61911392ca3fe50af519e6748e1987a69df348ed02e6524",
+      "lf_normalized_sha256": "4bf273546a9abf91f61911392ca3fe50af519e6748e1987a69df348ed02e6524"
+    },
+    {
+      "path": "projects/cornerstone/src/lib/foundations/card/card.component.scss",
+      "working_tree_status": "?? projects/cornerstone/src/lib/foundations/card/card.component.scss",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "lf_normalized_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "projects/cornerstone/src/lib/forms/choice-card/choice-card.component.ts",
+      "working_tree_status": "?? projects/cornerstone/src/lib/forms/choice-card/choice-card.component.ts",
+      "raw_sha256": "5348e0a40d84ee0cbf49bf814b133b94f27156bd6fee4012392d8c8385f3fb77",
+      "lf_normalized_sha256": "5348e0a40d84ee0cbf49bf814b133b94f27156bd6fee4012392d8c8385f3fb77"
+    },
+    {
+      "path": "projects/cornerstone/src/lib/forms/choice-card/choice-card.component.scss",
+      "working_tree_status": "?? projects/cornerstone/src/lib/forms/choice-card/choice-card.component.scss",
+      "raw_sha256": "46c8d715f56b7551bd22f6751be5abdb3eb480f6580672b44241c4d5e2e2f5a3",
+      "lf_normalized_sha256": "46c8d715f56b7551bd22f6751be5abdb3eb480f6580672b44241c4d5e2e2f5a3"
+    },
+    {
+      "path": "local:design-system/tests/reference/cornerstone-light.css",
+      "raw_sha256": "33e9720e75363de9d75c4588ba8cf181610df27e812692293a7dd05791e37cec",
+      "lf_normalized_sha256": "3678174ba58e048318b4ad7ccb574fdf78e5cfa5b6708fe18a850667032e236a"
+    }
+  ]
+}

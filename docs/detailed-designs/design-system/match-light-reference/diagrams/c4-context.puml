@@ -1,0 +1,10 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Context - Match the recorded Cornerstone light reference
+Person(reviewer, "Designer or developer", "Inspects local primitives and states")
+System(gallery, "Standalone design system", "Local Cornerstone light tokens and specimens")
+System_Ext(apps, "Event applications", "Independent consumers of mirrored styles")
+Rel(reviewer, gallery, "Inspects specimens", "Browser")
+Rel(gallery, apps, "Supplies token and interface reference at development time")
+@enduml
