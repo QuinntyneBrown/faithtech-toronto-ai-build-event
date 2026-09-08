@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Context - Manage the event roster
+Person(actor, "Administrator", "manage roster")
+System(system, "FaithTech event platform", "Maintain stable identities and revoke credentials without deleting history")
+Rel(actor, system, "Manage roster", "HTTPS")
+@enduml

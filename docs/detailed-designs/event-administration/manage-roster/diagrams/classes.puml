@@ -1,0 +1,55 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam classBackgroundColor #F9FAFB
+skinparam classBorderColor #344054
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+title Structure - Manage the event roster
+interface IRosterService {
+  +state: Signal<RosterEntry[]>
+  +refresh(): Promise<void>
+}
+class RosterService {
+  -http: HttpClient
+  +refresh(): Promise<void>
+}
+class ManageRosterHandler {
+  -store: IEventStore
+  +Handle(request: SetRegistrationActiveCommand): Task<RosterEntry>
+}
+interface IEventStore {
+  +LoadAuthorized(scope: ActorEventScope): Task<Registration>
+  +Commit(intent: OperationContext): Task<CommitResult>
+}
+class Registration {
+  +Id: Guid
+  +EventId: Guid
+  +DisplayName: string
+  +Active: bool
+  +NormalizedEmail: string?
+  +CredentialVersion: long
+  +FirstAccessAtUtc: DateTimeOffset?
+  +Rename(name: string): void
+  +Deactivate(): void
+  +Reactivate(emailAvailable: bool): ValidationResult
+}
+RosterService ..|> IRosterService
+ManageRosterHandler --> IEventStore : queries / commits through
+ManageRosterHandler --> Registration : enforces policy on
+class EntryCredential {
+  +RegistrationId: Guid
+  +CodeDigest: byte[]
+  +IssuedAtUtc: DateTimeOffset
+}
+class Session {
+  +Id: Guid
+  +RevokedAtUtc: DateTimeOffset?
+}
+Registration "1" *-- "1" EntryCredential
+Registration "1" --> "0..*" Session : session owner
+
+@enduml

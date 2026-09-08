@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components - Manage the event roster
+Container(ui, "ManageRosterPage", "Angular / IRosterService", "Signals and typed service contract")
+Container_Boundary(api, "Event API") {
+Component(ctrl, "RosterController", "ASP.NET Core", "Bind, MediatR dispatch, return")
+Component(gate, "SessionAuthorizationBehavior", "Application pipeline", "Validate actor, event and ownership")
+Component(handler, "ManageRosterHandler", "Application", "Maintain stable identities and revoke credentials without deleting history")
+Component(entity, "Registration", "Domain", "Registrations, code digests, email bindings and session revocations")
+Component(store, "SqlEventStore", "Infrastructure / IEventStore", "Feature queries, concurrency and transactions")
+}
+ContainerDb(db, "Event database", "SQL Server", "Registrations, code digests, email bindings and session revocations")
+Rel(ui, ctrl, "Manage roster", "HTTPS")
+Rel(ctrl, gate, "Dispatch request through pipeline")
+Rel(gate, handler, "Continue authorized request")
+Rel(handler, entity, "Apply domain policy")
+Rel(handler, store, "Load and persist through port")
+Rel(store, db, "Query or commit", "EF Core")
+@enduml
