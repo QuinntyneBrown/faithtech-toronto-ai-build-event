@@ -31,7 +31,7 @@ if (-not $Rollback) {
         $null = Azure sql server firewall-rule delete -g $env:AZURE_RESOURCE_GROUP -s $env:AZURE_SQL_SERVER -n $rule
     }
 }
-$null = Azure webapp deploy -g $env:AZURE_RESOURCE_GROUP -n $env:AZURE_APP_NAME --src-path "$PackageDirectory/web.zip" --type zip --timeout 600000
+$null = Azure webapp deploy -g $env:AZURE_RESOURCE_GROUP -n $env:AZURE_APP_NAME --src-path "$PackageDirectory/web.zip" --type zip --timeout 600000 --track-status false
 & "$PSScriptRoot/smoke-release.ps1" -Url $env:AZURE_WEBAPP_URL -Revision $manifest.revision
 $tag = if ($Rollback) { $app.tags.releaseRunNumber } else { $env:GITHUB_RUN_NUMBER }
 $null = Azure webapp update -g $env:AZURE_RESOURCE_GROUP -n $env:AZURE_APP_NAME --set "tags.releaseCommit=$($manifest.revision)" "tags.releaseRunNumber=$tag"

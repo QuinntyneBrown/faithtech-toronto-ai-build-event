@@ -1,20 +1,24 @@
 param([Parameter(Mandatory)][string]$Url, [Parameter(Mandatory)][string]$Revision,
-    [switch]$Restart, [string]$AppName, [string]$ResourceGroup)
+    [switch]$Restart, [string]$AppName, [string]$ResourceGroup, [switch]$TrustLocalCertificate)
 $ErrorActionPreference = 'Stop'
 if (-not $env:SMOKE_USERNAME -or -not $env:SMOKE_PASSWORD) { throw 'Configure smoke credentials.' }
+if ($TrustLocalCertificate -and ([uri]$Url).Host -notin @('127.0.0.1', 'localhost')) { throw 'Certificate bypass is restricted to loopback.' }
 $session = [Microsoft.PowerShell.Commands.WebRequestSession]::new()
 function Request([string]$Path, [string]$Method = 'GET', $Body = $null, $Headers = @{}) {
-    $parameters = @{Uri = "$Url$Path"; Method = $Method; WebSession = $session; TimeoutSec = 15;
+    Write-Host "$Method $Path"
+    $parameters = @{Uri = "$Url$Path"; Method = $Method; WebSession = $session; TimeoutSec = 30;
         SkipHttpErrorCheck = $true; Headers = $Headers}
+    if ($TrustLocalCertificate) { $parameters.SkipCertificateCheck = $true }
     if ($null -ne $Body) { $parameters.Body = $Body | ConvertTo-Json; $parameters.ContentType = 'application/json' }
     Invoke-WebRequest @parameters
 }
 function ExpectStatus($Response, [int]$Expected) {
     if ([int]$Response.StatusCode -ne $Expected) { throw "Unexpected HTTP status: $($Response.StatusCode), expected $Expected" }
 }
+$deadline = [DateTimeOffset]::UtcNow.AddMinutes(3)
 for ($attempt = 0; $attempt -lt 36; $attempt++) {
     try { $response = Request '/'; if ($response.StatusCode -eq 200) { break } } catch { }
-    if ($attempt -eq 35) { throw 'Application startup deadline exceeded.' }
+    if ($attempt -eq 35 -or [DateTimeOffset]::UtcNow -ge $deadline) { throw 'Application startup deadline exceeded.' }
     Start-Sleep -Seconds 5
 }
 foreach ($path in @('/', '/admin/sign-in', '/events/00000000-0000-0000-0000-000000000001/schedule')) {
@@ -34,18 +38,21 @@ $headers = @{'X-CSRF-TOKEN' = $token}
 ExpectStatus (Request '/api/admin/session' 'POST' @{username = $env:SMOKE_USERNAME; password = $env:SMOKE_PASSWORD} $headers) 204
 try {
     if ($Restart) {
+        $previousInstance = ((Request '/api/admin/readiness').Content | ConvertFrom-Json).instance
+        if (-not $previousInstance) { throw 'Restart verification requires a process instance identifier.' }
         & az webapp restart -g $ResourceGroup -n $AppName --only-show-errors
         if ($LASTEXITCODE -ne 0) { throw 'Restart failed.' }
     }
+    $deadline = [DateTimeOffset]::UtcNow.AddMinutes(3)
     for ($attempt = 0; $attempt -lt 36; $attempt++) {
         try {
             $response = Request '/api/admin/readiness'
             if ($response.StatusCode -eq 200) {
                 $state = $response.Content | ConvertFrom-Json
-                if ($state.ready -and $state.revision.EndsWith($Revision)) { break }
+                if ($state.ready -and $state.revision.EndsWith($Revision) -and (!$Restart -or $state.instance -ne $previousInstance)) { break }
             }
         } catch { }
-        if ($attempt -eq 35) { throw 'Authenticated SQL/revision readiness deadline exceeded.' }
+        if ($attempt -eq 35 -or [DateTimeOffset]::UtcNow -ge $deadline) { throw 'Authenticated SQL/revision readiness deadline exceeded.' }
         Start-Sleep -Seconds 5
     }
 } finally {
