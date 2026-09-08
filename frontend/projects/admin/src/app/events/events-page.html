@@ -1,0 +1,5 @@
+<main id="main"><ft-administrator-session-panel [showDetails]="false" (signedOut)="signedOut()">
+  <p><a routerLink="/session">Your session</a></p><div class="heading"><h1>Events</h1><button #createButton (click)="creating.set(true)">Create event</button></div>
+  <ft-event-list-panel />
+  @if (creating()) { <ft-create-event-dialog (closed)="close()" (saved)="saved()" /> }
+</ft-administrator-session-panel></main>

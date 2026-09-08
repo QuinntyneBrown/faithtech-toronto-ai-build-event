@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, output, signal } from '@angular/core';
+import { Component, DestroyRef, inject, input, output, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { SESSION_SERVICE, SessionState } from '@faithtech/api';
 
@@ -11,6 +11,7 @@ export class AdministratorSessionPanel {
   private timer?: ReturnType<typeof setTimeout>;
   private revision = 0;
   readonly signedOut = output<void>();
+  readonly showDetails = input(true);
   readonly state = signal<SessionState | null>(null);
   readonly error = signal('');
   readonly pendingSignOut = signal(false);
