@@ -57,3 +57,14 @@ test('L2-002/AC4: replacing an already-issued entry code reveals a new one-time 
   expect(code).toBeTruthy();
   await roster.expectParticipants('Alex', 1);
 });
+
+test('L2-002/AC5: reactivating a participant restores active status', async ({ page }) => {
+  const roster = await openRoster(page);
+  await roster.add('Alex'); await roster.takeCode('Alex');
+  await roster.deactivate('Alex');
+  await roster.expectStatus('Alex', 'Inactive');
+  await roster.reactivate('Alex');
+  await roster.expectStatus('Alex', 'Active');
+  await roster.expectReactivateDisabled('Alex');
+  await page.reload(); await roster.expectStatus('Alex', 'Active');
+});

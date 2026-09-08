@@ -13,6 +13,7 @@ export class RosterPanel implements OnInit {
   readonly renamed = output<RosterEntry>();
   readonly deactivated = output<RosterEntry>();
   readonly codeReplaced = output<RosterIssuance>();
+  readonly reactivated = output<RosterEntry>();
   readonly denied = output<void>();
   readonly entries = signal<RosterEntry[] | null>(null);
   readonly loadError = signal('');
@@ -35,6 +36,9 @@ export class RosterPanel implements OnInit {
   readonly replaceCodeError = signal('');
   readonly replaceCodeBusy = signal(false);
   private replaceCodeOperationId = crypto.randomUUID();
+  readonly reactivateError = signal('');
+  readonly reactivateBusyId = signal<string | null>(null);
+  private reactivateOperationId = crypto.randomUUID();
   private readonly addButton = viewChild<ElementRef<HTMLButtonElement>>('addButton');
   focusAdd() { this.addButton()?.nativeElement.focus(); }
   discardDraft() { if (!this.uncertain()) { this.name.set(''); this.error.set(''); this.fieldError.set(''); this.operationId = crypto.randomUUID(); } }
@@ -119,5 +123,23 @@ export class RosterPanel implements OnInit {
         this.replaceCodeError.set('This participant changed elsewhere. Close this dialog and try again.');
       } else { this.replaceCodeError.set('The code could not be replaced. Retry to continue.'); }
     } finally { this.replaceCodeBusy.set(false); }
+  }
+  async reactivate(entry: RosterEntry) {
+    if (this.reactivateBusyId()) return;
+    this.reactivateBusyId.set(entry.id); this.reactivateError.set('');
+    try {
+      const result = await this.service.reactivate(this.eventId(), entry.id, entry.version, this.reactivateOperationId);
+      this.entries.update(entries => (entries ?? []).map(x => x.id === result.id ? result : x));
+      this.reactivateOperationId = crypto.randomUUID();
+      this.reactivated.emit(result);
+    } catch (error) {
+      if (error instanceof RosterFailure && error.status === 401) { this.denied.emit(); return; }
+      this.reactivateOperationId = crypto.randomUUID();
+      if (error instanceof RosterFailure && error.status === 422) {
+        this.reactivateError.set(error.errors['email']?.join(' ') || 'This entry cannot be reactivated until its email binding is resolved.');
+      } else if (error instanceof RosterFailure && (error.status === 409 || error.status === 428)) {
+        this.reactivateError.set('This participant changed elsewhere. Retry to reactivate.');
+      } else { this.reactivateError.set('The reactivation could not be confirmed. Retry to continue.'); }
+    } finally { this.reactivateBusyId.set(null); }
   }
 }

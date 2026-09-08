@@ -37,6 +37,13 @@ export class RosterFixture {
       const result: RosterIssuance = { entry, code: (++this.additions).toString(16).padStart(32, '0'), previouslyCompleted: false, credentialVersion: crypto.randomUUID() };
       return { result };
     }
+    if (operation === 'reactivate') {
+      const entry = entries.find(x => x.id === args.registrationId);
+      if (!entry) return { status: 404 };
+      if (entry.version !== args.version) return { status: 409, code: 'stale-version' };
+      entry.active = true; entry.version = (Number(entry.version) + 1).toString();
+      return { result: entry };
+    }
     const name = args.input!.displayName.trim().replace(/\r\n?/g, '\n');
     if (!name || Array.from(name).length > 200) return { status: 422, errors: { displayName: ['Enter a participant name of 1–200 characters.'] } };
     const key = args.eventId + ':' + args.operationId, hash = JSON.stringify({ ...args, input: { displayName: name } }), receipt = this.receipts.get(key);

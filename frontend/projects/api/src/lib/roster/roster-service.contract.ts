@@ -8,4 +8,5 @@ export interface IRosterService {
   rename(eventId: string, registrationId: string, displayName: string, version: string, operationId: string): Promise<RosterEntry>;
   deactivate(eventId: string, registrationId: string, version: string, operationId: string): Promise<RosterEntry>;
   replaceCode(eventId: string, registrationId: string, version: string, operationId: string): Promise<RosterIssuance>;
+  reactivate(eventId: string, registrationId: string, version: string, operationId: string): Promise<RosterEntry>;
 }

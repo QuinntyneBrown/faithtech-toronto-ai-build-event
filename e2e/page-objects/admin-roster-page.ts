@@ -57,4 +57,8 @@ export class AdminRosterPage {
     await expect(dialog.getByText('a code was already issued', { exact: false })).toBeVisible();
   }
   async replaceCode() { await this.page.getByRole('button', { name: 'Replace the entry code', exact: true }).click(); }
+  async reactivate(name: string) { await this.page.getByRole('button', { name: 'Reactivate ' + name, exact: true }).click(); }
+  async expectReactivateDisabled(name: string) {
+    await expect(this.page.getByRole('button', { name: 'Reactivate ' + name, exact: true })).toBeDisabled();
+  }
 }

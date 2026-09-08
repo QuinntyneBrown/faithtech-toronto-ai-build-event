@@ -1,7 +1,7 @@
 <main id="main"><ft-administrator-session-panel [showDetails]="false" (signedOut)="signedOut()">
   <p><a [routerLink]="['/events', eventId]">Event settings</a></p><p class="eyebrow">A PLACE FOR EVERY BUILDER</p>
   <h1>Your people.</h1><p>Manage participant identities and event access. Entry codes are shown only when issued.</p>
-  <ft-roster-panel [eventId]="eventId" (requestAdd)="openAdd()" (issued)="showCode($event)" (requestRename)="openRename($event)" (renamed)="renamed($event)" (requestDeactivate)="openDeactivate($event)" (deactivated)="deactivated($event)" (codeReplaced)="codeReplaced($event)" (denied)="signedOut()" />
+  <ft-roster-panel [eventId]="eventId" (requestAdd)="openAdd()" (issued)="showCode($event)" (requestRename)="openRename($event)" (renamed)="renamed($event)" (requestDeactivate)="openDeactivate($event)" (deactivated)="deactivated($event)" (codeReplaced)="codeReplaced($event)" (denied)="signedOut()" /><!-- reactivate is a direct, unconfirmed action fully handled inside the panel -->
 </ft-administrator-session-panel></main>
 <dialog #addDialog aria-labelledby="add-title" (cancel)="$event.preventDefault(); cancelAdd()">
   <h2 id="add-title">Add participant</h2>
