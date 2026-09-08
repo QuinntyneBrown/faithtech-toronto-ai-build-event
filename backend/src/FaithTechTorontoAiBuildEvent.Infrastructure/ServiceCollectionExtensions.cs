@@ -26,6 +26,7 @@ public static class ServiceCollectionExtensions
             provider.GetRequiredService<IOptions<DatabaseOptions>>().Value.EventDatabase));
         services.AddIdentityCore<AdministratorAccount>().AddRoles<IdentityRole<Guid>>().AddEntityFrameworkStores<EventDbContext>();
         services.AddScoped<IAdministratorStore, SqlAdministratorStore>();
+        services.AddScoped<IParticipantStore, SqlParticipantStore>();
         services.AddScoped<IEventStore, SqlEventStore>();
         services.AddScoped<IScheduleStore, SqlScheduleStore>();
         services.AddScoped<IRosterStore, SqlRosterStore>();

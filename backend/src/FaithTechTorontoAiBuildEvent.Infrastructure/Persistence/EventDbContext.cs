@@ -14,6 +14,7 @@ public sealed class EventDbContext(DbContextOptions<EventDbContext> options)
     : IdentityDbContext<AdministratorAccount, IdentityRole<Guid>, Guid>(options)
 {
     public DbSet<AdministratorSession> AdministratorSessions => Set<AdministratorSession>();
+    public DbSet<ParticipantSession> ParticipantSessions => Set<ParticipantSession>();
     public DbSet<AuthenticationFailure> AuthenticationFailures => Set<AuthenticationFailure>();
     public DbSet<BuildEvent> Events => Set<BuildEvent>();
     public DbSet<LogoAsset> Logos => Set<LogoAsset>();
@@ -63,5 +64,9 @@ public sealed class EventDbContext(DbContextOptions<EventDbContext> options)
         builder.Entity<AuthenticationFailure>().HasIndex(x => new { x.AccountKey, x.FailedAtUtc });
         builder.Entity<AdministratorSession>().HasOne<AdministratorAccount>().WithMany()
             .HasForeignKey(x => x.AdministratorId).OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<ParticipantSession>().HasOne<Registration>().WithMany()
+            .HasForeignKey(x => x.RegistrationId).OnDelete(DeleteBehavior.Restrict);
+        builder.Entity<ParticipantSession>().HasOne<BuildEvent>().WithMany()
+            .HasForeignKey(x => x.EventId).OnDelete(DeleteBehavior.Restrict);
     }
 }
