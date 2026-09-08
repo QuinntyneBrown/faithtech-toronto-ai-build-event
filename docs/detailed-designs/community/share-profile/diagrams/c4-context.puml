@@ -1,0 +1,9 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Context - Share a participant profile
+Person(actor, "Participant", "share profile")
+System(system, "FaithTech event platform", "Save optional profile content and explicitly control discovery visibility")
+Rel(actor, system, "Share profile", "HTTPS")
+
+@enduml

@@ -1,0 +1,52 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam classBackgroundColor #F9FAFB
+skinparam classBorderColor #344054
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+title Structure - Share a participant profile
+interface IProfileService {
+  +state: Signal<OwnProfile>
+  +refresh(): Promise<void>
+}
+class ProfileService {
+  -http: HttpClient
+  +refresh(): Promise<void>
+}
+class ShareProfileHandler {
+  -store: IEventStore
+  +Handle(request: SaveProfileCommand): Task<OwnProfile>
+}
+interface IEventStore {
+  +LoadAuthorized(scope: ActorEventScope): Task<ParticipantProfile>
+  +Commit(intent: OperationContext): Task<CommitResult>
+}
+class ParticipantProfile {
+  +EventId: Guid
+  +ParticipantId: Guid
+  +Biography: string?
+  +SharingEnabled: bool
+  +Save(input: ProfileInput): ValidationResult
+  +SetSharing(enabled: bool): void
+}
+ProfileService ..|> IProfileService
+ShareProfileHandler --> IEventStore : queries / commits through
+ShareProfileHandler --> ParticipantProfile : enforces policy on
+class ProfileTag {
+  +Kind: TagKind
+  +DisplayValue: string
+  +NormalizedValue: string
+}
+enum TagKind {
+  Skill
+  Interest
+  Help
+}
+ParticipantProfile "1" *-- "0..20" ProfileTag
+ProfileTag --> TagKind
+
+@enduml

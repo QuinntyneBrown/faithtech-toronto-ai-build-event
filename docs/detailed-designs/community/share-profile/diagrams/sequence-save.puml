@@ -1,0 +1,72 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam classBackgroundColor #F9FAFB
+skinparam classBorderColor #344054
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+title Save optional owner profile fields
+actor "Participant" as actor
+box "Frontend - Client application" #E0F2FE
+participant "ShareProfilePage" as page
+participant "IProfileService" as client
+end box
+box "Backend - Event API" #D1FADF
+participant "ProfileController" as controller
+end box
+box "Backend - Application and Domain" #ECFDF3
+participant "Authorization / validation pipeline" as gate
+participant "ShareProfileHandler" as handler
+participant "ParticipantProfile" as entity
+end box
+box "Backend - Infrastructure" #FFF4E5
+database "SQL Server / IEventStore" as db
+participant "OutboxDispatcher / EventHub" as push
+end box
+actor -> page : Save profile
+page -> client : SaveProfileCommand
+client -> controller : HTTPS typed request
+controller -> gate : MediatR dispatch
+gate -> gate : Validate session, scope and input [L2-039/040]
+alt Invalid or unauthorized
+gate --> controller : Concealed error / field errors
+controller --> client : ProblemDetails
+client --> page : Retain draft; announce error
+else Authorized
+gate -> handler : Dispatch authorized request
+handler -> db : Load scoped state and receipt / expected version
+db --> handler : Current authorized state
+alt Identical authorized committed intent [L2-044]
+handler --> controller : Original safe receipt result
+controller --> client : Original committed result
+client --> page : Reconcile completed intent
+else New intent; altered reuse rejects with 409
+handler -> entity : Validate optional biography and normalized tag union [L2-013]
+alt Invalid tag limits or stale profile version
+entity --> handler : Reject without mutation
+handler --> controller : Conflict / validation result
+controller --> client : ProblemDetails + authorized current version
+client --> page : Show recovery action; preserve draft
+else Accepted
+handler -> entity : Save owner content without enabling sharing
+entity --> handler : OwnProfile with unchanged sharing flag
+handler -> db : Commit state + receipt + audit + outbox atomically
+db --> handler : Durable result
+handler --> controller : Feature result
+controller --> client : Authorized response
+client --> page : Update signals and render
+end
+end
+end
+opt Newly committed state
+push -> db : Lease committed invalidation
+db --> push : Audience and resource identity
+push -> client : Invalidate authorized state [L2-044]
+client -> controller : Refresh authorized resource
+controller --> client : Latest projection
+client --> page : Render within two seconds
+end
+@enduml
