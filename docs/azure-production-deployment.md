@@ -104,6 +104,76 @@ ALTER ROLE db_datareader ADD MEMBER [faithtech_runtime];
 ALTER ROLE db_datawriter ADD MEMBER [faithtech_runtime];
 ```
 
-Replace the password marker only in the private query session. The current EF CRUD implementation needs data access; the runtime does not need `db_owner` or schema-change permissions. Future stored procedures may require narrowly scoped EXECUTE grants. Run migrations and `create-admin` through the separate provisioning identity; do not grant the web application those privileges. Protect the saved runtime connection string and provisioning connection string separately. [Contained database users](https://learn.microsoft.com/en-us/azure/azure-sql/database/contained-database-users?view=azuresql).
+Replace the password marker only in the private query session. The current EF CRUD implementation needs data access; the runtime does not need `db_owner` or schema-change permissions. Future stored procedures may require narrowly scoped EXECUTE grants. Run migrations and `create-admin` through the separate provisioning identity; do not grant the web application those privileges. Protect the saved runtime connection string and provisioning connection string separately. [Contained database users](https://learn.microsoft.com/en-us/sql/relational-databases/security/contained-database-users-making-your-database-portable?view=sql-server-ver17).
 
 Persist Data Protection keys in a directory outside `/home/site/wwwroot`, such as `/home/data/faithtech-keys`, with a stable application discriminator, restricted access, and an encrypted recovery copy. Merely setting a directory in this document does not configure it: the application prerequisite must implement and verify the behavior. If explicit file persistence is used, configure key encryption rather than assuming that persistence itself encrypts the XML files. Database backups do not include these keys, the HMAC secret, or Azure configuration.
+
+## 3. Build, migrate and deploy
+
+Use a clean, tested release checkout and the SDK pinned by `global.json` (currently .NET 10.0.400), a Node version supported by the installed Angular version, and npm 10.9.4 from the frontend package metadata. Do not build on the small production instance. From the repository root, run each command in order and stop on any nonzero exit code:
+
+```powershell
+npm --prefix frontend ci
+npm --prefix frontend run build
+dotnet restore backend/src/FaithTechTorontoAiBuildEvent.Api --locked-mode
+dotnet restore backend/src/FaithTechTorontoAiBuildEvent.Provisioning --locked-mode
+$releaseId = Get-Date -Format 'yyyyMMdd-HHmmss'
+$releaseRoot = Join-Path ([IO.Path]::GetTempPath()) "faithtech-release-$releaseId"
+New-Item -ItemType Directory -Path $releaseRoot
+dotnet publish backend/src/FaithTechTorontoAiBuildEvent.Api -c Release --no-restore -p:UseAppHost=false -o "$releaseRoot/api"
+dotnet publish backend/src/FaithTechTorontoAiBuildEvent.Provisioning -c Release --no-restore -p:UseAppHost=false -o "$releaseRoot/provisioning"
+```
+
+Use fresh build outputs from the clean checkout; the Angular build script builds `api`, `components`, `domain`, `admin`, and `client` in dependency order. Inspect the publish directory: `FaithTechTorontoAiBuildEvent.Api.dll`, its runtime/dependency files, `wwwroot/index.html`, and `wwwroot/admin/index.html` must exist. Inspect the admin index's `/admin/` base path and referenced assets. This relies on the packaging prerequisite above being present in the release. Keep the provisioning executable **outside** the web ZIP.
+
+Run required API acceptance tests against a disposable SQL database and the repository's Playwright acceptance suites before publishing a release; never point destructive acceptance fixtures at production. Retain the results with the Git commit and release artifact. UI mocks establish UI behavior only; they do not prove Azure, SQL or live event behavior.
+
+For initial migration, use a private terminal without transcript logging. These PowerShell 7 prompts avoid putting secrets in shell history. Set `ASPNETCORE_ENVIRONMENT` for the web app, and `DOTNET_ENVIRONMENT` for this generic-host CLI. The provisioning connection uses the SQL administrator and the target **FaithTech** database, with encryption and certificate validation enabled.
+
+```powershell
+$env:DOTNET_ENVIRONMENT = 'Production'
+$env:ConnectionStrings__EventDatabase = Read-Host 'Provisioning connection string' -MaskInput
+$env:Security__DigestKey = Read-Host 'Saved production digest key' -MaskInput
+try {
+    dotnet "$releaseRoot/provisioning/FaithTechTorontoAiBuildEvent.Provisioning.dll" migrate
+    if ($LASTEXITCODE -ne 0) { throw 'Migration failed; do not deploy.' }
+    dotnet "$releaseRoot/provisioning/FaithTechTorontoAiBuildEvent.Provisioning.dll" create-admin event-operator
+    if ($LASTEXITCODE -ne 0) { throw 'Administrator provisioning failed.' }
+} finally {
+    Remove-Item Env:ConnectionStrings__EventDatabase -ErrorAction SilentlyContinue
+    Remove-Item Env:Security__DigestKey -ErrorAction SilentlyContinue
+    Remove-Item Env:DOTNET_ENVIRONMENT -ErrorAction SilentlyContinue
+}
+```
+
+`create-admin` prompts for its password without echoing it. On subsequent releases run `migrate` only; do not rerun initial account creation. The same CLI supports `disable-admin <username>` for revocation. Now create the runtime database user from step 2 and save its connection string in App Service. Remove the temporary operator SQL firewall rule after provisioning; add it temporarily again only when needed.
+
+Package the **contents** of the API publish directory, not the directory itself. Log into the intended Azure subscription and deploy using Microsoft Entra credentials:
+
+```powershell
+Compress-Archive -Path "$releaseRoot/api/*" -DestinationPath "$releaseRoot/web.zip"
+Get-FileHash "$releaseRoot/web.zip" -Algorithm SHA256
+az login
+az account set --subscription '<subscription-id>'
+az webapp deploy --resource-group rg-faithtech-prod --name '<actual-app-name>' --src-path "$releaseRoot/web.zip" --type zip
+```
+
+Copy the ZIP, SHA256, source commit, provisioning bundle and configuration-name inventory into access-controlled release storage. Store secret values in the password manager, not the release archive. Check startup logs, root response, the protected SQL readiness check, and an admin sign-in on the default HTTPS hostname before changing public DNS. Diagnose a failed startup before retrying; do not change Production to Development to expose an exception page. [ZIP deployment](https://learn.microsoft.com/en-us/azure/app-service/deploy-zip), [read-only package deployment](https://learn.microsoft.com/en-us/azure/app-service/deploy-run-package).
+
+For the design system, create a separate Static Web App on **Free** with deployment source **Other**. Select Canada Central for its available regional setting; static content is globally distributed, so this is not a guarantee that public gallery assets stay exclusively in Canada. Build independently and deploy with the Azure Static Web Apps CLI installed on the operator machine:
+
+```powershell
+npm --prefix design-system ci
+npm --prefix design-system run build
+$env:SWA_CLI_DEPLOYMENT_TOKEN = Read-Host 'Gallery deployment token from Azure' -MaskInput
+try {
+    swa deploy ./design-system/dist/site --env production
+    if ($LASTEXITCODE -ne 0) { throw 'Gallery deployment failed.' }
+} finally {
+    Remove-Item Env:SWA_CLI_DEPLOYMENT_TOKEN -ErrorAction SilentlyContinue
+}
+```
+
+Obtain the token from the gallery resource's **Manage deployment token**, keep it private, and record the SWA CLI version used. Publish `dist/site`, not the mock bundle. Verify the generated HTTPS URL, gallery assets and absence of an application runtime dependency. [SWA CLI installation and deployment](https://learn.microsoft.com/en-us/azure/static-web-apps/static-web-apps-cli-deploy).
+
+Configure the public domain using [the Namecheap guide](namecheap-domain-setup.md), then perform the checks below through the custom domains. Keep Liturgy integration disabled for September 9; no Liturgy service is required by this topology.
