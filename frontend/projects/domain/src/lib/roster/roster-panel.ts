@@ -12,6 +12,7 @@ export class RosterPanel implements OnInit {
   readonly issued = output<RosterIssuance>();
   readonly renamed = output<RosterEntry>();
   readonly deactivated = output<RosterEntry>();
+  readonly codeReplaced = output<RosterIssuance>();
   readonly denied = output<void>();
   readonly entries = signal<RosterEntry[] | null>(null);
   readonly loadError = signal('');
@@ -31,6 +32,9 @@ export class RosterPanel implements OnInit {
   readonly deactivateError = signal('');
   readonly deactivateBusy = signal(false);
   private deactivateOperationId = crypto.randomUUID();
+  readonly replaceCodeError = signal('');
+  readonly replaceCodeBusy = signal(false);
+  private replaceCodeOperationId = crypto.randomUUID();
   private readonly addButton = viewChild<ElementRef<HTMLButtonElement>>('addButton');
   focusAdd() { this.addButton()?.nativeElement.focus(); }
   discardDraft() { if (!this.uncertain()) { this.name.set(''); this.error.set(''); this.fieldError.set(''); this.operationId = crypto.randomUUID(); } }
@@ -100,5 +104,20 @@ export class RosterPanel implements OnInit {
         this.deactivateError.set('This participant changed elsewhere. Close this dialog and reopen deactivate to try again.');
       } else { this.deactivateError.set('The deactivation could not be confirmed. Retry to continue.'); }
     } finally { this.deactivateBusy.set(false); }
+  }
+  async replaceCode(registrationId: string, version: string) {
+    if (this.replaceCodeBusy()) return;
+    this.replaceCodeBusy.set(true); this.replaceCodeError.set('');
+    try {
+      const result = await this.service.replaceCode(this.eventId(), registrationId, version, this.replaceCodeOperationId);
+      this.entries.update(entries => (entries ?? []).map(entry => entry.id === result.entry.id ? result.entry : entry));
+      this.replaceCodeOperationId = crypto.randomUUID();
+      this.codeReplaced.emit(result);
+    } catch (error) {
+      if (error instanceof RosterFailure && error.status === 401) { this.denied.emit(); return; }
+      if (error instanceof RosterFailure && (error.status === 409 || error.status === 428)) {
+        this.replaceCodeError.set('This participant changed elsewhere. Close this dialog and try again.');
+      } else { this.replaceCodeError.set('The code could not be replaced. Retry to continue.'); }
+    } finally { this.replaceCodeBusy.set(false); }
   }
 }

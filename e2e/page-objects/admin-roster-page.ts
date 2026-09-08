@@ -47,4 +47,14 @@ export class AdminRosterPage {
   async expectDeactivateDisabled(name: string) {
     await expect(this.page.getByRole('button', { name: 'Deactivate ' + name, exact: true })).toBeDisabled();
   }
+  async addWithLostResponse(name: string) {
+    await this.beginAdd(name);
+    await this.page.getByRole('button', { name: 'Save participant', exact: true }).click();
+    await this.page.getByRole('button', { name: 'Check addition outcome', exact: true }).click();
+  }
+  async expectCodeAlreadyIssued(name: string) {
+    const dialog = this.page.getByRole('dialog', { name: 'Entry code for ' + name, exact: true });
+    await expect(dialog.getByText('a code was already issued', { exact: false })).toBeVisible();
+  }
+  async replaceCode() { await this.page.getByRole('button', { name: 'Replace the entry code', exact: true }).click(); }
 }

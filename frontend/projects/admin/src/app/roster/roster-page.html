@@ -1,7 +1,7 @@
 <main id="main"><ft-administrator-session-panel [showDetails]="false" (signedOut)="signedOut()">
   <p><a [routerLink]="['/events', eventId]">Event settings</a></p><p class="eyebrow">A PLACE FOR EVERY BUILDER</p>
   <h1>Your people.</h1><p>Manage participant identities and event access. Entry codes are shown only when issued.</p>
-  <ft-roster-panel [eventId]="eventId" (requestAdd)="openAdd()" (issued)="showCode($event)" (requestRename)="openRename($event)" (renamed)="renamed($event)" (requestDeactivate)="openDeactivate($event)" (deactivated)="deactivated($event)" (denied)="signedOut()" />
+  <ft-roster-panel [eventId]="eventId" (requestAdd)="openAdd()" (issued)="showCode($event)" (requestRename)="openRename($event)" (renamed)="renamed($event)" (requestDeactivate)="openDeactivate($event)" (deactivated)="deactivated($event)" (codeReplaced)="codeReplaced($event)" (denied)="signedOut()" />
 </ft-administrator-session-panel></main>
 <dialog #addDialog aria-labelledby="add-title" (cancel)="$event.preventDefault(); cancelAdd()">
   <h2 id="add-title">Add participant</h2>
@@ -40,8 +40,14 @@
 <dialog #codeDialog aria-labelledby="code-title" (cancel)="$event.preventDefault(); clearCode()">
   @if (issuance(); as value) {
     <h2 id="code-title">Entry code for {{ value.entry.displayName }}</h2>
-    @if (value.code) { <p>Save this code now and share it privately with this participant. It cannot be retrieved after closing this dialog.</p><label>New entry code<input autofocus readonly [value]="value.code"></label> }
-    @else { <p role="alert">The participant was added and a code was already issued. It cannot be shown again. Replace the entry code before sharing access.</p> }
-    <button [autofocus]="!value.code" (click)="clearCode()">Done</button>
+    @if (value.code) { <p>Save this code now and share it privately with this participant. It cannot be retrieved after closing this dialog.</p><label>New entry code<input #codeInput autofocus readonly [value]="value.code"></label> }
+    @else {
+      <p role="alert">The participant was added and a code was already issued. It cannot be shown again. Replace the entry code before sharing access.</p>
+      @if (panel(); as editor) {
+        @if (editor.replaceCodeError()) { <p role="alert">{{ editor.replaceCodeError() }}</p> }
+        <button type="button" autofocus [disabled]="editor.replaceCodeBusy()" (click)="editor.replaceCode(value.entry.id, value.entry.version)">{{ editor.replaceCodeBusy() ? 'Replacing…' : 'Replace the entry code' }}</button>
+      }
+    }
+    <button [autofocus]="!!value.code" (click)="clearCode()">Done</button>
   }
 </dialog>

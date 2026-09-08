@@ -46,3 +46,14 @@ test('L2-002/AC3: deactivating a participant marks them inactive and blocks a se
   await roster.expectDeactivateDisabled('Alex');
   await page.reload(); await roster.expectStatus('Alex', 'Inactive');
 });
+
+test('L2-002/AC4: replacing an already-issued entry code reveals a new one-time code', async ({ page, roster: fixture }) => {
+  const roster = await openRoster(page);
+  fixture.loseNextResponse = true;
+  await roster.addWithLostResponse('Alex');
+  await roster.expectCodeAlreadyIssued('Alex');
+  await roster.replaceCode();
+  const code = await roster.takeCode('Alex');
+  expect(code).toBeTruthy();
+  await roster.expectParticipants('Alex', 1);
+});

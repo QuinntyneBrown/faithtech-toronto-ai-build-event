@@ -14,6 +14,7 @@ export class RosterPage {
   readonly issuance = signal<RosterIssuance | null>(null);
   private readonly addDialog = viewChild<ElementRef<HTMLDialogElement>>('addDialog');
   private readonly codeDialog = viewChild<ElementRef<HTMLDialogElement>>('codeDialog');
+  private readonly codeInput = viewChild<ElementRef<HTMLInputElement>>('codeInput');
   private readonly summary = viewChild<ElementRef<HTMLElement>>('summary');
   private readonly leaveDialog = viewChild<ElementRef<HTMLDialogElement>>('leaveDialog');
   private readonly renameDialog = viewChild<ElementRef<HTMLDialogElement>>('renameDialog');
@@ -50,6 +51,12 @@ export class RosterPage {
     afterNextRender(() => { if (this.issuance() && this.session()?.state()) this.codeDialog()?.nativeElement.showModal(); }, { injector: this.injector });
   }
   clearCode() { const visible = !!this.issuance(); this.codeDialog()?.nativeElement.close(); this.issuance.set(null); if (visible) this.restoreFocus(); }
+  codeReplaced(result: RosterIssuance) {
+    this.issuance.set(result);
+    // The dialog is already open, so the native autofocus algorithm (which only runs when a <dialog> is shown) never
+    // applies to this freshly rendered input; focus it explicitly once the view reflects the new issuance.
+    afterNextRender(() => this.codeInput()?.nativeElement.focus(), { injector: this.injector });
+  }
   openRename(entry: RosterEntry) { this.panel()?.beginRename(entry); this.renameDialog()?.nativeElement.showModal(); }
   cancelRename() { if (this.panel()?.renameBusy()) return; this.panel()?.cancelRename(); this.renameDialog()?.nativeElement.close(); }
   renamed(_entry: RosterEntry) { this.renameDialog()?.nativeElement.close(); }

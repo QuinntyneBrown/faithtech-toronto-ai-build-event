@@ -29,6 +29,14 @@ export class RosterFixture {
       entry.active = false; entry.version = (Number(entry.version) + 1).toString();
       return { result: entry };
     }
+    if (operation === 'replaceCode') {
+      const entry = entries.find(x => x.id === args.registrationId);
+      if (!entry) return { status: 404 };
+      if (entry.version !== args.version) return { status: 409, code: 'stale-version' };
+      entry.version = (Number(entry.version) + 1).toString();
+      const result: RosterIssuance = { entry, code: (++this.additions).toString(16).padStart(32, '0'), previouslyCompleted: false, credentialVersion: crypto.randomUUID() };
+      return { result };
+    }
     const name = args.input!.displayName.trim().replace(/\r\n?/g, '\n');
     if (!name || Array.from(name).length > 200) return { status: 422, errors: { displayName: ['Enter a participant name of 1–200 characters.'] } };
     const key = args.eventId + ':' + args.operationId, hash = JSON.stringify({ ...args, input: { displayName: name } }), receipt = this.receipts.get(key);
