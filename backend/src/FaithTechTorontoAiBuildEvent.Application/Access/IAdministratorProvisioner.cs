@@ -4,4 +4,5 @@ public interface IAdministratorProvisioner
 {
     Task<Guid> Provision(string username, string password, CancellationToken cancellationToken);
     Task Disable(string username, CancellationToken cancellationToken);
+    Task<string[]> ResetPasswords(string? username, string password, CancellationToken cancellationToken);
 }

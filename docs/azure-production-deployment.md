@@ -349,3 +349,33 @@ Before every upgrade, confirm a usable restore point and retain the old package.
 If a release fails and the schema is backward-compatible, redeploy the preceding ZIP with `az webapp deploy` and verify readiness/authentication. If schema/data changes are incompatible, use the restore procedure and explicitly reconcile later writes; rolling back binaries alone is insufficient. Do not assume App Service's optional backup feature replaces SQL backups or is included in this tier.
 
 Azure maintains the managed hosting OS/runtime platform; the team still updates .NET/Angular/NuGet/npm dependencies, including supported patches, and tests the resulting release. Keep MediatR pinned to **12.5.0**. Review bills, database growth, certificates and backup restore availability monthly. Keep Always On enabled between events for recap access, and remove only specifically identified temporary test resources. Stopping an App Service app does not stop billing for its allocated plan. [App Service plan billing](https://learn.microsoft.com/en-us/azure/app-service/overview-hosting-plans).
+
+## Administrator account commands
+
+Build and install the current local CLI from the repository root:
+
+```powershell
+./eng/scripts/Install-OperatorTool.ps1
+```
+
+The script supports first installation and updating an existing global tool. A failed restore, build, or package step leaves the installed tool unchanged. The .NET 10 runtime must be available to the installed tool; on the local SDK setup, use `$env:DOTNET_ROOT = "$env:LOCALAPPDATA/FaithTech/dotnet"` in the operator shell. The tool executable is under `$env:USERPROFILE/.dotnet/tools`.
+
+Supply `ConnectionStrings__EventDatabase` from protected operator configuration. Use the operator database login rather than the application's runtime login. Never put connection passwords or administrator passwords into command arguments or checked-in scripts. Account commands do not need `Security__DigestKey`. They print the resolved SQL server, database, and principal before mutation and execute immediately using existing grants. Named targets, preview/apply, and durable operation receipts remain separate planned capabilities; these commands do not implement them. Azure SQL connectivity must already allow the operator machine.
+
+```powershell
+faithtech-admin add-user event-operator
+faithtech-admin add-user second-operator --prompt-password
+faithtech-admin reset-password event-operator --prompt-password
+# Supply one password line through a protected secret provider's stdout:
+# <secret-provider> | faithtech-admin reset-password --all --password-stdin
+```
+
+`add-user` without either password option uses exactly `faithtech2026!`. Explicit empty input never selects the default. `--prompt-password` requires an interactive terminal; `--password-stdin` requires redirected input. The options are mutually exclusive. Passwords require at least six characters, lowercase, a digit, and a symbol; uppercase is optional. Inputs longer than 1,024 characters are rejected. `create-admin <username>` remains available with its original mandatory password input.
+
+`reset-password` requires one username or `--all` and one password-input option. It resets all selected accounts and revokes their existing sessions atomically. `--all` includes disabled and role-revoked accounts, preserving their status and roles. Participant entry codes, account identities, and history remain unchanged. An empty bulk selection returns count zero. Successful output contains affected usernames and count, never passwords or hashes. Validate a reset with a fresh API sign-in and sign out the verification session.
+
+Exit codes: 0 confirmed completion; 1 known input/policy/operation failure; 2 parser syntax or input-mode error; 6 unconfirmed database outcome or interrupted execution; 7 committed operation whose result could not be delivered. For code 6, inspect accounts and session state before deciding on another reset. For code 7, do not replay the committed operation merely to recover output. Resetting to an earlier password is another explicit reset, not automatic rollback.
+
+The production deployment and rollback workflows read `SMOKE_USERNAME` and `SMOKE_PASSWORD` from the GitHub `production` environment. If the selected accounts include the deployment-check account, synchronize the matching password secret through protected stdin and verify API sign-in. A credential reset does not require deploying the API or running migrations.
+
+For packaged acceptance verification, set `FAITHTECH_TEST_TOOL` to the installed executable and run the backend acceptance suite against disposable SQL only. This routes process-based CLI tests through the installed package. Tests must never point at the production database.

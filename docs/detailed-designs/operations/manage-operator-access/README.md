@@ -8,6 +8,8 @@ This feature changes roster and administrator access while retaining participati
 
 ## Description
 
+The current account-command implementation is documented in [Manage administrator passwords](../manage-administrator-passwords/README.md). L2-061 and L2-062 use the existing connection configuration. The shared preview/receipt orchestration described below remains planned.
+
 Existing `IRosterStore` and `SqlRosterStore` implement list, add, rename, deactivate, reactivate, and code replacement. `IEntryCodeGenerator` creates and digests participant codes. Existing `ProvisionAdministratorHandler`, `DisableAdministratorHandler`, and `SqlAdministratorProvisioner` use ASP.NET Core Identity. Those real components supply the policies reused here. `OperatorAccessHandler`, `IOperatorAccessStore`, and `SqlOperatorAccessStore` are proposed operator orchestration additions.
 
 Commands are `roster list --event <id>`, `roster show <registration-id> --event <id>`, `roster add --event <id> --file <registration.json> --preview`, and `roster rename|deactivate|reactivate|replace-code <registration-id> --event <id> --version <version> --preview`. Rename takes `--file` containing `displayName`; replacement alone accepts `--clear-email`. Administrator commands retain `create-admin <username> --preview` and `disable-admin <username> --preview`. All database commands select a target and apply through the [shared operation protocol](../review-and-reconcile-operations/README.md). The file names and IDs are command arguments; passwords and code values are not.

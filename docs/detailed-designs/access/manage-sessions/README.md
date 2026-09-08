@@ -31,7 +31,7 @@ The following verbatim primary excerpts link to their complete normative definit
 | L2 ID | Refines (L1) | Requirement excerpt |
 |---|---|---|
 | [L2-004](../../../specs/L2.md#l2-004-session-continuity-and-sign-out) | `L1-002` | Participant sessions must survive refresh and remain valid for 24 hours after authentication unless revoked. Participants must be able to authenticate again after the event to view its recap. Sign-out must revoke the current session and clear private client state. |
-| [L2-038](../../../specs/L2.md#l2-038-administrator-authentication-and-authorization) | `L1-013` | Administration must require authentication to an operator-provisioned account with the admin role. There must be no public admin registration, default production password, or participant-driven role grant. Authorization must be enforced for every administration read and mutation, including direct requests. Administrator sessions must expire after 30 minutes of inactivity or eight hours total and support sign-out. |
+| [L2-038](../../../specs/L2.md#l2-038-administrator-authentication-and-authorization) | `L1-013` | Administration must require authentication to an operator-provisioned account with the admin role. There must be no public admin registration, automatically provisioned production account, or participant-driven role grant. Explicit operator creation may use the default password specified in L2-061. Authorization must be enforced for every administration read and mutation, including direct requests. Administrator sessions must expire after 30 minutes of inactivity or eight hours total and support sign-out. |
 
 ## Diagrams
 

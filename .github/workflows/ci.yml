@@ -52,7 +52,11 @@ jobs:
           done
           exit 1
       - name: API acceptance tests
-        run: dotnet test backend/FaithTechTorontoAiBuildEvent.slnx -c Release --no-build --logger trx --results-directory artifacts/test-results
+        run: |
+          dotnet pack backend/src/FaithTechTorontoAiBuildEvent.Provisioning -c Release --no-build --output artifacts/operator-test-package
+          dotnet tool install FaithTechTorontoAiBuildEvent.Provisioning --version 1.0.0 --tool-path "$RUNNER_TEMP/faithtech-operator" --add-source artifacts/operator-test-package --ignore-failed-sources
+          export FAITHTECH_TEST_TOOL="$RUNNER_TEMP/faithtech-operator/faithtech-admin"
+          dotnet test backend/FaithTechTorontoAiBuildEvent.slnx -c Release --no-build --logger trx --results-directory artifacts/test-results
       - name: Recording and release-helper acceptance tests
         run: |
           node --test e2e/demo/*.test.mjs

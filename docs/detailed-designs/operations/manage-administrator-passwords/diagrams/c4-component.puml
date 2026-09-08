@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Administrator passwords - components
+Container_Boundary(cli, "Provisioning tool") {
+Component(commands, "AddUserCommand / ResetPasswordCommand", "System.CommandLine", "Validates selectors and protected input")
+Component(handlers, "ProvisionAdministratorHandler / ResetAdministratorPasswordsHandler", "Application", "Dispatches account operations")
+Component(store, "SqlAdministratorProvisioner", "Infrastructure", "Owns Identity account transactions")
+Component(identity, "UserManager and PasswordHasher", "ASP.NET Core Identity", "Validates and hashes passwords")
+}
+ContainerDb(db, "Event database", "SQL Server", "Accounts, roles, sessions")
+Rel(commands, handlers, "Sends requests", "MediatR 12.5.0")
+Rel(handlers, store, "Calls IAdministratorProvisioner")
+Rel(store, identity, "Validates, hashes, updates")
+Rel(store, db, "Commits or rolls back")
+@enduml

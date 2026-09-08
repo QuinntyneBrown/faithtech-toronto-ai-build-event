@@ -24,7 +24,8 @@ public static class ServiceCollectionExtensions
             .Validate(options => options.IsValid(), "Configure ConnectionStrings:EventDatabase with a server, database and MARS disabled.").ValidateOnStart();
         services.AddDbContext<EventDbContext>((provider, options) => options.UseSqlServer(
             provider.GetRequiredService<IOptions<DatabaseOptions>>().Value.EventDatabase));
-        services.AddIdentityCore<AdministratorAccount>().AddRoles<IdentityRole<Guid>>().AddEntityFrameworkStores<EventDbContext>();
+        services.AddIdentityCore<AdministratorAccount>(options => options.Password.RequireUppercase = false)
+            .AddRoles<IdentityRole<Guid>>().AddEntityFrameworkStores<EventDbContext>();
         services.AddScoped<IAdministratorStore, SqlAdministratorStore>();
         services.AddScoped<IParticipantStore, SqlParticipantStore>();
         services.AddScoped<IEventStore, SqlEventStore>();

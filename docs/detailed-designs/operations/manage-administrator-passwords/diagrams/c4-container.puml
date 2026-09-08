@@ -1,0 +1,12 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Administrator passwords - containers
+Person(op, "Database operator")
+Container(cli, "faithtech-admin", ".NET 10 tool", "Existing protected connection configuration")
+Container(api, "Event API", "ASP.NET Core", "Checks credentials and session validity")
+ContainerDb(db, "Event database", "SQL Server / Azure SQL", "Account hashes, roles, sessions")
+Rel(op, cli, "Creates or resets accounts")
+Rel(cli, db, "Commits account transactions", "Encrypted SQL")
+Rel(api, db, "Reads authentication state", "EF Core")
+@enduml
