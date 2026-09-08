@@ -11,6 +11,13 @@ namespace FaithTechTorontoAiBuildEvent.Api.Controllers;
 [ApiController, Route("api/admin/events"), Authorize(Roles = "Administrator")]
 public sealed class AdministratorEventsController(ISender sender) : ControllerBase
 {
+    [HttpPut("{eventId:guid}"), ValidateAntiForgeryToken]
+    public async Task<IActionResult> Save(Guid eventId, CreateEventRequest request,
+        [FromHeader(Name = "Idempotency-Key"), Required] Guid? operationId,
+        [FromHeader(Name = "If-Match")] string? version, CancellationToken cancellationToken) =>
+        Ok(await sender.Send(new SaveEventCommand(Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!),
+            eventId, operationId!.Value, version, request.Title), cancellationToken));
+
     [HttpGet("{eventId:guid}")]
     public async Task<IActionResult> Get(Guid eventId, CancellationToken cancellationToken)
     {
