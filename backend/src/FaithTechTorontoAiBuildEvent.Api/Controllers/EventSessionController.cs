@@ -25,7 +25,8 @@ public sealed class EventSessionController(ISender sender) : ControllerBase
         {
             IsPersistent = true, ExpiresUtc = session.AuthenticatedAtUtc.AddHours(24)
         });
-        return Ok(new EntryResult(session.RegistrationId, session.EventId, session.AuthenticatedAtUtc.AddHours(24)));
+        var route = await sender.Send(new GetAuthorizedInitialRouteQuery(session.EventId, request.ReturnTo), cancellationToken);
+        return Ok(new EntryResult(session.RegistrationId, session.EventId, session.AuthenticatedAtUtc.AddHours(24), route));
     }
 
     [HttpGet, Authorize(AuthenticationSchemes = "Participant")]

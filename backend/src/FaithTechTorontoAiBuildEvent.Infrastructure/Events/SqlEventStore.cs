@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using FaithTechTorontoAiBuildEvent.Application.Access;
 using FaithTechTorontoAiBuildEvent.Application.Events;
 using FaithTechTorontoAiBuildEvent.Application.Operations;
 using FaithTechTorontoAiBuildEvent.Application.Scheduling;
@@ -144,6 +145,17 @@ public sealed class SqlEventStore(EventDbContext db) : IEventStore
     {
         var item = await db.Events.AsNoTracking().SingleOrDefaultAsync(x => x.Id == eventId && x.Published, cancellationToken);
         return item is null ? null : new EntryHeader(item.Id, item.Title);
+    }
+
+    public async Task<string> GetAuthorizedInitialRoute(Guid eventId, string? requestedReturnTo, CancellationToken cancellationToken)
+    {
+        var item = await db.Events.AsNoTracking().SingleOrDefaultAsync(x => x.Id == eventId, cancellationToken);
+        var now = await db.Database.SqlQuery<DateTimeOffset>($"SELECT TODATETIMEOFFSET(SYSUTCDATETIME(), '+00:00') AS Value").SingleAsync(cancellationToken);
+        var basePath = $"/events/{eventId:D}";
+        // Countdown and current-stage screens don't exist yet, so both map to the shell's index route for now;
+        // a completed event is the one case with somewhere more specific to land participants (the showcase/recap).
+        var authorized = item?.EndsAtUtc is { } end && now >= end ? $"{basePath}/showcase" : basePath;
+        return ReturnTargetPolicy.Resolve(eventId, requestedReturnTo, authorized);
     }
 
     public async Task<IReadOnlyList<EventSummary>> ListEvents(CancellationToken cancellationToken) =>

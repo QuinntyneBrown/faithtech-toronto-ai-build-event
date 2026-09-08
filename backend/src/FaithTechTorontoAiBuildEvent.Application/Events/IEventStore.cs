@@ -8,4 +8,5 @@ public interface IEventStore
     Task<EventDetail> CopyEvent(Guid actorId, Guid sourceEventId, Guid operationId, LocalTimeInput newStart, CancellationToken cancellationToken);
     Task<IReadOnlyList<EventSummary>> ListEvents(CancellationToken cancellationToken);
     Task<EntryHeader?> GetPublishedHeader(Guid eventId, CancellationToken cancellationToken);
+    Task<string> GetAuthorizedInitialRoute(Guid eventId, string? requestedReturnTo, CancellationToken cancellationToken);
 }
