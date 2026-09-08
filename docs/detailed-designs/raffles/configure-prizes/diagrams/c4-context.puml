@@ -1,0 +1,9 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Context - Configure prizes and inspect eligibility
+Person(actor, "Administrator", "configure prizes")
+System(system, "FaithTech event platform", "Maintain prize identities and inspect current eligible participants")
+Rel(actor, system, "Configure prizes", "HTTPS")
+
+@enduml
