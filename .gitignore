@@ -4,3 +4,14 @@ node_modules/
 dist/
 test-results/
 playwright-report/
+bin/
+obj/
+.angular/
+.env
+.env.*
+!.env.example
+*.user
+*.pfx
+*.pem
+.local/
+artifacts/
