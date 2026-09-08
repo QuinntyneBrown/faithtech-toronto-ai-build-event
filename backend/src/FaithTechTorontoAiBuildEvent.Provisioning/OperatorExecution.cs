@@ -51,12 +51,6 @@ internal static class OperatorExecution
         }
     }
 
-    public static void WriteCommittedResult(Action write)
-    {
-        try { write(); }
-        catch (IOException) { throw new CommittedOutputException(); }
-    }
-
     private static async Task ReportTarget(IServiceProvider services, CancellationToken cancellationToken)
     {
         var db = services.GetRequiredService<EventDbContext>();

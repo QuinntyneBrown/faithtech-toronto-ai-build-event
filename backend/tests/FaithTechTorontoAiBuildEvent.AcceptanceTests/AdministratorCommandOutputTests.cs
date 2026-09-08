@@ -9,6 +9,20 @@ namespace FaithTechTorontoAiBuildEvent.AcceptanceTests;
 
 public sealed class AdministratorCommandOutputTests(EventApiFactory factory) : IClassFixture<EventApiFactory>
 {
+    [Fact, Trait("Requirement", "L2-062/AC6")]
+    public async Task Given_a_closed_output_pipe_when_reset_commits_then_the_result_reports_delivery_failure()
+    {
+        var name = await factory.ProvisionAdministrator("previous2026!password");
+        var result = await ProvisioningProcess.Execute(factory, ["reset-password", name, "--password-stdin"],
+            "replacement2026!password", closeOutputBeforeMutation: true);
+        Assert.Equal(7, result.ExitCode);
+        Assert.Contains("committed", result.Error);
+        using var scope = factory.Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<Infrastructure.Access.AdministratorAccount>>();
+        var account = await users.FindByNameAsync(name);
+        Assert.True(await users.CheckPasswordAsync(account!, "replacement2026!password"));
+    }
+
     [Fact, Trait("Requirement", "L2-061/AC2;L2-062/AC6")]
     public async Task Given_custom_passwords_when_commands_succeed_then_the_target_and_result_exclude_secrets()
     {

@@ -25,11 +25,7 @@ public sealed class ResetPasswordCommand : Command
             var password = input.Read(result.GetValue(input.Prompt), result.GetValue(input.Stdin));
             var affected = await services.GetRequiredService<ISender>().Send(
                 new ResetAdministratorPasswordsCommand(result.GetValue(username), password), token);
-            OperatorExecution.WriteCommittedResult(() =>
-            {
-                Console.WriteLine($"Reset administrator passwords: {affected.Length}");
-                foreach (var name in affected) Console.WriteLine(name);
-            });
+            CommittedResultOutput.Write([$"Reset administrator passwords: {affected.Length}", .. affected]);
         }, cancellationToken, reportTarget: true));
     }
 }
