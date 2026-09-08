@@ -22,6 +22,11 @@ export class AdminEventsPage {
     await expect(row).toContainText('Draft');
   }
   async expectDialogClosed() { await expect(this.page.getByRole('dialog')).toHaveCount(0); }
+  async copy(title: string, newStart: string) {
+    await this.page.getByRole('listitem').filter({ hasText: title }).getByRole('button', { name: 'Copy ' + title, exact: true }).click();
+    await this.page.getByLabel('New start date and time', { exact: true }).fill(newStart);
+    await this.page.getByRole('button', { name: 'Create copy', exact: true }).click();
+  }
   async cancelUnsavedDraft() {
     await this.page.getByRole('button', { name: 'Create event', exact: true }).click();
     await this.page.getByLabel('Event title', { exact: true }).fill('Unsaved title');

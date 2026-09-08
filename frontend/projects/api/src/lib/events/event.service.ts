@@ -6,6 +6,7 @@ import { EventDetail } from './event-detail';
 import { EventInput } from './event-input';
 import { EventFailure } from './event-failure';
 import { IEventService } from './event-service.contract';
+import { LocalTimeInput } from './local-time-input';
 import { ServiceFailure } from '../access/service-failure';
 
 @Injectable()
@@ -53,5 +54,16 @@ export class EventService implements IEventService {
         headers: { 'X-CSRF-TOKEN': token.requestToken, 'Idempotency-Key': operationId },
       }));
     } catch (error) { throw new ServiceFailure(error instanceof HttpErrorResponse ? error.status : 0); }
+  }
+  async copy(sourceId: string, start: LocalTimeInput, operationId: string): Promise<EventDetail> {
+    try {
+      const token = await firstValueFrom(this.http.get<{requestToken: string}>('/api/admin/antiforgery'));
+      return await firstValueFrom(this.http.post<EventDetail>(`/api/admin/events/${encodeURIComponent(sourceId)}/copy`, { start }, {
+        headers: { 'X-CSRF-TOKEN': token.requestToken, 'Idempotency-Key': operationId },
+      }));
+    } catch (error) {
+      if (error instanceof HttpErrorResponse) throw new EventFailure(error.status, error.error?.code, error.error?.errors);
+      throw new EventFailure(0);
+    }
   }
 }

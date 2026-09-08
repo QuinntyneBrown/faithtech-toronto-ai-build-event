@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { EventDetail, EventInput, EventFailure, EventSummary, IEventService } from '@faithtech/api';
+import { EventDetail, EventInput, EventFailure, EventSummary, IEventService, LocalTimeInput } from '@faithtech/api';
 
 @Injectable()
 export class MockEventService implements IEventService {
@@ -16,6 +16,9 @@ export class MockEventService implements IEventService {
   createDraft(title: string, operationId: string) { return this.call<EventSummary>('create', { title, operationId }); }
   saveDraft(id: string, input: EventInput, version: string, operationId: string) {
     return this.call<EventDetail>('save', { id, input, version, operationId });
+  }
+  copy(sourceId: string, start: LocalTimeInput, operationId: string) {
+    return this.call<EventDetail>('copy', { id: sourceId, start, operationId });
   }
   private async call<T>(operation: string, args: object = {}): Promise<T> {
     const bridge = window as unknown as { __faithtechEvents(operation: string, args: object): Promise<{

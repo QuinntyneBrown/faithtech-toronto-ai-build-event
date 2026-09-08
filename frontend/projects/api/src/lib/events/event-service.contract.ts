@@ -1,6 +1,7 @@
 import { EventSummary } from './event-summary';
 import { EventDetail } from './event-detail';
 import { EventInput } from './event-input';
+import { LocalTimeInput } from './local-time-input';
 
 export interface IEventService {
   getLogo(id: string): Promise<Blob>;
@@ -9,4 +10,5 @@ export interface IEventService {
   saveDraft(id: string, input: EventInput, version: string, operationId: string): Promise<EventDetail>;
   list(): Promise<EventSummary[]>;
   createDraft(title: string, operationId: string): Promise<EventSummary>;
+  copy(sourceId: string, start: LocalTimeInput, operationId: string): Promise<EventDetail>;
 }

@@ -7,12 +7,13 @@ export class EventFixture {
   loseNextSaveResponse = false;
   unavailable = false;
   saves = 0;
+  copies = 0;
   logoUploads = 0;
   loseNextLogoResponse = false;
   logoUnavailable = false;
   readonly logos = new Map<string, {bytes: number[]; mediaType: string}>();
   handle(operation: string, args: {id?: string; input?: EventInput; title?: string; version?: string; operationId?: string;
-    bytes?: number[]; mediaType?: string; name?: string}) {
+    bytes?: number[]; mediaType?: string; name?: string; start?: {local: string; offsetMinutes: number | null}}) {
     if (this.unavailable) return { status: 503 };
     if (operation === 'list') return { result: [...this.events.values()] };
     const current = args.id ? this.events.get(args.id) : undefined;
@@ -34,6 +35,19 @@ export class EventFixture {
     }
     if (operation === 'save' && args.input?.directionsUrl && !/^https:\/\/[^@/]+(?:\/|$)/.test(args.input.directionsUrl))
       return { status: 422, errors: { directionsUrl: ['Use an absolute HTTPS URL without credentials.'] } };
+    if (operation === 'copy') {
+      if (!current) return { status: 404 };
+      if (!args.start?.local) return { status: 422, errors: { start: ["Enter the new event's start date and time."] } };
+      // Treat naive local strings as if UTC so the shift is pure wall-clock arithmetic, independent of the runner's own timezone.
+      const parse = (local: string) => new Date(local + 'Z').getTime();
+      const format = (utcMs: number) => new Date(utcMs).toISOString().slice(0, 19);
+      const shiftMs = current.start ? parse(args.start.local) - parse(current.start.local) : 0;
+      const shift = (value: {local: string; offsetMinutes: number | null} | null) =>
+        value ? { local: format(parse(value.local) + shiftMs), offsetMinutes: value.offsetMinutes } : null;
+      const copy: EventDetail = { ...current, id: randomUUID(), version: '1', published: false, useLiturgy: false, start: args.start, end: shift(current.end) };
+      this.events.set(copy.id, copy); this.receipts.set(args.operationId!, { hash, result: copy }); this.copies++;
+      return { result: copy };
+    }
     const result: EventDetail = operation === 'create' ? {
       id: randomUUID(), title: args.title?.trim() || null, published: false, useLiturgy: false, version: '1',
       venueName: null, address: null, latitude: null, longitude: null, waitingContent: null, closingContent: null, directionsUrl: null,

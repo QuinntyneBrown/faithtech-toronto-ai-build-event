@@ -1,0 +1,4 @@
+dialog { width: min(var(--cs-dialog-width), calc(var(--cs-full) - var(--cs-space-6))); max-height: var(--cs-dialog-height); padding: var(--cs-space-5); color: var(--cs-ink); background: var(--cs-paper); border: var(--cs-line) solid var(--cs-border); border-radius: var(--cs-radius-md); }
+dialog::backdrop { background: var(--cs-scrim); }
+form { display: grid; gap: var(--cs-space-3); }
+.actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--cs-space-3); margin-top: var(--cs-space-4); }
