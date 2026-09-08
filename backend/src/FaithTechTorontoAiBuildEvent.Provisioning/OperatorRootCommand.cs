@@ -8,6 +8,7 @@ public sealed class OperatorRootCommand
 
     public OperatorRootCommand()
     {
+        root.Subcommands.Add(new MigrateCommand());
         root.SetAction(_ => 0);
     }
 
