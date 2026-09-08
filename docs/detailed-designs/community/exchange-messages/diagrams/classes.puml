@@ -1,0 +1,50 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam classBackgroundColor #F9FAFB
+skinparam classBorderColor #344054
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+title Structure - Exchange private messages
+interface IConversationService {
+  +state: Signal<MessageView[]>
+  +refresh(): Promise<void>
+}
+class ConversationService {
+  -http: HttpClient
+  +refresh(): Promise<void>
+}
+class ExchangeMessagesHandler {
+  -store: IEventStore
+  +Handle(request: SendMessageCommand): Task<MessageView>
+}
+interface IEventStore {
+  +LoadAuthorized(scope: ActorEventScope): Task<Conversation>
+  +Commit(intent: OperationContext): Task<CommitResult>
+}
+class Conversation {
+  +Id: Guid
+  +EventId: Guid
+  +LowerParticipantId: Guid
+  +UpperParticipantId: Guid
+  +NextOrdinal: long
+  +Append(senderId: Guid, body: string, now: DateTimeOffset): Message
+}
+ConversationService ..|> IConversationService
+ExchangeMessagesHandler --> IEventStore : queries / commits through
+ExchangeMessagesHandler --> Conversation : enforces policy on
+class Message {
+  +Id: Guid
+  +ConversationId: Guid
+  +SenderId: Guid
+  +RecipientId: Guid
+  +Body: string
+  +SentAtUtc: DateTimeOffset
+  +Ordinal: long
+}
+Conversation "1" *-- "0..*" Message
+
+@enduml

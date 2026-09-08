@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Components - Exchange private messages
+Container(ui, "ExchangeMessagesPage", "Angular / IConversationService", "Signals and typed service contract")
+Container_Boundary(api, "Event API") {
+Component(ctrl, "ConversationController", "ASP.NET Core", "Bind, MediatR dispatch, return")
+Component(gate, "SessionAuthorizationBehavior", "Application pipeline", "Validate actor, event and ownership")
+Component(handler, "ExchangeMessagesHandler", "Application", "Persist text-only messages for an authorized event participant pair")
+Component(entity, "Conversation", "Domain", "Canonical participant pairs, immutable messages and per-conversation ordinals")
+Component(store, "SqlEventStore", "Infrastructure / IEventStore", "Feature queries, concurrency and transactions")
+}
+ContainerDb(db, "Event database", "SQL Server", "Canonical participant pairs, immutable messages and per-conversation ordinals")
+Rel(ui, ctrl, "Exchange messages", "HTTPS")
+Rel(ctrl, gate, "Dispatch request through pipeline")
+Rel(gate, handler, "Continue authorized request")
+Rel(handler, entity, "Apply domain policy")
+Rel(handler, store, "Load and persist through port")
+Rel(store, db, "Query or commit", "EF Core")
+@enduml
