@@ -1,5 +1,6 @@
 import { model, save } from './data.js';
 let frame=0, drawTimer=0, audio, enabled=false, device;
+export const soundEnabled=()=>enabled;
 export function stopEffects(){cancelAnimationFrame(frame);clearInterval(drawTimer);device?.destroy();device=undefined;}
 export async function toggleSound(button){enabled=!enabled;button.textContent=enabled?'Mute sound':'Enable sound';button.setAttribute('aria-pressed',String(enabled));if(enabled){audio ||= new AudioContext();await audio.resume();tone(440);}}
 function tone(frequency){if(!enabled||!audio)return;const oscillator=audio.createOscillator(),gain=audio.createGain();oscillator.frequency.value=frequency;gain.gain.setValueAtTime(0.035,audio.currentTime);gain.gain.exponentialRampToValueAtTime(0.001,audio.currentTime+0.12);oscillator.connect(gain);gain.connect(audio.destination);oscillator.start();oscillator.stop(audio.currentTime+0.13);}
@@ -18,7 +19,7 @@ export async function particles(){
   const color=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255),start=performance.now();
   canvas.width=canvas.clientWidth*devicePixelRatio;canvas.height=canvas.clientHeight*devicePixelRatio;
   try {
-    const adapter=await navigator.gpu?.requestAdapter();if(!adapter)throw new Error('Use canvas fallback');
+    const adapter=new URLSearchParams(location.search).get('renderer')==='canvas'?null:await navigator.gpu?.requestAdapter();if(!adapter)throw new Error('Use canvas fallback');
     const localDevice=await adapter.requestDevice();if(!canvas.isConnected){localDevice.destroy();return;}device=localDevice;
     const context=canvas.getContext('webgpu'),format=navigator.gpu.getPreferredCanvasFormat();
     context.configure({device,format,alphaMode:'premultiplied'});

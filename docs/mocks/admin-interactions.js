@@ -1,4 +1,5 @@
 import { model, save } from './data.js';
+import { createEvent } from './event-sessions.js';
 export const minutes = t => Number(t.split(':')[0])*60+Number(t.split(':')[1]);
 const time = n => `${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`;
 export async function submitAdmin(id,data,item,navigate) {
@@ -6,9 +7,9 @@ export async function submitAdmin(id,data,item,navigate) {
   if(id==='event-settings'){
     if(data.end<=data.start)return 'The event must end after it starts.';
     if(data.newEvent!=='true'&&model.stages.some(s=>s.start<data.start||s.end>data.end))return 'The event times must contain every scheduled stage. Adjust the stages first.';
-    let logo=model.event.logo;
+    let logo=data.newEvent==='true'?'':model.event.logo;
     if(data.logo?.size){if(data.logo.size>2*1024*1024)return 'Choose a logo smaller than 2 MB.';logo=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(data.logo);});}
-    if(data.newEvent==='true'){model.archivedEvents||=[];model.archivedEvents.push({...model.event});model.stages=[];model.winners=[];model.team='';model.project='';}
+    if(data.newEvent==='true'){createEvent({...data,logo});navigate('admin-settings',{state:'saved'});return true;}
     model.event={...model.event,name:data.name,date:data.date,start:data.start,end:data.end,timezone:data.timezone,venue:data.venue,address:data.address,liturgy:data.liturgy==='on',logo};save();navigate('admin-settings',{state:'saved'});return true;
   }
   if(id==='participant-edit') {

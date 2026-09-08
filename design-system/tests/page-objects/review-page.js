@@ -16,4 +16,5 @@ export class ReviewPage extends ArtifactPage {
   async reviewClock(time,speed='60'){await this.page.getByText(/Design review controls/).click();await this.page.getByLabel('Simulated time').fill(time);await this.page.getByLabel('Clock speed').selectOption(speed);await this.page.getByRole('button',{name:'Play scheduled flow'}).click();}
   async drawn(){await expect(this.page).toHaveURL(/state=winner/);await expect(this.main().getByRole('heading',{name:/Alex Morgan|Sarah Chen/})).toBeVisible();}
   async draft(label,value){await expect(this.main().getByRole('textbox',{name:label,exact:true})).toHaveValue(value);}
+  async dialogValue(label,value){await expect(this.overlay().getByLabel(label)).toHaveValue(value);}
 }

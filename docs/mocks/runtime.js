@@ -14,6 +14,7 @@ import { catalog } from './catalog.js';
 import { shell } from './shell.js';
 import { applyState } from './states.js';
 import { updateClock } from './clock.js';
+import { switchEvent } from './event-sessions.js';
 import { openDialog, closeDialog, cancelDialog, requestLeave, discard, clean, submittingForm } from './overlay.js';
 const app=document.querySelector('#app');
 const query=()=>new URLSearchParams(location.search);
@@ -42,6 +43,7 @@ document.addEventListener('click',e=>{
   if(a==='sound')toggleSound(b);
   if(a==='retry-message'||a==='reconnect')navigate(query().get('screen'),{item:query().get('item')||'sarah'});
   if(a==='reset')requestLeave(()=>{clean();reset();navigate('catalog');});
+  if(a==='switch-event')requestLeave(()=>{clean();switchEvent(Number(b.dataset.item));navigate('admin-overview');});
   if(a==='pause-clock'){model.followClock=false;save();b.textContent='Paused';}
 });
 document.addEventListener('submit',async e=>{

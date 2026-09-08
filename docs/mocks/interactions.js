@@ -1,7 +1,7 @@
 import { model, save, currentId } from './data.js';
 export function submitParticipant(id,data,item,navigate) {
   if(id==='quiz'){model.answers[model.questions[model.quizIndex].id]=data.answer;save();navigate('quiz',{state:'feedback'});return true;}
-  if(id==='profile'){Object.assign(model.profile,data);Object.assign(model.participants.find(p=>p.id===currentId()),data);save();navigate('profile',{state:'saved'});return true;}
+  if(id==='profile'){Object.assign(model.profile,data);const p=model.participants.find(p=>p.id===currentId());if(p)Object.assign(p,data);save();navigate('profile',{state:'saved'});return true;}
   if(id==='search'){navigate(new URLSearchParams(location.search).get('screen')||'people',{search:data.search});return true;}
   if(id==='new-message'){navigate('messages',{item:data.to,state:'empty'});return true;}
   if(id==='message'){if(!data.text.trim())return 'Write a message before sending.';model.messages.push({from:currentId(),to:data.to,text:data.text,time:model.clock});save();navigate('messages',{item:data.to});return true;}
