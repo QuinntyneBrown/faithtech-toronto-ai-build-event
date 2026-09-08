@@ -1,0 +1,58 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam classBackgroundColor #F9FAFB
+skinparam classBorderColor #344054
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+title Authorize a resource before its handler runs
+actor "Participant and administrator" as actor
+box "Frontend - Client and admin applications" #E0F2FE
+participant "ProtectAccessPage" as page
+participant "ISessionService" as client
+end box
+box "Backend - Event API" #D1FADF
+participant "SessionController" as controller
+end box
+box "Backend - Application and Domain" #ECFDF3
+participant "Authorization / validation pipeline" as gate
+participant "ProtectAccessHandler" as handler
+participant "AuthorizationScope" as entity
+end box
+box "Backend - Infrastructure" #FFF4E5
+database "SQL Server / IEventStore" as db
+participant "OutboxDispatcher / EventHub" as push
+end box
+actor -> page : Request a protected resource
+page -> client : Internal AuthorizeResourceRequest
+client -> controller : HTTPS typed request
+controller -> gate : MediatR dispatch
+gate -> gate : Validate session, scope and input [L2-039/040]
+alt Invalid or unauthorized
+gate --> controller : Concealed error / field errors
+controller --> client : ProblemDetails
+client --> page : Retain draft; announce error
+else Authorized
+gate -> handler : Dispatch authorized request
+handler -> db : Load scoped state and versions
+db --> handler : Current authorized state
+handler -> entity : Validate active session, event, role and ownership [L2-039]
+alt Foreign event, wrong owner, revoked session or forbidden role
+entity --> handler : Reject without mutation
+handler --> controller : Conflict / validation result
+controller --> client : ProblemDetails + authorized current version
+client --> page : Show recovery action; preserve draft
+else Accepted
+handler -> entity : Allow only the authorized feature request and projection
+entity --> handler : Authorized scope without secret fields
+handler -> db : Read authorized projection
+db --> handler : Durable result
+handler --> controller : Feature result
+controller --> client : Authorized response
+client --> page : Update signals and render
+end
+end
+@enduml

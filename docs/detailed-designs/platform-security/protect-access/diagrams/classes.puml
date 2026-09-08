@@ -1,0 +1,53 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam classBackgroundColor #F9FAFB
+skinparam classBorderColor #344054
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+title Structure - Protect event access and private state
+interface ISessionService {
+  +state: Signal<SessionState>
+  +refresh(): Promise<void>
+}
+class SessionService {
+  -http: HttpClient
+  +refresh(): Promise<void>
+}
+class ProtectAccessHandler {
+  -store: IEventStore
+  +Handle(request: AuthorizeResourceRequest): Task<AuthorizationDecision>
+}
+interface IEventStore {
+  +LoadAuthorized(scope: ActorEventScope): Task<AuthorizationScope>
+  +Commit(intent: OperationContext): Task<CommitResult>
+}
+class AuthorizationScope {
+  +ActorId: Guid
+  +SessionId: Guid
+  +EventId: Guid?
+  +Role: ActorRole
+  +CanRead(resource: ResourceIdentity): bool
+  +CanMutate(resource: ResourceIdentity): bool
+}
+SessionService ..|> ISessionService
+ProtectAccessHandler --> IEventStore : queries / commits through
+ProtectAccessHandler --> AuthorizationScope : enforces policy on
+class ResourceIdentity {
+  +EventId: Guid
+  +OwnerId: Guid?
+  +OtherPartyId: Guid?
+  +Kind: ResourceKind
+}
+class CredentialDigest {
+  +EventId: Guid
+  +Digest: byte[]
+  +Version: long
+}
+AuthorizationScope ..> ResourceIdentity : event, role and ownership checks
+AuthorizationScope ..> CredentialDigest : validates current credential generation
+
+@enduml
