@@ -12,7 +12,8 @@ public sealed class ApiExceptionHandler : IExceptionHandler
     public async ValueTask<bool> TryHandleAsync(HttpContext context, Exception exception, CancellationToken cancellationToken)
     {
         var status = exception switch { AuthenticationThrottledException => 429, InputValidationException => 422,
-            OperationConflictException => 409, SqlException => 503, _ => 500 };
+            OperationConflictException or StaleVersionException => 409, VersionRequiredException => 428,
+            ResourceNotFoundException => 404, SqlException => 503, _ => 500 };
         if (exception is AuthenticationThrottledException throttled)
             context.Response.Headers.RetryAfter = throttled.RetryAfterSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
         context.Response.StatusCode = status;
@@ -24,6 +25,13 @@ public sealed class ApiExceptionHandler : IExceptionHandler
                 ["correlationId"] = context.TraceIdentifier }
         };
         if (exception is InputValidationException invalid) problem.Extensions["errors"] = invalid.Errors;
+        if (exception is StaleVersionException stale)
+        {
+            problem.Extensions["code"] = "stale-version";
+            problem.Extensions["current"] = stale.Current;
+        }
+        if (exception is VersionRequiredException) problem.Extensions["code"] = "version-required";
+        if (exception is ResourceNotFoundException) problem.Extensions["code"] = "not-found";
         await context.Response.WriteAsJsonAsync(problem, cancellationToken);
         return true;
     }

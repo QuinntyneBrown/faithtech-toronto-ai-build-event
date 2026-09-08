@@ -1,0 +1,6 @@
+:host { display: block; }
+button { margin-bottom: var(--cs-space-4); }
+.table-scroll { overflow-x: auto; }
+table { width: var(--cs-full); border-collapse: collapse; }
+td, th { padding: var(--cs-space-3); text-align: start; vertical-align: top; overflow-wrap: anywhere; }
+[role="alert"] { color: var(--cs-error); }

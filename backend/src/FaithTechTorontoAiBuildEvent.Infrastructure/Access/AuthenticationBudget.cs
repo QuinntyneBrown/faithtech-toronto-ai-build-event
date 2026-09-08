@@ -9,11 +9,11 @@ namespace FaithTechTorontoAiBuildEvent.Infrastructure.Access;
 
 public sealed class AuthenticationBudget(EventDbContext db, IOptions<SecurityOptions> options)
 {
-    public async Task<Guid?> Verify(string username, string source, Func<Task<Guid?>> verify, CancellationToken cancellationToken)
+    public async Task<Guid?> Verify(string accountScope, string source, Func<Task<Guid?>> verify, CancellationToken cancellationToken)
     {
         var key = Convert.FromBase64String(options.Value.DigestKey);
         string Digest(string value) => Convert.ToHexString(HMACSHA256.HashData(key, Encoding.UTF8.GetBytes(value)));
-        var accountKey = Digest("admin:" + username.Trim().ToUpperInvariant());
+        var accountKey = Digest(accountScope);
         var sourceKey = Digest("source:" + source);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         foreach (var resource in new[] { accountKey, sourceKey }.Order(StringComparer.Ordinal))

@@ -47,14 +47,93 @@ namespace FaithTechTorontoAiBuildEvent.Infrastructure.Persistence.Migrations
                     b.ToTable("AdministratorSessions");
                 });
 
+            modelBuilder.Entity("FaithTechTorontoAiBuildEvent.Domain.Access.ParticipantSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("AuthenticatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RegistrationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("Revoked")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventId");
+
+                    b.HasIndex("RegistrationId");
+
+                    b.ToTable("ParticipantSessions");
+                });
+
             modelBuilder.Entity("FaithTechTorontoAiBuildEvent.Domain.Events.BuildEvent", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Address")
+                        .HasMaxLength(10000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClosingContent")
+                        .HasMaxLength(10000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset?>("CompletedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("DirectionsUrl")
+                        .HasMaxLength(4096)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("EndLocal")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("EndOffsetMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("EndsAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("float");
+
+                    b.Property<Guid?>("LogoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("float");
+
                     b.Property<bool>("Published")
                         .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset?>("SelectionClosedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("SelectionOpenedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTime?>("StartLocal")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("StartOffsetMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("StartsAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Timezone")
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
 
                     b.Property<string>("Title")
                         .HasMaxLength(400)
@@ -63,14 +142,50 @@ namespace FaithTechTorontoAiBuildEvent.Infrastructure.Persistence.Migrations
                     b.Property<bool>("UseLiturgy")
                         .HasColumnType("bit");
 
+                    b.Property<string>("VenueName")
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
                     b.Property<byte[]>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<string>("WaitingContent")
+                        .HasMaxLength(10000)
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("LogoId");
+
                     b.ToTable("Events");
+                });
+
+            modelBuilder.Entity("FaithTechTorontoAiBuildEvent.Domain.Events.LogoAsset", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("Bytes")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<int>("Height")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MediaType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("Width")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Logos");
                 });
 
             modelBuilder.Entity("FaithTechTorontoAiBuildEvent.Domain.Operations.AuditRecord", b =>
@@ -97,6 +212,9 @@ namespace FaithTechTorontoAiBuildEvent.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid?>("SubjectId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -141,6 +259,100 @@ namespace FaithTechTorontoAiBuildEvent.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("OperationReceipts");
+                });
+
+            modelBuilder.Entity("FaithTechTorontoAiBuildEvent.Domain.Roster.Registration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("CodeDigest")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTimeOffset>("CodeIssuedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("CredentialVersion")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(640)
+                        .HasColumnType("nvarchar(640)");
+
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("FirstAccessAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(640)
+                        .HasColumnType("nvarchar(640)");
+
+                    b.Property<byte[]>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventId", "CodeDigest")
+                        .IsUnique();
+
+                    b.HasIndex("EventId", "NormalizedEmail")
+                        .IsUnique()
+                        .HasFilter("[Active] = 1 AND [NormalizedEmail] IS NOT NULL");
+
+                    b.ToTable("Registrations");
+                });
+
+            modelBuilder.Entity("FaithTechTorontoAiBuildEvent.Domain.Scheduling.EventStage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Content")
+                        .HasMaxLength(10000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
+                    b.Property<string>("Phase")
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
+                    b.Property<string>("ResourceUrl")
+                        .HasMaxLength(4096)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ScreenType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventId");
+
+                    b.ToTable("Stages");
                 });
 
             modelBuilder.Entity("FaithTechTorontoAiBuildEvent.Infrastructure.Access.AdministratorAccount", b =>
@@ -382,6 +594,147 @@ namespace FaithTechTorontoAiBuildEvent.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("FaithTechTorontoAiBuildEvent.Domain.Access.ParticipantSession", b =>
+                {
+                    b.HasOne("FaithTechTorontoAiBuildEvent.Domain.Events.BuildEvent", null)
+                        .WithMany()
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FaithTechTorontoAiBuildEvent.Domain.Roster.Registration", null)
+                        .WithMany()
+                        .HasForeignKey("RegistrationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("FaithTechTorontoAiBuildEvent.Domain.Events.BuildEvent", b =>
+                {
+                    b.HasOne("FaithTechTorontoAiBuildEvent.Domain.Events.LogoAsset", null)
+                        .WithMany()
+                        .HasForeignKey("LogoId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.OwnsOne("FaithTechTorontoAiBuildEvent.Domain.Scheduling.TimeWindow", "PresentationWindow", b1 =>
+                        {
+                            b1.Property<Guid>("BuildEventId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<DateTime>("EndLocal")
+                                .HasColumnType("datetime2");
+
+                            b1.Property<int>("EndOffsetMinutes")
+                                .HasColumnType("int");
+
+                            b1.Property<DateTimeOffset>("EndsAtUtc")
+                                .HasColumnType("datetimeoffset");
+
+                            b1.Property<DateTime>("StartLocal")
+                                .HasColumnType("datetime2");
+
+                            b1.Property<int>("StartOffsetMinutes")
+                                .HasColumnType("int");
+
+                            b1.Property<DateTimeOffset>("StartsAtUtc")
+                                .HasColumnType("datetimeoffset");
+
+                            b1.HasKey("BuildEventId");
+
+                            b1.ToTable("Events");
+
+                            b1.WithOwner()
+                                .HasForeignKey("BuildEventId");
+                        });
+
+                    b.OwnsOne("FaithTechTorontoAiBuildEvent.Domain.Scheduling.TimeWindow", "SelectionWindow", b1 =>
+                        {
+                            b1.Property<Guid>("BuildEventId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<DateTime>("EndLocal")
+                                .HasColumnType("datetime2");
+
+                            b1.Property<int>("EndOffsetMinutes")
+                                .HasColumnType("int");
+
+                            b1.Property<DateTimeOffset>("EndsAtUtc")
+                                .HasColumnType("datetimeoffset");
+
+                            b1.Property<DateTime>("StartLocal")
+                                .HasColumnType("datetime2");
+
+                            b1.Property<int>("StartOffsetMinutes")
+                                .HasColumnType("int");
+
+                            b1.Property<DateTimeOffset>("StartsAtUtc")
+                                .HasColumnType("datetimeoffset");
+
+                            b1.HasKey("BuildEventId");
+
+                            b1.ToTable("Events");
+
+                            b1.WithOwner()
+                                .HasForeignKey("BuildEventId");
+                        });
+
+                    b.Navigation("PresentationWindow");
+
+                    b.Navigation("SelectionWindow");
+                });
+
+            modelBuilder.Entity("FaithTechTorontoAiBuildEvent.Domain.Roster.Registration", b =>
+                {
+                    b.HasOne("FaithTechTorontoAiBuildEvent.Domain.Events.BuildEvent", null)
+                        .WithMany()
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("FaithTechTorontoAiBuildEvent.Domain.Scheduling.EventStage", b =>
+                {
+                    b.HasOne("FaithTechTorontoAiBuildEvent.Domain.Events.BuildEvent", null)
+                        .WithMany("Stages")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("FaithTechTorontoAiBuildEvent.Domain.Scheduling.TimeWindow", "Interval", b1 =>
+                        {
+                            b1.Property<Guid>("EventStageId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<DateTime>("EndLocal")
+                                .HasColumnType("datetime2");
+
+                            b1.Property<int>("EndOffsetMinutes")
+                                .HasColumnType("int");
+
+                            b1.Property<DateTimeOffset>("EndsAtUtc")
+                                .HasColumnType("datetimeoffset");
+
+                            b1.Property<DateTime>("StartLocal")
+                                .HasColumnType("datetime2");
+
+                            b1.Property<int>("StartOffsetMinutes")
+                                .HasColumnType("int");
+
+                            b1.Property<DateTimeOffset>("StartsAtUtc")
+                                .HasColumnType("datetimeoffset");
+
+                            b1.HasKey("EventStageId");
+
+                            b1.ToTable("Stages");
+
+                            b1.WithOwner()
+                                .HasForeignKey("EventStageId");
+                        });
+
+                    b.Navigation("Interval")
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
@@ -431,6 +784,11 @@ namespace FaithTechTorontoAiBuildEvent.Infrastructure.Persistence.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("FaithTechTorontoAiBuildEvent.Domain.Events.BuildEvent", b =>
+                {
+                    b.Navigation("Stages");
                 });
 #pragma warning restore 612, 618
         }

@@ -176,6 +176,17 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "acceptance": {
+              "optimization": false,
+              "sourceMap": true,
+              "extractLicenses": false,
+              "fileReplacements": [
+                {
+                  "replace": "projects/client/src/app/app.providers.ts",
+                  "with": "projects/client/src/app/app.providers.mock.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -188,6 +199,9 @@
             },
             "development": {
               "buildTarget": "client:build:development"
+            },
+            "acceptance": {
+              "buildTarget": "client:build:acceptance"
             }
           },
           "defaultConfiguration": "development"

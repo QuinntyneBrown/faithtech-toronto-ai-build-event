@@ -1,4 +1,6 @@
 import { test as base } from '@playwright/test';
+import { EventFixture } from './event-fixture';
+import { ScheduleFixture } from './schedule-fixture';
 
 export class SessionFixture {
   authenticated = false;
@@ -23,10 +25,26 @@ export class SessionFixture {
   }
 }
 
-export const test = base.extend<{session: SessionFixture}>({
+export const test = base.extend<{session: SessionFixture; events: EventFixture; schedules: ScheduleFixture; roster: RosterFixture}>({
+  roster: [async ({ context, events }, use) => {
+    const roster = new RosterFixture(events);
+    await context.exposeBinding('__faithtechRoster', (_source, operation, args) => roster.handle(operation, args));
+    await use(roster);
+  }, { auto: true }],
+  schedules: [async ({ context, events }, use) => {
+    const schedules = new ScheduleFixture(events);
+    await context.exposeBinding('__faithtechSchedule', (_source, operation, args) => schedules.handle(operation, args));
+    await use(schedules);
+  }, { auto: true }],
+  events: [async ({ context }, use) => {
+    const events = new EventFixture();
+    await context.exposeBinding('__faithtechEvents', (_source, operation, args) => events.handle(operation, args));
+    await use(events);
+  }, { auto: true }],
   session: [async ({ context }, use) => {
     const session = new SessionFixture();
     await context.exposeBinding('__faithtechSession', (_source, operation, credentials) => session.handle(operation, credentials));
     await use(session);
   }, { auto: true }],
 });
+import { RosterFixture } from './roster-fixture';

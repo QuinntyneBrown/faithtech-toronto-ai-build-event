@@ -1,18 +1,31 @@
 import { Injectable } from '@angular/core';
-import { EventSummary, IEventService, ServiceFailure } from '@faithtech/api';
+import { EventDetail, EventInput, EventFailure, EventSummary, IEventService, LocalTimeInput } from '@faithtech/api';
 
 @Injectable()
 export class MockEventService implements IEventService {
-  private events: EventSummary[] = [];
-  private receipts = new Map<string, EventSummary>();
-  async list() { return [...this.events]; }
-  async createDraft(title: string, operationId: string) {
-    if ([...title.trim()].length > 200) throw new ServiceFailure(422);
-    const previous = this.receipts.get(operationId);
-    if (previous) return previous;
-    const event = { id: crypto.randomUUID(), title: title.trim() || null, published: false, useLiturgy: false, version: '1' };
-    this.events.push(event);
-    this.receipts.set(operationId, event);
-    return event;
+  async getLogo(id: string) {
+    const image = await this.call<{bytes: number[]; mediaType: string}>('getLogo', { id });
+    return new Blob([new Uint8Array(image.bytes)], { type: image.mediaType });
+  }
+  async uploadLogo(id: string, file: File, version: string, operationId: string) {
+    return this.call<EventDetail>('uploadLogo', { id, version, operationId, name: file.name, mediaType: file.type,
+      bytes: Array.from(new Uint8Array(await file.arrayBuffer())) });
+  }
+  list() { return this.call<EventSummary[]>('list'); }
+  get(id: string) { return this.call<EventDetail>('get', { id }); }
+  createDraft(title: string, operationId: string) { return this.call<EventSummary>('create', { title, operationId }); }
+  saveDraft(id: string, input: EventInput, version: string, operationId: string) {
+    return this.call<EventDetail>('save', { id, input, version, operationId });
+  }
+  copy(sourceId: string, start: LocalTimeInput, operationId: string) {
+    return this.call<EventDetail>('copy', { id: sourceId, start, operationId });
+  }
+  private async call<T>(operation: string, args: object = {}): Promise<T> {
+    const bridge = window as unknown as { __faithtechEvents(operation: string, args: object): Promise<{
+      result: T; status?: number; failed?: boolean; code?: string; errors?: Record<string, string[]>; current?: EventDetail;
+    }> };
+    const response = await bridge.__faithtechEvents(operation, args);
+    if (response.failed || response.status) throw new EventFailure(response.status ?? 0, response.code, response.errors, response.current);
+    return response.result;
   }
 }

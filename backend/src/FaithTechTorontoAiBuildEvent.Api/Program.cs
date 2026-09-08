@@ -29,6 +29,7 @@ public partial class Program
         builder.Services.AddProblemDetails();
         builder.Services.AddExceptionHandler<ApiExceptionHandler>();
         builder.Services.AddScoped<AdministratorCookieEvents>();
+        builder.Services.AddScoped<ParticipantCookieEvents>();
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
         {
             options.Cookie.Name = "FaithTech.Admin";
@@ -38,6 +39,15 @@ public partial class Program
             options.Cookie.SameSite = SameSiteMode.Strict;
             options.SlidingExpiration = false;
             options.EventsType = typeof(AdministratorCookieEvents);
+        }).AddCookie("Participant", options =>
+        {
+            options.Cookie.Name = "FaithTech.Participant";
+            options.Cookie.Path = "/api/events";
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            options.Cookie.SameSite = SameSiteMode.Strict;
+            options.SlidingExpiration = false;
+            options.EventsType = typeof(ParticipantCookieEvents);
         });
         builder.Services.AddAuthorization();
         var app = builder.Build();

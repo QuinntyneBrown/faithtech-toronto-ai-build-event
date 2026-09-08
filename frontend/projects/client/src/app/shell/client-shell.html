@@ -1,0 +1,15 @@
+<ft-participant-session-panel [eventId]="eventId()" [showDetails]="true" (signedOut)="signedOut()">
+  <header>
+    <nav aria-label="Event">
+      <a [routerLink]="['/events', eventId()]">Current event</a>
+      <a [routerLink]="['/events', eventId(), 'schedule']">Schedule</a>
+      <a [routerLink]="['/events', eventId(), 'teams']">Teams &amp; projects</a>
+      <a [routerLink]="['/events', eventId(), 'people']">People</a>
+      <a [routerLink]="['/events', eventId(), 'messages']">Messages</a>
+      <a [routerLink]="['/events', eventId(), 'quiz']">Quiz</a>
+      <a [routerLink]="['/events', eventId(), 'raffle']">Raffle</a>
+      <a [routerLink]="['/events', eventId(), 'showcase']">Showcase</a>
+    </nav>
+  </header>
+  <main id="main"><router-outlet /></main>
+</ft-participant-session-panel>

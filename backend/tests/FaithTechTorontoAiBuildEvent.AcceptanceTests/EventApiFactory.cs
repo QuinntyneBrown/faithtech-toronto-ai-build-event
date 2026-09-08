@@ -55,6 +55,26 @@ public sealed class EventApiFactory : WebApplicationFactory<Program>, IAsyncLife
         return client;
     }
 
+    public async Task<(HttpClient Client, Guid RegistrationId, string Code)> ParticipantBrowser(HttpClient admin, Guid eventId, string displayName, string email)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"/api/admin/events/{eventId}/roster") { Content = JsonContent.Create(new { displayName }) };
+        request.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString());
+        using var addResponse = await admin.SendAsync(request); addResponse.EnsureSuccessStatusCode();
+        var issued = await addResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var registrationId = issued.GetProperty("entry").GetProperty("id").GetGuid();
+        var code = issued.GetProperty("code").GetString()!;
+        var client = Browser();
+        var token = await client.GetFromJsonAsync<JsonElement>($"/api/events/{eventId}/antiforgery");
+        client.DefaultRequestHeaders.Add("X-CSRF-TOKEN", token.GetProperty("requestToken").GetString());
+        (await client.PostAsJsonAsync($"/api/events/{eventId}/session", new { email, entryCode = code })).EnsureSuccessStatusCode();
+        // A token fetched before sign-in is bound to the anonymous identity and fails validation on a later
+        // Participant-authorized mutating request; refetch now so the client is ready for one.
+        token = await client.GetFromJsonAsync<JsonElement>($"/api/events/{eventId}/antiforgery");
+        client.DefaultRequestHeaders.Remove("X-CSRF-TOKEN");
+        client.DefaultRequestHeaders.Add("X-CSRF-TOKEN", token.GetProperty("requestToken").GetString());
+        return (client, registrationId, code);
+    }
+
     public async Task<string> ProvisionAdministrator(string password)
     {
         using var scope = Services.CreateScope();

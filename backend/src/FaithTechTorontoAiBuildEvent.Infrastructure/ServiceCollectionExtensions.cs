@@ -1,6 +1,10 @@
 using FaithTechTorontoAiBuildEvent.Application.Access;
 using FaithTechTorontoAiBuildEvent.Application.Events;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Events;
+using FaithTechTorontoAiBuildEvent.Infrastructure.Scheduling;
+using FaithTechTorontoAiBuildEvent.Application.Scheduling;
+using FaithTechTorontoAiBuildEvent.Application.Roster;
+using FaithTechTorontoAiBuildEvent.Infrastructure.Roster;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Access;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
@@ -22,7 +26,13 @@ public static class ServiceCollectionExtensions
             provider.GetRequiredService<IOptions<DatabaseOptions>>().Value.EventDatabase));
         services.AddIdentityCore<AdministratorAccount>().AddRoles<IdentityRole<Guid>>().AddEntityFrameworkStores<EventDbContext>();
         services.AddScoped<IAdministratorStore, SqlAdministratorStore>();
+        services.AddScoped<IParticipantStore, SqlParticipantStore>();
         services.AddScoped<IEventStore, SqlEventStore>();
+        services.AddScoped<IScheduleStore, SqlScheduleStore>();
+        services.AddScoped<IRosterStore, SqlRosterStore>();
+        services.AddSingleton<IEntryCodeGenerator, EntryCodeGenerator>();
+        services.AddScoped<IEventLogoStore, SqlEventLogoStore>();
+        services.AddSingleton<ILogoDecoder, SkiaLogoDecoder>();
         services.AddScoped<IAdministratorProvisioner, SqlAdministratorProvisioner>();
         services.AddScoped<AuthenticationBudget>();
         services.AddScoped<IRequestSource, OperatorRequestSource>();

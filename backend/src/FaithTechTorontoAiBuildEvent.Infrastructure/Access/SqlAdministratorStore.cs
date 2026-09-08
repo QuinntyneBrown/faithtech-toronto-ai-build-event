@@ -13,7 +13,7 @@ public sealed class SqlAdministratorStore(EventDbContext db, UserManager<Adminis
         .HashPassword(new AdministratorAccount(), Guid.NewGuid().ToString());
 
     public Task<Guid?> VerifyCredentials(string username, string password, string source, CancellationToken cancellationToken) =>
-        budget.Verify(username, source, async () => {
+        budget.Verify("admin:" + username.Trim().ToUpperInvariant(), source, async () => {
         var account = await users.FindByNameAsync(username.Trim());
         if (account is null)
         {
