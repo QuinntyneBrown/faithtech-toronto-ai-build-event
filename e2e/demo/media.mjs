@@ -2,9 +2,9 @@ import { spawn } from 'node:child_process';
 import { writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-export function run(command, args, { timeout = 120000, input, env = process.env, onOutput } = {}) {
+export function run(command, args, { timeout = 120000, input, env = process.env, onOutput, cwd } = {}) {
   return new Promise((accept, reject) => {
-    const child = spawn(command, args, { windowsHide: true, env, stdio: ['pipe', 'pipe', 'pipe'] });
+    const child = spawn(command, args, { windowsHide: true, env, cwd, stdio: ['pipe', 'pipe', 'pipe'] });
     let output = '', expired = false;
     const timer = setTimeout(() => { expired = true; child.kill(); }, timeout);
     const collect = data => { const text = data.toString(); output += text; onOutput?.(text); };
@@ -35,12 +35,13 @@ export async function speech(lines, directory) {
   }));
 }
 
-export async function mux(raw, cues, target) {
-  const args = ['-y', '-i', raw];
+export async function mux(raw, cues, target, offset = 0) {
+  const args = ['-y', '-ss', String(offset), '-i', raw];
   for (const cue of cues) args.push('-i', cue.path);
   const filters = cues.map((c, i) => `[${i + 1}:a]adelay=${Math.round(c.start * 1000)}:all=1[a${i}]`);
   filters.push(cues.map((_, i) => `[a${i}]`).join('') + `amix=inputs=${cues.length}:normalize=0,apad[audio]`);
-  args.push('-filter_complex', filters.join(';'), '-map', '0:v', '-map', '[audio]', '-c:v', 'copy',
+  args.push('-filter_complex', filters.join(';'), '-map', '0:v', '-map', '[audio]', '-c:v', 'libvpx',
+    '-deadline', 'realtime', '-cpu-used', '6', '-crf', '12', '-b:v', '2M',
     '-c:a', 'libopus', '-b:a', '96k', '-shortest', target);
   await run(process.env.FFMPEG || 'ffmpeg', args);
   await writeFile(target.replace('.webm', '.vtt'), captions(cues));
