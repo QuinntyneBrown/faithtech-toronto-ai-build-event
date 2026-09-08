@@ -44,6 +44,30 @@ public sealed class SqlRosterStore(EventDbContext db, IEntryCodeGenerator codes)
         db.AuditRecords.Add(new() { ActorId = command.ActorId, EventId = command.EventId, SubjectId = entry.Id, Action = "registration-added", Outcome = "succeeded", AtUtc = now });
         await db.SaveChangesAsync(cancellationToken); await transaction.CommitAsync(cancellationToken); return result;
     }
+    public async Task<RosterEntry> Rename(RenameRegistrationCommand command, CancellationToken cancellationToken)
+    {
+        var target = $"PUT /api/admin/events/{command.EventId}/roster/{command.RegistrationId}/name";
+        var hash = Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new { target, command.DisplayName, command.Version })));
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        var resource = $"event:{command.EventId}";
+        await db.Database.ExecuteSqlInterpolatedAsync($"DECLARE @result int; EXEC @result = sp_getapplock @Resource={resource}, @LockMode='Exclusive', @LockOwner='Transaction', @LockTimeout=5000; IF @result < 0 THROW 51000, 'Operation unavailable', 1;", cancellationToken);
+        var entry = await db.Registrations.SingleOrDefaultAsync(x => x.Id == command.RegistrationId && x.EventId == command.EventId, cancellationToken) ?? throw new ResourceNotFoundException();
+        var receipt = await db.OperationReceipts.SingleOrDefaultAsync(x => x.ActorId == command.ActorId && x.EventId == command.EventId && x.OperationId == command.OperationId, cancellationToken);
+        if (receipt is not null) {
+            if (receipt.PayloadHash != hash) throw new OperationConflictException();
+            return JsonSerializer.Deserialize<RosterEntry>(receipt.Result)!;
+        }
+        var current = Detail(entry);
+        if (current.Version != command.Version) throw new StaleVersionException(current);
+        var now = await db.Database.SqlQuery<DateTimeOffset>($"SELECT TODATETIMEOFFSET(SYSUTCDATETIME(), '+00:00') AS Value").SingleAsync(cancellationToken);
+        entry.DisplayName = command.DisplayName!;
+        await db.SaveChangesAsync(cancellationToken);
+        var result = Detail(entry);
+        db.OperationReceipts.Add(new() { ActorId = command.ActorId, EventId = command.EventId, OperationId = command.OperationId, Target = target,
+            PayloadHash = hash, Result = JsonSerializer.Serialize(result), CommittedAtUtc = now });
+        db.AuditRecords.Add(new() { ActorId = command.ActorId, EventId = command.EventId, SubjectId = entry.Id, Action = "registration-renamed", Outcome = "succeeded", AtUtc = now });
+        await db.SaveChangesAsync(cancellationToken); await transaction.CommitAsync(cancellationToken); return result;
+    }
     private RosterEntry Detail(Registration entry) => new(entry.Id, entry.DisplayName, entry.Active, entry.NormalizedEmail is not null,
         entry.FirstAccessAtUtc, Convert.ToBase64String(db.Entry(entry).Property<byte[]>("Version").CurrentValue!));
 }
