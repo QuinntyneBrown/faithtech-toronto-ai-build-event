@@ -1,0 +1,18 @@
+@startuml
+title Manage roster credentials and administrator access - components
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+Container_Boundary(local_process, "Local Provisioning process") {
+Component(cmd, "Roster and administrator commands", "Provisioning", "Bind identifiers and protected inputs")
+Component(handler, "OperatorAccessHandler", "Application", "Routes validated access intentions")
+Component(store, "SqlOperatorAccessStore", "Infrastructure", "Owns operator transaction")
+Component(roster, "SqlRosterMutations", "Infrastructure", "Changes roster and participant sessions")
+Component(accounts, "SqlAdministratorMutations", "Infrastructure", "Identity accounts and admin sessions")
+}
+ContainerDb(db, "Event database", "SQL Server", "Durable data")
+Rel(cmd, handler, "Dispatches")
+Rel(handler, store, "Applies reviewed change")
+Rel(store, roster, "Reuses roster mutation core")
+Rel(store, accounts, "Reuses Identity mutation core")
+Rel(store, db, "Commits data, audit and nonsecret receipt")
+@enduml
