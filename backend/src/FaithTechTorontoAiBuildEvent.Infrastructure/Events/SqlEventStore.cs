@@ -30,7 +30,9 @@ public sealed class SqlEventStore(EventDbContext db) : IEventStore
         var current = await Detail(item, cancellationToken);
         if (current.Version != command.Version) throw new StaleVersionException(current);
         var input = command.Input;
-        _ = ScheduleValidator.Normalize(ScheduleMapping.Input(item) with { Timezone = input.Timezone, Start = input.Start, End = input.End });
+        var schedule = ScheduleValidator.Normalize(ScheduleMapping.Input(item) with { Timezone = input.Timezone, Start = input.Start, End = input.End });
+        var now = await db.Database.SqlQuery<DateTimeOffset>($"SELECT TODATETIMEOFFSET(SYSUTCDATETIME(), '+00:00') AS Value").SingleAsync(cancellationToken);
+        ScheduleClosurePolicy.CheckAndRecord(item, schedule, now);
         item.Title = input.Title; item.VenueName = input.VenueName; item.Address = input.Address;
         item.UseLiturgy = input.UseLiturgy;
         item.Latitude = input.Latitude; item.Longitude = input.Longitude;
@@ -40,7 +42,6 @@ public sealed class SqlEventStore(EventDbContext db) : IEventStore
         item.StartsAtUtc = input.Start?.ToUtc(); item.EndsAtUtc = input.End?.ToUtc();
         await db.SaveChangesAsync(cancellationToken);
         var result = await Detail(item, cancellationToken);
-        var now = await db.Database.SqlQuery<DateTimeOffset>($"SELECT TODATETIMEOFFSET(SYSUTCDATETIME(), '+00:00') AS Value").SingleAsync(cancellationToken);
         db.OperationReceipts.Add(new() { ActorId = command.ActorId, EventId = item.Id, OperationId = command.OperationId,
             Target = target, PayloadHash = hash, Result = JsonSerializer.Serialize(result), CommittedAtUtc = now });
         db.AuditRecords.Add(new() { ActorId = command.ActorId, EventId = item.Id, Action = "event-saved", Outcome = "succeeded", AtUtc = now });

@@ -31,6 +31,7 @@ public sealed class SqlScheduleStore(EventDbContext db) : IScheduleStore
         var now = await Now(cancellationToken);
         var current = ScheduleMapping.Detail(item, Convert.ToBase64String(db.Entry(item).Property<byte[]>("Version").CurrentValue!), now);
         if (current.Version != command.Version) throw new StaleVersionException(current);
+        ScheduleClosurePolicy.CheckAndRecord(item, command.Input, now);
         var submitted = command.Input.Stages!.Select(x => x.Id).ToArray();
         if (await db.Stages.AnyAsync(x => submitted.Contains(x.Id) && x.EventId != item.Id, cancellationToken))
             throw new InputValidationException("stages", "Use fresh identities for new stages in this event.");
