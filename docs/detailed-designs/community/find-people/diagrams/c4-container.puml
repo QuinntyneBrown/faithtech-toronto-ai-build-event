@@ -1,0 +1,18 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Containers - Find people and explain matches
+Person(actor, "Participant", "find people")
+System_Boundary(system, "FaithTech event platform") {
+Container(ui, "Client application", "Angular", "FindPeoplePage")
+Container(api, "Event API", ".NET 10 / MediatR 12.5.0", "Search active roster names and rank actual shared tag intersections")
+ContainerDb(db, "Event database", "SQL Server", "Active registrations, shared profile projections and block exclusions")
+ContainerDb(redis, "Fanout backplane", "Redis; multiple API instances only", "Transient notification transport")
+}
+Rel(actor, ui, "Find people")
+Rel(ui, api, "Typed requests and state reads", "JSON / HTTPS")
+Rel(api, db, "Commit or query scoped state", "EF Core")
+Rel(api, redis, "EventHub fanout between instances")
+Rel(api, ui, "Committed outbox invalidations through EventHub", "SignalR / HTTPS")
+
+@enduml

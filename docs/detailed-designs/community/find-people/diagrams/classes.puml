@@ -1,0 +1,51 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam classBackgroundColor #F9FAFB
+skinparam classBorderColor #344054
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 180
+title Structure - Find people and explain matches
+interface IDirectoryService {
+  +state: Signal<DirectoryEntry[]>
+  +refresh(): Promise<void>
+}
+class DirectoryService {
+  -http: HttpClient
+  +refresh(): Promise<void>
+}
+class FindPeopleHandler {
+  -store: IEventStore
+  +Handle(request: SearchPeopleQuery): Task<DirectoryEntry[]>
+}
+interface IEventStore {
+  +LoadAuthorized(scope: ActorEventScope): Task<DirectoryEntry>
+  +Commit(intent: OperationContext): Task<CommitResult>
+}
+class DirectoryEntry {
+  +ParticipantId: Guid
+  +DisplayName: string
+  +SharingEnabled: bool
+  +Biography: string?
+  +SharedTags: string[]
+  +Matches(query: string): bool
+}
+DirectoryService ..|> IDirectoryService
+FindPeopleHandler --> IEventStore : queries / commits through
+FindPeopleHandler --> DirectoryEntry : enforces policy on
+class Recommendation {
+  +ParticipantId: Guid
+  +DisplayName: string
+  +Score: int
+  +IntersectingTags: string[]
+}
+class RecommendationPolicy {
+  +Rank(owner: DirectoryEntry, candidates: DirectoryEntry[]): Recommendation[]
+}
+RecommendationPolicy ..> DirectoryEntry : compares normalized tag unions
+RecommendationPolicy --> Recommendation : returns at most five
+
+@enduml

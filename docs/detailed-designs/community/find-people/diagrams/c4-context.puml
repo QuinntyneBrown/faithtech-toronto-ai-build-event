@@ -1,0 +1,9 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Context - Find people and explain matches
+Person(actor, "Participant", "find people")
+System(system, "FaithTech event platform", "Search active roster names and rank actual shared tag intersections")
+Rel(actor, system, "Find people", "HTTPS")
+
+@enduml
