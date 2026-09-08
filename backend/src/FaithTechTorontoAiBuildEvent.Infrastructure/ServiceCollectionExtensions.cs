@@ -28,6 +28,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAdministratorStore, SqlAdministratorStore>();
         services.AddScoped<IParticipantStore, SqlParticipantStore>();
         services.AddScoped<IEventStore, SqlEventStore>();
+        services.AddScoped<Application.Operations.IReadinessStore, Operations.SqlReadinessStore>();
         services.AddScoped<IScheduleStore, SqlScheduleStore>();
         services.AddScoped<IRosterStore, SqlRosterStore>();
         services.AddSingleton<IEntryCodeGenerator, EntryCodeGenerator>();
