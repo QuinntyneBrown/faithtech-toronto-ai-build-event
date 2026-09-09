@@ -35,6 +35,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IEntryStore, SqlEntryStore>();
         services.AddScoped<IParticipantSessionStore, SqlParticipantSessionStore>();
         services.AddScoped<IProfileStore, SqlProfileStore>();
+        services.AddScoped<IAdministratorParticipantStore, SqlAdministratorParticipantStore>();
         services.AddSingleton<IEntryReceiptSecretService, EntryReceiptSecretService>();
         services.AddSingleton<PasscodeVerifier>();
         services.AddScoped<IAdministratorCredentialProvisioner, SqlAdministratorCredentialProvisioner>();
