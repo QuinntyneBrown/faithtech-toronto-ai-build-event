@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using System.Text.Json;
 using FaithTechTorontoAiBuildEvent.Application.Operations;
 using FaithTechTorontoAiBuildEvent.Domain.Operations;
@@ -47,6 +46,6 @@ public sealed class SqlOperatorUnitOfWork(EventDbContext db, OperatorPrincipal p
     }
     public Task<DateTimeOffset> Now(CancellationToken token) => db.Database
         .SqlQuery<DateTimeOffset>($"SELECT TODATETIMEOFFSET(SYSUTCDATETIME(), '+00:00') AS Value").SingleAsync(token);
-    public static string Hash(EventImportReview review) => Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(
-        new { review.EventId, review.Create, review.Version, review.After })));
+    public static string Hash(EventImportReview review) => CanonicalJson.Hash(
+        new { review.EventId, review.Create, review.Version, review.Seed, review.After });
 }
