@@ -65,4 +65,27 @@ public sealed class ParticipantEntryController(ISender sender) : ControllerBase
         Response.Cookies.Delete("faithtech-participant", new CookieOptions { Path = "/api/participant" });
         return NoContent();
     }
+
+    [HttpGet("profile")]
+    public async Task<ActionResult<ParticipantProfileResponse>> GetProfile(CancellationToken cancellationToken)
+    {
+        var profile = await sender.Send(new GetParticipantProfileQuery(Request.Cookies["faithtech-participant"]), cancellationToken);
+        return profile is null
+            ? Unauthorized()
+            : Ok(new ParticipantProfileResponse(profile.Name, profile.WhatYouMake, profile.OnYourHeart));
+    }
+
+    [HttpPut("profile")]
+    public async Task<ActionResult<ParticipantProfileResponse>> SaveProfile(SaveParticipantProfileRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var profile = await sender.Send(new SaveParticipantProfileCommand(request.OperationId, request.ExpectedVersion, request.Input, Request.Cookies["faithtech-participant"]), cancellationToken);
+            return Ok(new ParticipantProfileResponse(profile.Name, profile.WhatYouMake, profile.OnYourHeart));
+        }
+        catch (EntryValidationException exception)
+        {
+            return BadRequest(new ProblemDetails { Detail = exception.Message, Status = StatusCodes.Status400BadRequest });
+        }
+    }
 }
