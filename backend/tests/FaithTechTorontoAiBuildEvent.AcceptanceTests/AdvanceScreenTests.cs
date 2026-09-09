@@ -5,6 +5,8 @@
 using System.Net;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
 using Xunit;
 
 namespace FaithTechTorontoAiBuildEvent.AcceptanceTests;
@@ -30,10 +32,13 @@ public sealed class AdvanceScreenTests : IClassFixture<CountdownApiFactory>
             operationId = Guid.NewGuid(), expectedVersion = "0", fromScreen = "countdown", toScreen = "projects"
         });
         var state = await client.GetFromJsonAsync<PublicState>("/api/event/state");
+        using var scope = factory.Services.CreateScope();
+        var changes = scope.ServiceProvider.GetRequiredService<CompanionDbContext>().EventChanges.Select(change => change.Version).ToList();
 
         Assert.Equal(HttpStatusCode.OK, transition.StatusCode);
         Assert.NotNull(state);
         Assert.Equal("projects", state.CurrentScreen);
+        Assert.Contains(1, changes);
     }
 
     private sealed record PublicState(string CurrentScreen);
