@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Present synchronized name cycling and celebration — components
+Container(client, "RafflePageComponent", "Companion Angular client", "Presents this capability")
+Container_Boundary(api, "Companion API") {
+Component(entry, "RaffleController", "ASP.NET Core controller", "Binds inputs and dispatches")
+Component(handler, "GetRaffleSnapshotHandler", "Application handler", "Reveal the saved winner with accessible, resilient effects")
+Component(entity, "RaffleResult", "Domain model", "Owns slice state")
+}
+ContainerDb(db, "Companion database", "SQL Server", "Durable state")
+Rel(client, entry, "Calls through IRaffleService")
+Rel(entry, handler, "Dispatches")
+Rel(handler, entity, "Uses")
+Rel(handler, db, "Commits through application persistence contract")
+@enduml

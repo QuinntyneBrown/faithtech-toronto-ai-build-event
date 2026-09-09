@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Present synchronized name cycling and celebration — context
+Person(actor, "Raffle viewer", "Reveal the saved winner with accessible, resilient effects")
+System(companion, "FaithTech event companion", "Present synchronized name cycling and celebration")
+Rel(actor, companion, "Uses")
+@enduml

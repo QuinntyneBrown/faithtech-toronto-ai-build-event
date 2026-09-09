@@ -1,0 +1,41 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Present the remaining committed timeline
+actor "Raffle viewer" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "RafflePageComponent" as page
+participant "IRaffleService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "RaffleController" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "GetRaffleSnapshotHandler" as handler
+participant "RaffleResult" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+participant "EventChangePublisher" as push
+end box
+push -> client : EventChanged for committed draw
+client -> controller : GET raffle snapshot
+controller -> handler : Dispatch snapshot query
+handler -> db : Read saved draw and current labels
+ db --> handler : Winner, candidates and UTC timeline
+handler --> controller : RaffleSnapshot L2-022
+controller --> client : Versioned result and server time
+client -> page : Supply RaffleResult and clock anchor
+alt Joined before reveal
+ page -> page : Cornerstone cycles/decelerates for remaining interval
+ page -> page : Reveal saved winner once at deadline
+ page -> page : Celebrate only until effectsEnd
+else Joined after reveal
+ page -> page : Show winner immediately; no replay
+end
+page --> actor : Accessible durable winner text
+@enduml

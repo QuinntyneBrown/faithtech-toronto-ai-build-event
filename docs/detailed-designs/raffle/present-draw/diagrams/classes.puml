@@ -1,0 +1,45 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+title Present synchronized name cycling and celebration — structure
+interface IRaffleService {
++readonly raffle: Signal<RaffleSnapshot>
++synchronize(): Promise<void>
+}
+class RafflePageComponent
+RafflePageComponent ..> IRaffleService : consumes contract
+class RaffleController
+class GetRaffleSnapshotHandler {
+  +Handle(request: GetRaffleSnapshotQuery): Task<RaffleSnapshot>
+}
+class GetRaffleSnapshotQuery {
++DateTimeOffset RequestedAtUtc
+}
+class RaffleResult {
++Guid DrawId
++string WinnerLabel
++List<string> CandidateLabels
++DateTimeOffset StartedAtUtc
++DateTimeOffset RevealAtUtc
++DateTimeOffset EffectsEndAtUtc
+}
+RaffleController ..> GetRaffleSnapshotHandler : dispatches
+GetRaffleSnapshotHandler ..> GetRaffleSnapshotQuery : handles
+GetRaffleSnapshotHandler --> RaffleResult : uses
+class RaffleStageComponent {
+ +result: RaffleResult
+ +estimatedServerNow: number
+ +reducedMotion: boolean
+ +StopEffects(): void
+}
+interface IParticleRenderer {
+ +Start(canvas: HTMLCanvasElement): Promise<void>
+ +Dispose(): void
+}
+RafflePageComponent --> RaffleStageComponent : supplies inputs
+RaffleStageComponent ..> RaffleResult
+RaffleStageComponent ..> IParticleRenderer : presentation only
+@enduml
