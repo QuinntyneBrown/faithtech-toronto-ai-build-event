@@ -1,6 +1,9 @@
 using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
+using System.Text.Json;
 
 namespace FaithTechTorontoAiBuildEvent.AcceptanceTests;
 
@@ -12,8 +15,15 @@ public sealed class ProvisioningMigrationTests(EventApiFactory factory) : IClass
         using var scope = factory.Services.CreateScope();
         var database = scope.ServiceProvider.GetRequiredService<EventDbContext>().Database;
         await database.EnsureDeletedAsync();
-        Assert.Equal(0, await ProvisioningProcess.Run(factory, ["migrate"]));
-        Assert.Empty(await database.GetPendingMigrationsAsync());
-        Assert.Equal(0, await ProvisioningProcess.Run(factory, ["migrate"]));
+        await database.GetService<IRelationalDatabaseCreator>().CreateAsync();
+        using var files = new OperatorCliFixture(factory);
+        for (var attempt = 0; attempt < 2; attempt++) {
+            var preview = await ProvisioningProcess.Execute(factory, ["migrate", "--preview", .. files.Options]);
+            Assert.True(preview.ExitCode == 0, preview.Output + preview.Error);
+            var id = JsonDocument.Parse(preview.Output).RootElement.GetProperty("previewId").GetGuid().ToString();
+            var applied = await ProvisioningProcess.Execute(factory, ["operations", "apply", id, "--approve", id, .. files.Options]);
+            Assert.True(applied.ExitCode == 0, applied.Output + applied.Error);
+            Assert.Empty(await database.GetPendingMigrationsAsync());
+        }
     }
 }

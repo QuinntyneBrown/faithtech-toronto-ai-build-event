@@ -9,6 +9,18 @@ namespace FaithTechTorontoAiBuildEvent.AcceptanceTests;
 public sealed class EventImportCommandTests(EventApiFactory factory) : IClassFixture<EventApiFactory>
 {
     [Fact]
+    public async Task Given_a_migration_preview_when_approved_then_schema_history_is_rechecked_and_no_pending_work_is_repeated()
+    {
+        using var files = new OperatorCliFixture(factory);
+        var result = await ProvisioningProcess.Execute(factory, ["migrate", "--preview", .. files.Options]);
+        Assert.True(result.ExitCode == 0, result.Output + result.Error);
+        var id = JsonDocument.Parse(result.Output).RootElement.GetProperty("previewId").GetGuid().ToString();
+        var applied = await ProvisioningProcess.Execute(factory, ["operations", "apply", id, "--approve", id, .. files.Options]);
+        Assert.True(applied.ExitCode == 0, applied.Output + applied.Error);
+        Assert.Equal("unchanged", JsonDocument.Parse(applied.Output).RootElement.GetProperty("outcome").GetString());
+    }
+
+    [Fact]
     public async Task Given_a_seed_when_previewed_then_no_event_is_written()
     {
         using var files = new OperatorCliFixture(factory);

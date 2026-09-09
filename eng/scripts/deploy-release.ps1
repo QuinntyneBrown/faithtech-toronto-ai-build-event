@@ -24,8 +24,7 @@ if (-not $Rollback) {
         $env:ConnectionStrings__EventDatabase = $env:MIGRATION_CONNECTION_STRING
         $env:Security__DigestKey = $env:PRODUCTION_DIGEST_KEY
         $env:DOTNET_ENVIRONMENT = 'Production'
-        & dotnet "$PackageDirectory/provisioning/FaithTechTorontoAiBuildEvent.Provisioning.dll" migrate
-        if ($LASTEXITCODE -ne 0) { throw 'Migration failed; package has not been deployed.' }
+        & "$PSScriptRoot/Invoke-ReviewedMigration.ps1" -ToolPath "$PackageDirectory/provisioning/FaithTechTorontoAiBuildEvent.Provisioning.dll"
     } finally {
         Remove-Item Env:ConnectionStrings__EventDatabase,Env:Security__DigestKey,Env:DOTNET_ENVIRONMENT -ErrorAction SilentlyContinue
         $null = Azure sql server firewall-rule delete -g $env:AZURE_RESOURCE_GROUP -s $env:AZURE_SQL_SERVER -n $rule

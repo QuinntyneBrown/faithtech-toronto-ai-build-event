@@ -14,8 +14,10 @@ try {
     $env:ConnectionStrings__EventDatabase = $connection.ConnectionString
     $env:Security__DigestKey = [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
     $env:DOTNET_ENVIRONMENT = 'Production'
-    & dotnet "$root/provisioning/FaithTechTorontoAiBuildEvent.Provisioning.dll" migrate
-    if ($LASTEXITCODE -ne 0) { throw 'Package database migration failed.' }
+    if ($database -notmatch '^FaithTechPackage_[a-f0-9]{32}$') { throw 'Unsafe test database name.' }
+    & docker exec -e "SQLCMDPASSWORD=$env:MSSQL_SA_PASSWORD" faithtech-ci-sql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -b -Q "CREATE DATABASE [$database]"
+    if ($LASTEXITCODE -ne 0) { throw 'Package test database creation failed.' }
+    & "$PSScriptRoot/Invoke-ReviewedMigration.ps1" -ToolPath "$root/provisioning/FaithTechTorontoAiBuildEvent.Provisioning.dll" -Environment test
     $password | & dotnet "$root/provisioning/FaithTechTorontoAiBuildEvent.Provisioning.dll" create-admin package-smoke
     if ($LASTEXITCODE -ne 0) { throw 'Package account provisioning failed.' }
     $env:ASPNETCORE_ENVIRONMENT = 'Production'

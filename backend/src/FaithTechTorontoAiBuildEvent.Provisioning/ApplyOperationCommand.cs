@@ -1,6 +1,7 @@
 using System.CommandLine;
 using System.Security.Cryptography;
 using FaithTechTorontoAiBuildEvent.Application.Operations;
+using FaithTechTorontoAiBuildEvent.Infrastructure.Operations;
 
 namespace FaithTechTorontoAiBuildEvent.Provisioning;
 
@@ -26,6 +27,12 @@ public sealed class ApplyOperationCommand : Command
                 throw new OperationConflictException();
             session.Files.Journal(saved.OperationId, new { saved.OperationId, saved.PreviewId, session.Principal, atUtc = DateTimeOffset.UtcNow, outcome = "started", saved.Kind });
             session.Started = true;
+            if (saved.Kind == "migrate") {
+                var history = await new SqlOperatorMigrations(session.Database).Apply(saved, migration =>
+                    session.Files.Journal(saved.OperationId, new { saved.OperationId, migration, outcome = "migration-committed", atUtc = DateTimeOffset.UtcNow }), cancellation);
+                session.Committed = true; session.Outcome = saved.PendingMigrations.Length == 0 ? "unchanged" : "succeeded";
+                return new { appliedMigrations = history };
+            }
             var result = await session.Sender.Send(new ApplyEventImportCommand(saved.OperationId, saved.Import ?? throw new ArgumentException("Not an import preview.")), cancellation);
             session.Committed = true;
             return result;
