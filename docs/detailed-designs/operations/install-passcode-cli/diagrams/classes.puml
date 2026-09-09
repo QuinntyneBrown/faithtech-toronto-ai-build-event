@@ -1,0 +1,42 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+title Install and target the passcode-management CLI — structure
+interface IOperatorTargetService {
++resolve(name: string): Task<OperatorTargetProfile>
++verify(profile: OperatorTargetProfile): Task<DatabaseIdentity>
+}
+class OperatorRootCommand
+OperatorRootCommand ..> IOperatorTargetService : consumes contract
+class VerifyConnectionCommand
+class VerifyConnectionHandler {
+  +Handle(request: VerifyConnectionInput): Task<DatabaseIdentity>
+}
+class VerifyConnectionInput {
++string TargetName
++int ConnectionTimeoutSeconds
++int CommandTimeoutSeconds
+}
+class OperatorTargetProfile {
++string Name
++string Server
++string Database
++string ConnectionConfigurationKey
+}
+VerifyConnectionCommand ..> VerifyConnectionHandler : dispatches
+VerifyConnectionHandler ..> VerifyConnectionInput : handles
+VerifyConnectionHandler --> OperatorTargetProfile : uses
+class DatabaseIdentity {
+ +string Server
+ +string Database
+}
+class SetAdminPasscodeCommand {
+ +Execute(input: ReplacePasscodeInput): Task<int>
+}
+OperatorRootCommand --> VerifyConnectionCommand
+OperatorRootCommand --> SetAdminPasscodeCommand
+VerifyConnectionHandler --> DatabaseIdentity
+@enduml

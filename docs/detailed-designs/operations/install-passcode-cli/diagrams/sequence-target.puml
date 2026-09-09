@@ -1,0 +1,48 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Resolve and verify the explicit database target
+actor "Database operator" as actor
+box "Operator — installed .NET tool" #E0F2FE
+participant "OperatorRootCommand" as page
+participant "IOperatorTargetService" as client
+end box
+box "Backend — SQL operation boundary" #D1FADF
+participant "VerifyConnectionCommand" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "VerifyConnectionHandler" as handler
+participant "OperatorTargetProfile" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+participant "EventChangePublisher" as push
+end box
+actor -> page : verify-connection --target selected
+page -> client : Resolve named protected configuration
+alt Missing / invalid / insecure configuration
+ client --> page : Configuration error before connect
+ page --> actor : Exit 2; no fallback
+else Valid explicit target
+ client -> controller : VerifyConnectionInput and cancellation
+ controller -> handler : Dispatch verification
+ handler -> db : Encrypted connection; SELECT server/database only
+ db --> handler : Actual identity
+ handler -> entity : Compare expected target L2-050
+ alt Matching identity and grants
+  handler --> controller : DatabaseIdentity
+  controller --> client : Verified target
+  client --> page : Nonsecret identity
+  page --> actor : Confirmed connection; no data changed
+ else Mismatch / permission / timeout
+  handler --> controller : Redacted known failure
+  controller --> client : Failure
+  client --> page : No alternate target
+  page --> actor : Classified nonsuccess
+ end
+end
+@enduml

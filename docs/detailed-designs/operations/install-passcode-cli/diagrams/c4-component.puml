@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Install and target the passcode-management CLI — components
+Container(client, "OperatorRootCommand", "Passcode CLI", "Presents this capability")
+Container_Boundary(api, "Passcode CLI") {
+Component(entry, "VerifyConnectionCommand", "System.CommandLine", "Binds inputs and dispatches")
+Component(handler, "VerifyConnectionHandler", "Application handler", "Run the latest local tool against an explicitly selected database")
+Component(entity, "OperatorTargetProfile", "Domain model", "Owns slice state")
+}
+ContainerDb(db, "Companion database", "SQL Server", "Durable state")
+Rel(client, entry, "Calls through IOperatorTargetService")
+Rel(entry, handler, "Dispatches")
+Rel(handler, entity, "Uses")
+Rel(handler, db, "Commits through application persistence contract")
+@enduml

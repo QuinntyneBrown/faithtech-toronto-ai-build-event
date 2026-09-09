@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Install and target the passcode-management CLI — context
+Person(actor, "Database operator", "Run the latest local tool against an explicitly selected database")
+System(companion, "FaithTech event companion", "Install and target the passcode-management CLI")
+Rel(actor, companion, "Uses")
+@enduml
