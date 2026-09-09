@@ -99,7 +99,7 @@
     let your team shape what comes next.
   </p>
 </aside>
-<mock-review-dialog
+<cs-review-dialog
   title="Project details"
   [open]="draft() !== null"
   (closed)="draft.set(null)"
@@ -169,8 +169,8 @@
       </div>
     </form>
   }
-</mock-review-dialog>
-<mock-review-dialog
+</cs-review-dialog>
+<cs-review-dialog
   title="Remove this project?"
   [open]="deleting() !== null"
   (closed)="deleting.set(null)"
@@ -196,4 +196,4 @@
       Remove project</button
     ><button csButton="ghost" (click)="deleting.set(null)">Keep project</button>
   </div>
-</mock-review-dialog>
+</cs-review-dialog>

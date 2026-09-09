@@ -1,4 +1,3 @@
-import { NativeControlStateDirective } from "@mock/components";
 import {
   Component,
   ChangeDetectionStrategy,
@@ -17,14 +16,13 @@ import {
   CsButtonDirective,
   CsInputDirective,
   FieldComponent,
+  ReviewDialogComponent,
 } from "@quinntyne/cornerstone";
-import { ReviewDialogComponent } from "@mock/components";
 import { EVENT_SERVICE } from "./data/event-service.token";
 import { Screen, SCREENS, SCREEN_LABELS } from "./models/screen";
 @Component({
   selector: "mock-app",
   imports: [
-    NativeControlStateDirective,
     RouterOutlet,
     FormsModule,
     AlertComponent,

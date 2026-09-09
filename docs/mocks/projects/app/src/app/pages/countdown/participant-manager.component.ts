@@ -1,4 +1,3 @@
-import { NativeControlStateDirective } from "@mock/components";
 import {
   Component,
   ChangeDetectionStrategy,
@@ -17,14 +16,13 @@ import {
   FieldComponent,
   CsInputDirective,
   CsTextareaDirective,
+  ReviewDialogComponent,
 } from "@quinntyne/cornerstone";
-import { ReviewDialogComponent } from "@mock/components";
 import { EVENT_SERVICE } from "../../data/event-service.token";
 import { Participant } from "../../models/participant";
 @Component({
   selector: "mock-participant-manager",
   imports: [
-    NativeControlStateDirective,
     FormsModule,
     AlertComponent,
     BadgeComponent,

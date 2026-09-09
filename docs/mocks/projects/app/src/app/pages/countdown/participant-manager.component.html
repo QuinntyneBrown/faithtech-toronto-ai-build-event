@@ -91,7 +91,7 @@
     />
   }
 </cs-card>
-<mock-review-dialog
+<cs-review-dialog
   [title]="draft()?.label ? 'Participant details' : 'Add a participant'"
   [open]="draft() !== null"
   (closed)="draft.set(null)"
@@ -156,8 +156,8 @@
       </div>
     </form>
   }
-</mock-review-dialog>
-<mock-review-dialog
+</cs-review-dialog>
+<cs-review-dialog
   title="Remove this participant?"
   [open]="deleting() !== null"
   (closed)="deleting.set(null)"
@@ -181,4 +181,4 @@
       Keep participant
     </button>
   </div>
-</mock-review-dialog>
+</cs-review-dialog>
