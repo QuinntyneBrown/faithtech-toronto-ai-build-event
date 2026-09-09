@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, input, signal } from "@angular/core";
+import { ChangeDetectionStrategy, Component, effect, inject, input, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { CsButtonDirective, CsInputDirective, CsTextareaDirective, FieldComponent } from "@quinntyne/cornerstone";
 import { PROFILE_SERVICE } from "@faithtech/api";
@@ -16,6 +16,18 @@ export class ProfileFormComponent {
   readonly name = signal("");
   readonly whatYouMake = signal("");
   readonly onYourHeart = signal("");
+
+  constructor() {
+    this.profileService.load();
+    effect(() => {
+      const profile = this.profileService.profile();
+      if (profile !== null) {
+        this.name.set(profile.name ?? "");
+        this.whatYouMake.set(profile.whatYouMake ?? "");
+        this.onYourHeart.set(profile.onYourHeart ?? "");
+      }
+    });
+  }
 
   save(): void {
     this.profileService.save({
