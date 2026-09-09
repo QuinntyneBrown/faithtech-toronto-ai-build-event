@@ -35,6 +35,16 @@ export class AdministratorLoginPanel {
     await this.passcodeField.pressSequentially(passcode);
   }
 
+  /** Opens and submits the login without a pointer. */
+  async signInByKeyboard(passcode: string): Promise<void> {
+    await this.openControl.focus();
+    await this.openControl.press("Enter");
+    await expect(this.passcodeField).toBeVisible();
+    await this.passcodeField.focus();
+    await this.passcodeField.pressSequentially(passcode);
+    await this.passcodeField.press("Enter");
+  }
+
   async signIn(passcode: string): Promise<void> {
     await this.submitPasscode(passcode);
   }

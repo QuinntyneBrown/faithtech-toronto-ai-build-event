@@ -128,6 +128,28 @@ export class CountdownPage {
     await this.submit.click();
   }
 
+  /** Types and submits without a pointer, for the keyboard-only criteria. */
+  async enterByKeyboard(email: string): Promise<void> {
+    await this.emailField.focus();
+    await this.emailField.pressSequentially(email);
+    await this.emailField.press("Enter");
+  }
+
+  /** Tabs forward from the email field until the submit control has focus. */
+  async expectSubmitReachableByTab(): Promise<void> {
+    await this.emailField.focus();
+    for (let step = 0; step < 6; step += 1) {
+      if (await this.submit.evaluate(node => node === document.activeElement)) return;
+      await this.page.keyboard.press("Tab");
+    }
+    throw new Error("The entry submit control was not reachable by tabbing.");
+  }
+
+  /** The field's own limit, so an oversized address cannot be typed at all. */
+  async expectEmailLengthLimit(limit: number): Promise<void> {
+    await expect(this.emailField).toHaveAttribute("maxlength", String(limit));
+  }
+
   async expectEntryEnabled(): Promise<void> {
     await expect(this.submit).toBeEnabled();
   }

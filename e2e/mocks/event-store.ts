@@ -49,7 +49,14 @@ export interface MockResponse {
 export interface ForcedOutcome {
   status?: number;
   json?: unknown;
+  /** Fails the request at the transport, which reaches the client as status 0. */
   abort?: boolean;
+  /**
+   * With `abort`, still applies the write before dropping the response. That is
+   * the honest shape of a lost response: the server committed, the client never
+   * found out.
+   */
+  commit?: boolean;
   headers?: Record<string, string>;
 }
 

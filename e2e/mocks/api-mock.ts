@@ -39,7 +39,10 @@ export async function installApiMock(
 
     const forced = store.consumeForced(method + " " + path);
     if (forced?.abort) {
-      // Reaches the client as status 0, the "lost response" path.
+      // Reaches the client as status 0, the "lost response" path. With `commit`
+      // the write is applied first, so the server has committed and the client
+      // never found out.
+      if (forced.commit) store.handle(method, path, body, session);
       await route.abort("failed");
       return;
     }

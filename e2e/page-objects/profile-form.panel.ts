@@ -53,6 +53,20 @@ export class ProfileFormPanel {
     await this.submit.click();
   }
 
+  /** Types without a pointer, for the keyboard-only criteria. */
+  async fillByKeyboard(details: ProfileDetails): Promise<void> {
+    if (details.name !== undefined) {
+      const field = this.root.getByLabel("Name", { exact: true });
+      await field.focus();
+      await field.pressSequentially(details.name);
+    }
+  }
+
+  async saveByKeyboard(): Promise<void> {
+    await this.submit.focus();
+    await this.submit.press("Enter");
+  }
+
   async expectValues(details: Required<ProfileDetails>): Promise<void> {
     await expect(this.root.getByLabel("Name", { exact: true })).toHaveValue(details.name);
     await expect(this.root.getByLabel("What you make", { exact: true })).toHaveValue(details.whatYouMake);

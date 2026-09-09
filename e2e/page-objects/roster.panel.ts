@@ -55,6 +55,13 @@ export class RosterPanel {
     await this.addSubmit.click();
   }
 
+  /** Types and submits without a pointer, for the keyboard-only criteria. */
+  async addByKeyboard(email: string): Promise<void> {
+    await this.emailField.focus();
+    await this.emailField.pressSequentially(email);
+    await this.emailField.press("Enter");
+  }
+
   async expectAddEnabled(): Promise<void> {
     await expect(this.addSubmit).toBeEnabled();
   }
