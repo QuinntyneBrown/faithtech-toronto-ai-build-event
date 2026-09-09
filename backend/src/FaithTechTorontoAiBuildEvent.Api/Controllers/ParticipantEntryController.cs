@@ -62,7 +62,13 @@ public sealed class ParticipantEntryController(ISender sender) : ControllerBase
     public async Task<IActionResult> ClearSession(CancellationToken cancellationToken)
     {
         await sender.Send(new ClearParticipantSessionCommand(Request.Cookies["faithtech-participant"]), cancellationToken);
-        Response.Cookies.Delete("faithtech-participant", new CookieOptions { Path = "/api/participant" });
+        Response.Cookies.Delete("faithtech-participant", new CookieOptions
+        {
+            Path = "/api/participant",
+            Secure = true,
+            HttpOnly = true,
+            SameSite = SameSiteMode.Strict
+        });
         return NoContent();
     }
 
