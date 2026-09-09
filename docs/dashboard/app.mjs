@@ -1,4 +1,4 @@
-import { initialProgress, updateProgress, summarize, parseProgress, statuses } from './progress.mjs';
+import { initialProgress, updateProgress, summarize, parseProgress, statuses, estimateDevelopment } from './progress.mjs';
 import { renderChart } from './chart.mjs';
 
 const $ = id => document.getElementById(id);
@@ -11,13 +11,8 @@ const badge = (status, text = statuses[status] ?? status) => `<span class="badge
 
 function render() {
   const summary = summarize(audit.items, state);
-  const metrics = [
-    ['REMAINING TO ACCEPT', summary.remaining, `/ ${summary.total}`, 'Full requirement scope · equal weight', 'cyan-border', 'remaining'],
-    ['NEEDS VERIFICATION', summary.review, '', 'Implementation present; acceptance pending', '', 'review'],
-    ['IN PROGRESS', summary.progress, '', `${summary.todo} more requirements not started`, 'amber-border', 'progress'],
-    ['ACCEPTED', `${summary.percent}%`, `${summary.done} / ${summary.total}`, 'Explicit reviews backed by evidence', 'green-border', 'accepted'],
-  ];
-  $('metrics').innerHTML = metrics.map(([label, value, suffix, description, color, id]) => `<article class="metric ${color}"><div class="metric-label">${label}</div><div class="metric-value"><span data-testid="${id}">${value}</span><small>${suffix}</small></div><p class="metric-description">${description}</p><div class="mini-bar"><span style="width:${id === 'remaining' ? 100 - summary.percent : id === 'accepted' ? summary.percent : Number(value) / summary.total * 100}%"></span></div></article>`).join('');
+  const development = estimateDevelopment(audit.items, state);
+  $('metrics').innerHTML = `<section class="development-hero" aria-label="Estimated development completion"><div class="development-value" data-testid="development">${development}%</div><div class="development-description"><div class="eyebrow">ESTIMATED DEV COMPLETION</div><h2>From the audited work remaining.</h2><p>${summary.review} awaiting verification · ${summary.progress} in progress · ${summary.todo} not started</p><div class="mini-bar"><span style="width:${development}%"></span></div><details><summary>How this estimate is calculated</summary><p>Each requirement has equal weight: not started 0%, in progress 50%, awaiting verification 90%, accepted 100%. Rounded to a whole percent; 100% requires every requirement accepted. This is a rough status-based estimate, not measured effort or time remaining.</p></details><p class="acceptance-note">${summary.done} of ${summary.total} accepted · <span data-testid="remaining">${summary.remaining}</span> still require acceptance. Updates when review statuses change.</p></div></section>`;
   $('areas').innerHTML = [...new Set(audit.items.map(item => item.area))].map(name => `<button class="area-button ${area === name ? 'active' : ''}" data-area="${escape(name)}"><span>${escape(name)}</span><span>${audit.items.filter(item => item.area === name && statusOf(item) !== 'done').length}</span></button>`).join('');
   $('overview').classList.toggle('active', area === 'all');
   $('active-area').textContent = area === 'all' ? 'ALL WORKSTREAMS' : area.toUpperCase();

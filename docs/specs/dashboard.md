@@ -48,3 +48,16 @@ Traces to: DB-L1-001.
 
 The baseline is a dated code review, not an automatic acceptance certificate.
 Status changes are explicit operator assessments. Export provides a portable backup.
+
+## DB-L2-004: One prominent development completion estimate
+
+Traces to: DB-L1-001.
+
+1. Given audited statuses, when the dashboard opens, then one dominant number shows
+   estimated development completion, with equal requirement weights: not started
+   0%, in progress 50%, needs verification 90%, accepted 100%. The baseline is 66%.
+2. Given a status changes or saved reviews are restored, when rendered, then the
+   estimate updates from the whole scope regardless of search or workstream filters.
+3. Given no requirements or none started, when estimated, then display 0%; show 100%
+   only when all requirements are accepted. Round other estimates to whole percent,
+   capped at 99%, and explain that this is a rough status estimate, not measured effort.

@@ -3,7 +3,7 @@
 // Description: Completion reflects explicit evidence and preserves a truthful history.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { initialProgress, updateProgress, summarize, parseProgress } from './progress.mjs';
+import { initialProgress, updateProgress, summarize, parseProgress, estimateDevelopment } from './progress.mjs';
 
 const items = [{ id: 'L2-001', status: 'review' }, { id: 'L2-002', status: 'progress' }];
 const baseline = () => initialProgress(items, '2026-09-09T18:00:00Z');
@@ -41,4 +41,19 @@ test('Given fabricated or inconsistent history, reject the import', () => {
   const state = baseline();
   state.history[0].remaining = 0;
   assert.throws(() => parseProgress(JSON.stringify(state), items));
+});
+
+// Traces to: DB-L2-004
+test('Given mixed development statuses, estimate progress separately from acceptance', () => {
+  assert.equal(estimateDevelopment(items, baseline()), 70);
+  const next = updateProgress(items, baseline(), 'L2-002', 'review', 'Implementation ready');
+  assert.equal(estimateDevelopment(items, next), 90);
+  assert.equal(summarize(items, next).done, 0);
+});
+test('Given empty, unstarted or accepted scope, estimate the boundaries safely', () => {
+  assert.equal(estimateDevelopment([], initialProgress([])), 0);
+  assert.equal(estimateDevelopment([{ id: 'a', status: 'todo' }], { entries: {} }), 0);
+  assert.equal(estimateDevelopment([{ id: 'a', status: 'done' }], { entries: {} }), 100);
+  const almostDone = Array.from({ length: 100 }, (_, id) => ({ id: String(id), status: id ? 'done' : 'review' }));
+  assert.equal(estimateDevelopment(almostDone, { entries: {} }), 99);
 });

@@ -13,6 +13,7 @@ export class DashboardPage {
     await this.page.getByRole('button', { name: 'Save review' }).click();
   }
   async expectRemaining(count: number) { await expect(this.page.getByTestId('remaining')).toHaveText(String(count)); }
+  async expectDevelopment(percent: number) { await expect(this.page.getByTestId('development')).toHaveText(`${percent}%`); }
   async expectMessage(text: RegExp) { await expect(this.page.getByRole('alert')).toContainText(text); }
   async closeInspector() { await this.page.getByRole('button', { name: 'Close inspector' }).click(); }
   async expectFocusOn(id: string) { await expect(this.page.getByRole('button', { name: new RegExp(id) })).toBeFocused(); }

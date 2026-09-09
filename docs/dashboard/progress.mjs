@@ -1,5 +1,12 @@
 export const statuses = { todo: 'Not started', progress: 'In progress', review: 'Needs verification', done: 'Accepted' };
 
+export function estimateDevelopment(items, state) {
+  const counts = summarize(items, state);
+  if (!counts.total) return 0;
+  if (counts.done === counts.total) return 100;
+  return Math.min(99, Math.round((counts.progress * 50 + counts.review * 90 + counts.done * 100) / counts.total));
+}
+
 export function summarize(items, state) {
   const counts = { total: items.length, done: 0, remaining: 0, percent: 0, review: 0, progress: 0, todo: 0 };
   for (const item of items) counts[state.entries[item.id]?.status ?? item.status]++;

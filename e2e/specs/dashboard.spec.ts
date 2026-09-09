@@ -4,6 +4,15 @@
 import { test } from '@playwright/test';
 import { DashboardPage } from '../page-objects/dashboard.page';
 
+// Traces to: DB-L2-004
+test('development estimate reflects saved work and stays independent of filters', async ({ page }) => {
+  const dashboard = new DashboardPage(page); await dashboard.open(); await dashboard.expectDevelopment(66);
+  await dashboard.inspect('L2-009'); await dashboard.save('review', 'Team controls implemented; acceptance pending.');
+  await dashboard.expectDevelopment(67); await dashboard.expectRemaining(34);
+  await dashboard.search('nothing-matches'); await dashboard.expectDevelopment(67);
+  await page.reload(); await dashboard.expectDevelopment(67);
+});
+
 test('audit is searchable and filtering never changes the full-scope totals', async ({ page }) => {
   const dashboard = new DashboardPage(page);
   await dashboard.open(); await dashboard.expectBaseline();
