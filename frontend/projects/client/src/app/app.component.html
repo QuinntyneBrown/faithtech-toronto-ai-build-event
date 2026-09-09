@@ -1,4 +1,5 @@
 <main>
+  @if (profile.notice(); as notice) { <p role="status">{{ notice }}</p> }
   @if (event.connectionError(); as connectionError) {
     <cs-card>
       <p role="alert">{{ connectionError }}</p>

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, inject, input, signal } from "@angular/core";
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { CsButtonDirective, CsInputDirective, CsTextareaDirective, FieldComponent } from "@quinntyne/cornerstone";
 import { EVENT_SERVICE, PROFILE_SERVICE } from "@faithtech/api";
@@ -18,6 +18,12 @@ export class ProfileFormComponent {
   readonly whatYouMake = signal("");
   readonly onYourHeart = signal("");
   readonly skipped = signal(false);
+  readonly dirty = computed(() => {
+    const saved = this.profileService.profile();
+    return this.name() !== (saved?.name ?? "")
+      || this.whatYouMake() !== (saved?.whatYouMake ?? "")
+      || this.onYourHeart() !== (saved?.onYourHeart ?? "");
+  });
 
   constructor() {
     this.profileService.load();
@@ -27,6 +33,11 @@ export class ProfileFormComponent {
         this.name.set(profile.name ?? "");
         this.whatYouMake.set(profile.whatYouMake ?? "");
         this.onYourHeart.set(profile.onYourHeart ?? "");
+      }
+    });
+    effect(() => {
+      if (this.event.state()?.currentScreen !== "countdown" && this.dirty()) {
+        this.profileService.discardUnsaved();
       }
     });
   }

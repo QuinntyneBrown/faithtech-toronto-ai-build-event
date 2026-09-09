@@ -3,7 +3,7 @@ import { NavigationEnd, Router, RouterOutlet } from "@angular/router";
 import { toSignal } from "@angular/core/rxjs-interop";
 import { filter, map } from "rxjs";
 import { CardComponent, CsButtonDirective } from "@quinntyne/cornerstone";
-import { ADMINISTRATOR_SESSION_SERVICE, EVENT_SERVICE } from "@faithtech/api";
+import { ADMINISTRATOR_SESSION_SERVICE, EVENT_SERVICE, PROFILE_SERVICE } from "@faithtech/api";
 import { AdministratorLoginComponent } from "@faithtech/domain";
 
 @Component({
@@ -16,6 +16,7 @@ import { AdministratorLoginComponent } from "@faithtech/domain";
 export class AppComponent {
   protected readonly event = inject(EVENT_SERVICE);
   protected readonly administrator = inject(ADMINISTRATOR_SESSION_SERVICE);
+  protected readonly profile = inject(PROFILE_SERVICE);
   private readonly router = inject(Router);
   protected readonly route = toSignal(
     this.router.events.pipe(
