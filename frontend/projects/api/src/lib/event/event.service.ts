@@ -38,7 +38,17 @@ export class EventService implements IEventService {
       this.connectionError.set("Live updates are unavailable. Changes are disabled until you reconnect.");
     });
     void this.startConnection();
-    this.destroyRef.onDestroy(() => { void this.connection.stop(); });
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        if (this.connection.state === HubConnectionState.Disconnected) this.retryLiveUpdates();
+        else this.load();
+      }
+    };
+    window.addEventListener("visibilitychange", onVisibilityChange);
+    this.destroyRef.onDestroy(() => {
+      window.removeEventListener("visibilitychange", onVisibilityChange);
+      void this.connection.stop();
+    });
   }
 
   load(): void {
