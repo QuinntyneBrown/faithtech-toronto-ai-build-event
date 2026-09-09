@@ -26,6 +26,27 @@ public sealed class SqlAdministratorParticipantStore(CompanionDbContext database
         return new AdministratorParticipant(participant.Id, participant.Email, participant.PublicLabel, null, null, null, null, false);
     }
 
+    public async Task DeleteAsync(Guid participantId, long expectedVersion, CancellationToken cancellationToken)
+    {
+        var state = await database.EventStates.SingleAsync(cancellationToken);
+        if (state.Version != expectedVersion)
+        {
+            throw new InvalidOperationException("Participant roster changed; reload and try again.");
+        }
+        var participant = await database.Participants.SingleOrDefaultAsync(candidate => candidate.Id == participantId, cancellationToken) ?? throw new KeyNotFoundException("Participant not found.");
+        var sessions = await database.ParticipantSessions.Where(session => session.ParticipantId == participantId).ToListAsync(cancellationToken);
+        foreach (var session in sessions) { session.Revoked = true; }
+        var receipts = await database.EntryReceipts.Where(receipt => receipt.ParticipantId == participantId).ToListAsync(cancellationToken);
+        foreach (var receipt in receipts) { receipt.Revoked = true; }
+        var draws = await database.RaffleDraws.Where(draw => draw.WinnerParticipantId == participantId).ToListAsync(cancellationToken);
+        foreach (var draw in draws) { draw.WinnerParticipantId = null; draw.WinnerLabel = "Removed participant"; }
+        var candidates = await database.RaffleCandidates.Where(candidate => candidate.ParticipantId == participantId).ToListAsync(cancellationToken);
+        foreach (var candidate in candidates) { candidate.Label = "Removed participant"; }
+        database.Participants.Remove(participant);
+        state.Version++;
+        await database.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<AdministratorParticipant>> ListAsync(CancellationToken cancellationToken)
     {
         var participants = await database.Participants.AsNoTracking().OrderBy(participant => participant.PublicLabel).ToListAsync(cancellationToken);
