@@ -8,7 +8,12 @@
     <h2>{{ state.welcome }}</h2>
     <p>{{ state.purpose }}</p>
     <p>{{ state.venue }}</p>
-    <cs-countdown [target]="Date.parse(state.countdownTargetUtc)" [now]="now()" ariaLabel="Time until welcome" />
+    @if (event.clockSynchronized()) {
+      <cs-countdown [target]="Date.parse(state.countdownTargetUtc)" [now]="now()" ariaLabel="Time until welcome" />
+    } @else {
+      <p>{{ Date.parse(state.countdownTargetUtc) | date:"MMMM d, y, h:mm a 'UTC'":"UTC" }}</p>
+      <p role="status">{{ event.clockError() ?? "Synchronizing current time…" }}</p>
+    }
   </cs-card>
   <event-entry-form [eventVersion]="state.version" />
   <event-administrator-login />

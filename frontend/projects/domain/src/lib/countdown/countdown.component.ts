@@ -1,3 +1,4 @@
+import { DatePipe } from "@angular/common";
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from "@angular/core";
 import { CardComponent, CountdownComponent as CsCountdownComponent } from "@quinntyne/cornerstone";
 import { ADMINISTRATOR_SESSION_SERVICE, EVENT_FLOW_SERVICE, EVENT_SERVICE } from "@faithtech/api";
@@ -8,7 +9,7 @@ import { ParticipantRosterComponent } from "../roster/participant-roster.compone
 
 @Component({
   selector: "event-countdown",
-  imports: [CardComponent, CsCountdownComponent, EventHeaderComponent, EntryFormComponent, AdministratorLoginComponent, ParticipantRosterComponent],
+  imports: [CardComponent, CsCountdownComponent, DatePipe, EventHeaderComponent, EntryFormComponent, AdministratorLoginComponent, ParticipantRosterComponent],
   templateUrl: "./countdown.component.html",
   styleUrl: "./countdown.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush

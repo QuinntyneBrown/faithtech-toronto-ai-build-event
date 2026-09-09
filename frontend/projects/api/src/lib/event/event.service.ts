@@ -1,6 +1,7 @@
 import { HttpClient } from "@angular/common/http";
 import { DestroyRef, Injectable, inject, signal } from "@angular/core";
 import { HubConnection, HubConnectionBuilder, HubConnectionState } from "@microsoft/signalr";
+import { firstValueFrom } from "rxjs";
 import { IEventService } from "./event-service.contract";
 import { PublicEventState } from "./public-event-state";
 import { ServerTimeResponse } from "./server-time-response";
@@ -12,7 +13,11 @@ export class EventService implements IEventService {
   readonly error = signal<string | null>(null);
   readonly connected = signal(false);
   readonly connectionError = signal<string | null>(null);
-  private readonly serverOffsetMilliseconds = signal(0);
+  readonly clockSynchronized = signal(false);
+  readonly clockError = signal<string | null>(null);
+  private serverAnchorMilliseconds: number | null = null;
+  private monotonicAnchorMilliseconds: number | null = null;
+  private clockRefreshPending: Promise<void> | null = null;
   private readonly destroyRef = inject(DestroyRef);
   private readonly connection: HubConnection;
 
@@ -43,8 +48,12 @@ export class EventService implements IEventService {
       }
     };
     window.addEventListener("visibilitychange", onVisibilityChange);
+    const clockTimer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void this.refreshServerTime();
+    }, 30_000);
     this.destroyRef.onDestroy(() => {
       window.removeEventListener("visibilitychange", onVisibilityChange);
+      window.clearInterval(clockTimer);
       void this.connection.stop();
     });
   }
@@ -59,7 +68,7 @@ export class EventService implements IEventService {
           this.state.set(state);
         }
         this.loading.set(false);
-        this.refreshServerTime();
+        void this.refreshServerTime();
       },
       error: () => {
         this.error.set("We could not load the event. Please try again.");
@@ -69,7 +78,8 @@ export class EventService implements IEventService {
   }
 
   serverNow(): number {
-    return Date.now() + this.serverOffsetMilliseconds();
+    if (this.serverAnchorMilliseconds === null || this.monotonicAnchorMilliseconds === null) return Number.NaN;
+    return this.serverAnchorMilliseconds + performance.now() - this.monotonicAnchorMilliseconds;
   }
 
   retryLiveUpdates(): void {
@@ -77,17 +87,40 @@ export class EventService implements IEventService {
     else this.synchronize();
   }
 
-  private refreshServerTime(): void {
-    const requestStartedAt = Date.now();
-    this.http.get<ServerTimeResponse>("/api/event/time").subscribe({
-      next: response => {
-        const requestCompletedAt = Date.now();
+  private refreshServerTime(): Promise<void> {
+    if (this.clockRefreshPending !== null) return this.clockRefreshPending;
+    this.clockRefreshPending = this.sampleServerTime().finally(() => this.clockRefreshPending = null);
+    return this.clockRefreshPending;
+  }
+
+  private async sampleServerTime(): Promise<void> {
+    const samples: { roundTrip: number; serverAtReceipt: number; receivedAt: number }[] = [];
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const startedAt = performance.now();
+      try {
+        const response = await firstValueFrom(this.http.get<ServerTimeResponse>("/api/event/time"));
+        const receivedAt = performance.now();
         const serverTime = Date.parse(response.serverTimeUtc);
         if (!Number.isNaN(serverTime)) {
-          this.serverOffsetMilliseconds.set(serverTime - ((requestStartedAt + requestCompletedAt) / 2));
+          const roundTrip = receivedAt - startedAt;
+          samples.push({ roundTrip, serverAtReceipt: serverTime + roundTrip / 2, receivedAt });
         }
+      } catch {
+        // A later sample may still establish a trustworthy clock.
       }
-    });
+    }
+
+    const best = samples.sort((left, right) => left.roundTrip - right.roundTrip)[0];
+    if (best === undefined || best.roundTrip > 2_000) {
+      this.clockSynchronized.set(false);
+      this.clockError.set("Current countdown time is unavailable. The scheduled welcome time is shown instead.");
+      return;
+    }
+
+    this.serverAnchorMilliseconds = best.serverAtReceipt;
+    this.monotonicAnchorMilliseconds = best.receivedAt;
+    this.clockSynchronized.set(true);
+    this.clockError.set(null);
   }
 
   private async startConnection(): Promise<void> {
@@ -109,7 +142,7 @@ export class EventService implements IEventService {
         if (current === null || BigInt(state.version) >= BigInt(current.version)) {
           this.state.set(state);
         }
-        this.refreshServerTime();
+        void this.refreshServerTime();
         if (this.connection.state === HubConnectionState.Connected) {
           this.connected.set(true);
           this.connectionError.set(null);
