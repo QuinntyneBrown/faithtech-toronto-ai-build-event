@@ -20,3 +20,6 @@ export * from "./lib/roster/roster-service.contract";
 export * from "./lib/roster/administrator-participant-input";
 export * from "./lib/roster/roster-service.token";
 export * from "./lib/roster/roster.service";
+export * from "./lib/teams/team-service.contract";
+export * from "./lib/teams/team-service.token";
+export * from "./lib/teams/team.service";

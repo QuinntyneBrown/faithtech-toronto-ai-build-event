@@ -7,6 +7,14 @@
       <cs-card>
         <h2>{{ team.label }}</h2>
         @if (projectTitle(team.projectId); as projectTitle) { <p>Project: {{ projectTitle }}</p> }
+        @if (administrator.active()) {
+          <cs-field label="Assigned project" [forId]="'project-' + team.id">
+            <select csSelect [id]="'project-' + team.id" [ngModel]="team.projectId ?? ''" (ngModelChange)="assignProject(team, $event)" [disabled]="!event.connected()">
+              <option value="">No project assigned</option>
+              @for (project of state.projects; track project.id) { <option [value]="project.id">{{ project.title }}</option> }
+            </select>
+          </cs-field>
+        }
         <ul>@for (member of team.members; track member) { <li>{{ member }}</li> }</ul>
       </cs-card>
     }
