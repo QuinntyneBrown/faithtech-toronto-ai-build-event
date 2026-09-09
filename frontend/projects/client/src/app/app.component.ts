@@ -1,16 +1,17 @@
 import { ChangeDetectionStrategy, Component, effect, inject } from "@angular/core";
 import { Router, RouterOutlet } from "@angular/router";
+import { CardComponent, CsButtonDirective } from "@quinntyne/cornerstone";
 import { ADMINISTRATOR_SESSION_SERVICE, EVENT_SERVICE } from "@faithtech/api";
 
 @Component({
   selector: "event-companion",
-  imports: [RouterOutlet],
+  imports: [CardComponent, CsButtonDirective, RouterOutlet],
   templateUrl: "./app.component.html",
   styleUrl: "./app.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent {
-  private readonly event = inject(EVENT_SERVICE);
+  protected readonly event = inject(EVENT_SERVICE);
   private readonly administrator = inject(ADMINISTRATOR_SESSION_SERVICE);
   private readonly router = inject(Router);
 

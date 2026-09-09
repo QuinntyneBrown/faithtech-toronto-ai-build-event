@@ -1,3 +1,9 @@
 <main>
+  @if (event.connectionError(); as connectionError) {
+    <cs-card>
+      <p role="alert">{{ connectionError }}</p>
+      <button csButton="secondary" type="button" (click)="event.retryLiveUpdates()">Retry live updates</button>
+    </cs-card>
+  }
   <router-outlet />
 </main>
