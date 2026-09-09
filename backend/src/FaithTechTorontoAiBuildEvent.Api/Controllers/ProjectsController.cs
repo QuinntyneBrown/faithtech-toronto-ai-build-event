@@ -23,6 +23,10 @@ public sealed class ProjectsController(ISender sender) : ControllerBase
         {
             return BadRequest(new ProblemDetails { Detail = exception.Message, Status = StatusCodes.Status400BadRequest });
         }
+        catch (InvalidOperationException exception)
+        {
+            return Conflict(new ProblemDetails { Detail = exception.Message, Status = StatusCodes.Status409Conflict });
+        }
     }
 
     [HttpPut("{projectId:guid}")]
