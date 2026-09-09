@@ -27,7 +27,8 @@ instances. Preserve it across restarts so authentication budgets keep their keys
 Do not commit it. Tests generate isolated ephemeral keys automatically.
 
 ```powershell
-dotnet run --project backend/src/FaithTechTorontoAiBuildEvent.Provisioning -- migrate
+dotnet run --project backend/src/FaithTechTorontoAiBuildEvent.Provisioning -- migrate --target development --preview
+# Review the returned preview, then use operations apply <preview-id> --target development.
 dotnet run --project backend/src/FaithTechTorontoAiBuildEvent.Provisioning -- create-admin operator
 dotnet run --project backend/src/FaithTechTorontoAiBuildEvent.Provisioning -- disable-admin operator
 dotnet run --project backend/src/FaithTechTorontoAiBuildEvent.Api -- --environment Development --urls https://localhost:7443
@@ -41,3 +42,6 @@ ASP.NET Core development certificate.
 
 Only the verified increments listed in `docs/IMPLEMENTATION.md` currently exist.
 The application is under construction and has not passed production acceptance.
+
+For target configuration, reviewed migrations, seed imports, and reconciliation,
+see [the operator import runbook](../docs/operator-event-import.md).

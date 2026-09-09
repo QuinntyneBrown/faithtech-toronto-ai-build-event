@@ -260,7 +260,7 @@ $env:DOTNET_ENVIRONMENT = 'Production'
 $env:ConnectionStrings__EventDatabase = Read-Host 'Provisioning connection string' -MaskInput
 $env:Security__DigestKey = Read-Host 'Saved production digest key' -MaskInput
 try {
-    dotnet "$releaseRoot/provisioning/FaithTechTorontoAiBuildEvent.Provisioning.dll" migrate
+    ./eng/scripts/Invoke-ReviewedMigration.ps1 -ToolPath "$releaseRoot/provisioning/FaithTechTorontoAiBuildEvent.Provisioning.dll"
     if ($LASTEXITCODE -ne 0) { throw 'Migration failed; do not deploy.' }
     dotnet "$releaseRoot/provisioning/FaithTechTorontoAiBuildEvent.Provisioning.dll" create-admin event-operator
     if ($LASTEXITCODE -ne 0) { throw 'Administrator provisioning failed.' }

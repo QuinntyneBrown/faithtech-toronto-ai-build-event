@@ -45,7 +45,7 @@ public static class OperatorCommandRunner
             if (session?.Started == true && !session.Committed && error is SqlException or DbUpdateException or OperationCanceledException or IOException) {
                 var recovered = await OperatorRecovery.Resolve(session, watch.Elapsed.TotalMilliseconds, error is OperationCanceledException);
                 if (recovered is not null) { result = recovered; exit = session.ExitCode; }
-                else { exit = 6; result = result with { Outcome = "unconfirmed", Error = "Outcome unconfirmed; reconcile before retrying." }; }
+                else { exit = 6; result = result with { Outcome = "unconfirmed", Message = "Outcome unconfirmed; reconcile before retrying." }; }
             }
         }
         try {

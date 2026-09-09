@@ -19,5 +19,10 @@ public sealed class OperatorRootCommand
         root.SetAction(_ => 0);
     }
 
-    public Task<int> InvokeAsync(string[] arguments) => root.Parse(arguments).InvokeAsync();
+    public async Task<int> InvokeAsync(string[] arguments)
+    {
+        var parsed = root.Parse(arguments);
+        var result = await parsed.InvokeAsync();
+        return parsed.Errors.Count > 0 ? 2 : result;
+    }
 }

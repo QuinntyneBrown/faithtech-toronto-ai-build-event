@@ -1,5 +1,11 @@
 # Implementation evidence
 
+The operator seed-import increment adds explicit target inspection, protected
+preview/apply, atomic event/schedule imports, database-principal attribution, and
+receipt/history reconciliation. Migration callers now use the reviewed flow.
+See [the operator runbook](operator-event-import.md). This does not implement the
+remaining general event/roster/SQL maintenance CLI commands or participant features.
+
 Requirements in [specs/L2.md](specs/L2.md) remain the acceptance authority. Detailed designs
 and mocks supply implementation and visual inputs. Completion requires all 48
 requirements, including their cross-cutting criteria.
