@@ -1,0 +1,44 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+title Operate, measure, and restore the event companion — structure
+interface IReadinessService {
++check(): Task<ReadinessState>
+}
+class OperatorRunbook
+OperatorRunbook ..> IReadinessService : consumes contract
+class ReadinessController
+class GetReadinessHandler {
+  +Handle(request: GetReadinessQuery): Task<ReadinessState>
+}
+class GetReadinessQuery {
++DateTimeOffset RequestedAtUtc
+}
+class ReadinessState {
++bool Ready
++bool DatabaseAvailable
++bool SchemaCompatible
++string CorrelationId
+}
+ReadinessController ..> GetReadinessHandler : dispatches
+GetReadinessHandler ..> GetReadinessQuery : handles
+GetReadinessHandler --> ReadinessState : uses
+class AuditRecord {
+ +Guid Id
+ +string Action
+ +Guid? SubjectId
+ +Guid? SessionReference
+ +DateTimeOffset OccurredAtUtc
+ +string Outcome
+}
+class RecoveryVerification {
+ +string IsolatedDatabase
+ +DateTimeOffset BackupAtUtc
+ +bool SessionsRevoked
+ +bool StateCoherent
+}
+GetReadinessHandler ..> AuditRecord : redacted diagnostic reference
+@enduml

@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Operate, measure, and restore the event companion — components
+Container(client, "OperatorRunbook", "Companion Angular client", "Presents this capability")
+Container_Boundary(api, "Companion API") {
+Component(entry, "ReadinessController", "ASP.NET Core controller", "Binds inputs and dispatches")
+Component(handler, "GetReadinessHandler", "Application handler", "Initialize and recover coherent event state with redacted evidence")
+Component(entity, "ReadinessState", "Domain model", "Owns slice state")
+}
+ContainerDb(db, "Companion database", "SQL Server", "Durable state")
+Rel(client, entry, "Calls through IReadinessService")
+Rel(entry, handler, "Dispatches")
+Rel(handler, entity, "Uses")
+Rel(handler, db, "Commits through application persistence contract")
+@enduml

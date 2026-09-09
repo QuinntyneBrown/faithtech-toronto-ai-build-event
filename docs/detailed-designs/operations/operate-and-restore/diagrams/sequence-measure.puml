@@ -1,0 +1,39 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Measure real API and connected render latency
+actor "Deployment operator" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "OperatorRunbook" as page
+participant "IReadinessService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "ReadinessController" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "GetReadinessHandler" as handler
+participant "ReadinessState" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+participant "EventChangePublisher" as push
+end box
+actor -> page : Start isolated baseline workload
+page -> client : 2m warmup then 10m, 200 viewers / 2 admins
+loop Each measured operation
+ client -> controller : Real HTTP request and SignalR connection
+ controller -> handler : Dispatch read / mutation
+ handler -> db : Read or commit durable state
+ db --> handler : Version and commit time
+ handler --> controller : Result
+ controller --> client : API timing observation
+ push -> client : SignalR invalidation
+ client -> page : Apply authoritative snapshot; record render time
+end
+page -> page : Separate intentional rejects, missing observations and drops
+page --> actor : API p95, error rate, every observed render, environment L2-043
+@enduml

@@ -1,0 +1,42 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Check readiness and correlate a failure
+actor "Deployment operator" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "OperatorRunbook" as page
+participant "IReadinessService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "ReadinessController" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "GetReadinessHandler" as handler
+participant "ReadinessState" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+participant "EventChangePublisher" as push
+end box
+actor -> page : Inspect readiness / reported error reference
+page -> client : Check readiness
+client -> controller : GET health ready
+controller -> handler : Dispatch GetReadinessQuery
+handler -> db : Open connection and check companion schema/state
+alt Available and compatible
+ db --> handler : Ready
+ handler --> controller : Safe ReadinessState
+ controller --> client : 200
+else Database or schema failure
+ db --> handler : Failure
+ handler -> entity : Redacted diagnostic with correlation ID L2-045
+ handler --> controller : Not ready
+ controller --> client : 503; no secrets
+end
+client --> page : Readiness result
+page --> actor : Correlate logs; do not infer uncertain commit
+@enduml
