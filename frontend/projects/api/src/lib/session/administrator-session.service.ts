@@ -1,5 +1,6 @@
 import { HttpClient, HttpErrorResponse } from "@angular/common/http";
-import { Injectable, signal } from "@angular/core";
+import { DestroyRef, Injectable, inject, signal } from "@angular/core";
+import { HubConnection, HubConnectionBuilder, HubConnectionState } from "@microsoft/signalr";
 import { IAdministratorSessionService } from "./administrator-session-service.contract";
 
 @Injectable()
@@ -9,13 +10,32 @@ export class AdministratorSessionService implements IAdministratorSessionService
   readonly error = signal<string | null>(null);
   private lastInteractionReportAt = Number.NEGATIVE_INFINITY;
   private interactionReportPending = false;
+  private connectionStarting = false;
+  private stoppingConnection = false;
+  private readonly connection: HubConnection;
+  private readonly destroyRef = inject(DestroyRef);
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(private readonly http: HttpClient) {
+    this.connection = new HubConnectionBuilder()
+      .withUrl("/api/admin/updates")
+      .withAutomaticReconnect([0, 2_000, 5_000, 10_000])
+      .build();
+    this.connection.on("sessionInvalidated", () => this.invalidate());
+    this.connection.onreconnecting(() => this.active.set(false));
+    this.connection.onreconnected(() => this.load());
+    this.connection.onclose(() => {
+      if (!this.stoppingConnection) this.invalidate("Administrator updates disconnected. Sign in again to continue.");
+    });
+    this.destroyRef.onDestroy(() => void this.connection.stop());
+  }
 
   load(): void {
     this.http.get<{ authenticated: boolean }>("/api/admin/session").subscribe({
-      next: state => this.active.set(state.authenticated),
-      error: () => this.active.set(false)
+      next: state => {
+        this.active.set(state.authenticated);
+        if (state.authenticated) void this.connect();
+      },
+      error: () => this.invalidate()
     });
   }
 
@@ -29,8 +49,7 @@ export class AdministratorSessionService implements IAdministratorSessionService
       next: () => this.interactionReportPending = false,
       error: () => {
         this.interactionReportPending = false;
-        this.active.set(false);
-        this.error.set("Your administrator session has ended.");
+        this.invalidate("Your administrator session has ended.");
       }
     });
   }
@@ -43,6 +62,7 @@ export class AdministratorSessionService implements IAdministratorSessionService
         this.active.set(state.authenticated);
         this.lastInteractionReportAt = performance.now();
         this.loading.set(false);
+        if (state.authenticated) void this.connect();
       },
       error: (response: HttpErrorResponse) => {
         this.active.set(false);
@@ -57,8 +77,29 @@ export class AdministratorSessionService implements IAdministratorSessionService
 
   signOut(): void {
     this.http.delete<void>("/api/admin/session").subscribe({
-      next: () => { this.active.set(false); this.error.set(null); },
+      next: () => { this.invalidate(); this.error.set(null); },
       error: () => this.error.set("We could not sign out. Try again.")
     });
+  }
+
+  private async connect(): Promise<void> {
+    if (this.connectionStarting || this.connection.state !== HubConnectionState.Disconnected) return;
+    this.connectionStarting = true;
+    try {
+      await this.connection.start();
+    } catch {
+      this.invalidate("Administrator updates are unavailable. Sign in again to continue.");
+    } finally {
+      this.connectionStarting = false;
+    }
+  }
+
+  private invalidate(message: string | null = null): void {
+    this.active.set(false);
+    this.error.set(message);
+    if (this.connection.state !== HubConnectionState.Disconnected) {
+      this.stoppingConnection = true;
+      void this.connection.stop().finally(() => this.stoppingConnection = false);
+    }
   }
 }
