@@ -1,5 +1,6 @@
 using FaithTechTorontoAiBuildEvent.Application.EventState;
 using FaithTechTorontoAiBuildEvent.Api.Hubs;
+using FaithTechTorontoAiBuildEvent.Api.Security;
 using FaithTechTorontoAiBuildEvent.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +11,7 @@ builder.Services.AddMediatR(configuration => configuration.RegisterServicesFromA
 builder.Services.AddCompanionInfrastructure(builder.Configuration);
 
 var application = builder.Build();
+application.UseMiddleware<SameOriginMutationMiddleware>();
 application.MapControllers();
 application.MapHub<EventUpdatesHub>("/hubs/event-updates");
 application.Run();
