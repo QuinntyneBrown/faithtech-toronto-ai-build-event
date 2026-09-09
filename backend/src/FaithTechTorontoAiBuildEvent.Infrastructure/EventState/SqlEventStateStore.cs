@@ -1,6 +1,7 @@
 using FaithTechTorontoAiBuildEvent.Application.EventState;
 using FaithTechTorontoAiBuildEvent.Application.Raffle;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
+using FaithTechTorontoAiBuildEvent.Domain.Participants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -25,7 +26,7 @@ public sealed class SqlEventStateStore(CompanionDbContext database, IOptions<Eve
             team.Id,
             team.Label,
             team.ProjectId,
-            participants.Where(participant => participant.TeamId == team.Id).OrderBy(participant => participant.PublicLabel).Select(participant => participant.Name ?? participant.PublicLabel).ToList()))
+            participants.Where(participant => participant.TeamId == team.Id).OrderBy(participant => participant.PublicLabel).Select(participant => ParticipantPublicDisplay.Format(participant.Name, participant.PublicLabel)).ToList()))
             .ToList();
         var eventOptions = options.Value;
         var publicDraws = draws.Select(draw => new RaffleResult(draw.Id, draw.WinnerLabel, candidateLabels.GetValueOrDefault(draw.Id, []), draw.StartedAtUtc, draw.RevealAtUtc, draw.EffectsEndAtUtc)).ToList();

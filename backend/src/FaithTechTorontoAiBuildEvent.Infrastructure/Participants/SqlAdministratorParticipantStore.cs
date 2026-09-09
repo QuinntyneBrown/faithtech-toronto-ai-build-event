@@ -127,6 +127,11 @@ public sealed class SqlAdministratorParticipantStore(CompanionDbContext database
         participant.Name = BlankToNull(input.Name);
         participant.WhatYouMake = BlankToNull(input.WhatYouMake);
         participant.OnYourHeart = BlankToNull(input.OnYourHeart);
+        var publicDisplay = ParticipantPublicDisplay.Format(participant.Name, participant.PublicLabel);
+        var retainedCandidates = await database.RaffleCandidates.Where(candidate => candidate.ParticipantId == participantId).ToListAsync(cancellationToken);
+        foreach (var candidate in retainedCandidates) { candidate.Label = publicDisplay; }
+        var retainedWins = await database.RaffleDraws.Where(draw => draw.WinnerParticipantId == participantId).ToListAsync(cancellationToken);
+        foreach (var draw in retainedWins) { draw.WinnerLabel = publicDisplay; }
         state.Version++;
         var teamLabel = participant.TeamId is { } teamId ? await database.Teams.Where(team => team.Id == teamId).Select(team => team.Label).SingleOrDefaultAsync(cancellationToken) : null;
         var hasWon = await database.RaffleDraws.AnyAsync(draw => draw.WinnerParticipantId == participantId, cancellationToken);

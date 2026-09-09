@@ -1,5 +1,6 @@
 using FaithTechTorontoAiBuildEvent.Application.Participants;
 using FaithTechTorontoAiBuildEvent.Domain.EventFlow;
+using FaithTechTorontoAiBuildEvent.Domain.Participants;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using FaithTechTorontoAiBuildEvent.Application.EventState;
@@ -41,6 +42,11 @@ public sealed class SqlProfileStore(CompanionDbContext database, IEventUpdatePub
         participant.Name = BlankToNull(request.Input.Name);
         participant.WhatYouMake = BlankToNull(request.Input.WhatYouMake);
         participant.OnYourHeart = BlankToNull(request.Input.OnYourHeart);
+        var publicDisplay = ParticipantPublicDisplay.Format(participant.Name, participant.PublicLabel);
+        var retainedCandidates = await database.RaffleCandidates.Where(candidate => candidate.ParticipantId == participant.Id).ToListAsync(cancellationToken);
+        foreach (var candidate in retainedCandidates) { candidate.Label = publicDisplay; }
+        var retainedWins = await database.RaffleDraws.Where(draw => draw.WinnerParticipantId == participant.Id).ToListAsync(cancellationToken);
+        foreach (var draw in retainedWins) { draw.WinnerLabel = publicDisplay; }
         database.ProfileSaveReceipts.Add(new FaithTechTorontoAiBuildEvent.Domain.Participants.ProfileSaveReceipt
         {
             OperationId = request.OperationId,

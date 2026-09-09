@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using FaithTechTorontoAiBuildEvent.Application.Raffle;
 using FaithTechTorontoAiBuildEvent.Application.EventState;
 using FaithTechTorontoAiBuildEvent.Domain.EventFlow;
+using FaithTechTorontoAiBuildEvent.Domain.Participants;
 using FaithTechTorontoAiBuildEvent.Domain.Raffle;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -64,7 +65,7 @@ public sealed class SqlRaffleStore(CompanionDbContext database, IEventUpdatePubl
             OperationId = operationId,
             ExpectedVersion = expectedVersion,
             WinnerParticipantId = winner.Id,
-            WinnerLabel = winner.Name ?? winner.PublicLabel,
+            WinnerLabel = ParticipantPublicDisplay.Format(winner.Name, winner.PublicLabel),
             StartedAtUtc = nowUtc,
             RevealAtUtc = nowUtc.AddSeconds(5),
             EffectsEndAtUtc = nowUtc.AddSeconds(10)
@@ -74,7 +75,7 @@ public sealed class SqlRaffleStore(CompanionDbContext database, IEventUpdatePubl
         {
             DrawId = draw.Id,
             ParticipantId = participant.Id,
-            Label = participant.Name ?? participant.PublicLabel
+            Label = ParticipantPublicDisplay.Format(participant.Name, participant.PublicLabel)
         }));
         state.Version++;
         await database.SaveChangesAsync(cancellationToken);
