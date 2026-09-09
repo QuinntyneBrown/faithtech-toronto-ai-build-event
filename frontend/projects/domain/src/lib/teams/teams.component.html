@@ -3,13 +3,14 @@
 } @else if (event.state(); as state) {
   <h1>Team selection</h1>
   @if (state.teams.length) {
+    @if (teams.error(); as error) { <p role="alert">{{ error }}</p> }
     @for (team of state.teams; track team.label) {
       <cs-card>
         <h2>{{ team.label }}</h2>
         @if (projectTitle(team.projectId); as projectTitle) { <p>Project: {{ projectTitle }}</p> }
         @if (administrator.active()) {
           <cs-field label="Assigned project" [forId]="'project-' + team.id">
-            <select csSelect [id]="'project-' + team.id" [ngModel]="team.projectId ?? ''" (ngModelChange)="assignProject(team, $event)" [disabled]="!event.connected()">
+            <select csSelect [id]="'project-' + team.id" [ngModel]="team.projectId ?? ''" (ngModelChange)="assignProject(team, $event)" [disabled]="!event.connected() || teams.loading()">
               <option value="">No project assigned</option>
               @for (project of state.projects; track project.id) { <option [value]="project.id">{{ project.title }}</option> }
             </select>
