@@ -4,10 +4,11 @@ using FaithTechTorontoAiBuildEvent.Domain.Projects;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using DomainEventState = FaithTechTorontoAiBuildEvent.Domain.EventFlow.EventState;
+using FaithTechTorontoAiBuildEvent.Application.EventState;
 
 namespace FaithTechTorontoAiBuildEvent.Infrastructure.Projects;
 
-public sealed class SqlProjectStore(CompanionDbContext database) : IProjectStore
+public sealed class SqlProjectStore(CompanionDbContext database, IEventUpdatePublisher updatePublisher) : IProjectStore
 {
     public async Task UpdateAsync(Guid projectId, long expectedVersion, ProjectInput input, CancellationToken cancellationToken)
     {
@@ -20,6 +21,7 @@ public sealed class SqlProjectStore(CompanionDbContext database) : IProjectStore
         project.DemoUrl = BlankToNull(input.DemoUrl);
         state.Version++;
         await database.SaveChangesAsync(cancellationToken);
+        await updatePublisher.PublishAsync(state.Version, cancellationToken);
     }
 
     public async Task DeleteAsync(Guid projectId, long expectedVersion, CancellationToken cancellationToken)
@@ -35,6 +37,7 @@ public sealed class SqlProjectStore(CompanionDbContext database) : IProjectStore
         database.Projects.Remove(project);
         state.Version++;
         await database.SaveChangesAsync(cancellationToken);
+        await updatePublisher.PublishAsync(state.Version, cancellationToken);
     }
 
     public async Task<Guid> AddAsync(long expectedVersion, ProjectInput input, CancellationToken cancellationToken)
@@ -51,6 +54,7 @@ public sealed class SqlProjectStore(CompanionDbContext database) : IProjectStore
         database.Projects.Add(project);
         state.Version++;
         await database.SaveChangesAsync(cancellationToken);
+        await updatePublisher.PublishAsync(state.Version, cancellationToken);
         return project.Id;
     }
 
