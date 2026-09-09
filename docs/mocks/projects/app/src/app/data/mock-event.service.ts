@@ -35,7 +35,7 @@ export class MockEventService implements IEventService {
   private refresh(): void {
     if (this.offline()) return;
     try {
-      const next = this.read(); if (!next || next.revision < this.state().revision) return;
+      const next = this.read(); if (!next || (next.generation === this.state().generation && next.revision < this.state().revision)) return;
       if (next.generation !== this.state().generation) this.clearEntry();
       this.state.set(next);
     } catch { this.error.set('Could not synchronize mock data. Reset the mock or allow browser storage.'); }
@@ -49,13 +49,14 @@ export class MockEventService implements IEventService {
       if (!navigator.locks) throw new Error('Synchronized changes require localhost or HTTPS in Chrome.');
       if (this.failNext()) { this.failNext.set(false); throw new Error('Simulated save failure. Your changes were not saved; try again.'); }
       await navigator.locks.request(STORAGE, () => {
-        const current = command.type === 'reset' ? this.state() : (this.read() ?? this.state());
+        let current = this.state();
+        try { current = this.read() ?? current; } catch (error) { if (command.type !== 'reset') throw error; }
         if (command.type !== 'reset' && current.revision !== version) { this.state.set(current); throw new Error('Another tab updated the event. Review the latest values and try again.'); }
         if (!['enter', 'profile', 'reset', 'restartCountdown'].includes(command.type) && !this.admin()) throw new Error('Sign in as an administrator first.');
         if (command.type === 'profile' && command.id !== this.identity()) throw new Error('This entry belongs to another session.');
         const next = applyCommand(current, command);
         localStorage.setItem(STORAGE, JSON.stringify(next)); this.state.set(next); this.ready.set(true);
-        if (command.type === 'enter') { this.identity.set(command.id); sessionStorage.setItem(STORAGE + '-person', command.id); }
+        if (command.type === 'enter') { this.identity.set(command.id); try { sessionStorage.setItem(STORAGE + '-person', command.id); } catch { /* Entry committed; current-tab ownership still works. */ } }
         if (command.type === 'reset') this.clearEntry();
         this.channel.postMessage(next.revision);
       });

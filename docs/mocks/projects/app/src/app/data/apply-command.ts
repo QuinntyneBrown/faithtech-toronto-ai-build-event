@@ -37,9 +37,8 @@ export function applyCommand(state: EventState, command: EventCommand): EventSta
     case 'participantDelete': {
       const p = next.participants.find(p => p.id === command.id);
       if (!p) throw new Error('This participant has already been removed.');
-      const oldLabel = publicName(p);
       next.participants = next.participants.filter(p => p.id !== command.id);
-      next.draws.forEach(d => { d.candidates = d.candidates.filter(name => name !== oldLabel); if (d.winnerId === command.id) d.label = 'Removed participant'; }); break;
+      next.draws.forEach(d => { d.candidates = d.candidates.filter(name => name !== p.label && !name.endsWith(' · ' + p.label)); if (d.winnerId === command.id) d.label = 'Removed participant'; }); break;
     }
     case 'projectSave': {
       const p = projectFields(command.project), i = next.projects.findIndex(item => item.id === p.id);

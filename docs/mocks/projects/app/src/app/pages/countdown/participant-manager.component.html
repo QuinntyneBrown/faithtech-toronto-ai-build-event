@@ -1,0 +1,25 @@
+<cs-card class="roster">
+  <div class="section-heading"><div><p class="eyebrow">HOST TOOLS</p><h2>Who's in the room</h2><p class="muted">{{ event.state().participants.length }} entered · Emails and personal answers are host-only.</p></div><button csButton [disabled]="event.busy() || event.offline()" (click)="edit()">+ Add participant</button></div>
+  <cs-field label="Find a participant" forId="roster-search"><input csInput id="roster-search" name="search" type="search" [ngModel]="search()" (ngModelChange)="search.set($event)" placeholder="Name, email, or participant number"></cs-field>
+  @if (visible().length) {
+    <div class="data-scroll" role="region" aria-label="Participant roster" tabindex="0"><table csTable><thead><tr><th scope="col">Participant</th><th scope="col">Team</th><th scope="col">Raffle</th><th scope="col">Manage</th></tr></thead><tbody>
+      @for (p of visible(); track p.id) { <tr><td><strong>{{ p.name || p.label }}</strong><small>{{ p.email }}</small></td><td>{{ team(p.teamId) }}</td><td><cs-badge [tone]="won(p.id) ? 'success' : 'neutral'">{{ won(p.id) ? 'Winner' : 'Entered' }}</cs-badge></td><td><div class="actions"><button csButton="ghost" [attr.aria-label]="'Edit ' + (p.name || p.label)" [disabled]="event.busy() || event.offline()" (click)="edit(p)">Details / edit</button><button csButton="ghost" [attr.aria-label]="'Delete ' + (p.name || p.label)" [disabled]="event.busy() || event.offline()" (click)="event.dismiss(); deleting.set(p)">Delete</button></div></td></tr> }
+    </tbody></table></div>
+  } @else { <div class="empty-panel"><h3>{{ search() ? 'No matching participants' : 'The room is ready.' }}</h3><p>{{ search() ? 'Try a different name or email.' : 'Entries will appear here. You can also add someone yourself.' }}</p></div> }
+</cs-card>
+<mock-review-dialog [title]="draft()?.label ? 'Participant details' : 'Add a participant'" [open]="draft() !== null" (closed)="draft.set(null)">
+  @if (draft(); as p) { <form (ngSubmit)="save()" class="form-stack">
+    <cs-field label="Email address" forId="roster-email"><input csInput id="roster-email" name="email" type="email" required maxlength="254" [ngModel]="p.email" (ngModelChange)="change('email',$event)"></cs-field>
+    <cs-field label="Name (optional)" forId="roster-name"><input csInput id="roster-name" name="name" maxlength="200" [ngModel]="p.name" (ngModelChange)="change('name',$event)"></cs-field>
+    <cs-field label="What you make (optional)" forId="roster-makes"><textarea csTextarea id="roster-makes" name="makes" maxlength="2000" rows="2" [ngModel]="p.makes" (ngModelChange)="change('makes',$event)"></textarea></cs-field>
+    <cs-field label="What's on your heart (optional)" forId="roster-heart"><textarea csTextarea id="roster-heart" name="heart" maxlength="2000" rows="2" [ngModel]="p.heart" (ngModelChange)="change('heart',$event)"></textarea></cs-field>
+    @if (event.error()) { <cs-alert tone="error">{{ event.error() }}</cs-alert> }
+    <div class="actions"><button csButton type="submit" [disabled]="event.busy() || event.offline()">Save participant</button><button csButton="ghost" type="button" (click)="draft.set(null)">Cancel</button></div>
+  </form> }
+</mock-review-dialog>
+<mock-review-dialog title="Remove this participant?" [open]="deleting() !== null" (closed)="deleting.set(null)">
+  <p>{{ deleting()?.name || deleting()?.label }} will be removed from the roster, their team, and future raffle draws. Any earlier win remains recorded as “Removed participant”.</p>
+  @if (event.error()) { <cs-alert tone="error">{{ event.error() }}</cs-alert> }
+  <div class="actions"><button csButton="danger" [disabled]="event.busy() || event.offline()" (click)="remove()">Remove participant</button><button csButton="ghost" (click)="deleting.set(null)">Keep participant</button></div>
+</mock-review-dialog>
+

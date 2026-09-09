@@ -1,1 +1,16 @@
-:host { display: block; max-inline-size: var(--cs-event-width); margin-inline: auto; }
+:host { display: block; max-inline-size: var(--cs-event-width); margin-inline: auto; padding-inline: var(--cs-space-5); }
+.masthead { display: flex; justify-content: space-between; align-items: center; gap: var(--cs-space-4); padding-block: var(--cs-space-5); border-block-end: var(--cs-event-rule) solid var(--cs-border); }
+.brand { display: flex; align-items: center; gap: var(--cs-space-3); font-size: var(--cs-text-lg); }
+.brand strong { font-weight: normal; color: var(--cs-ink-muted); }
+.brand-mark { background: var(--cs-lime); color: var(--cs-ink); border-radius: var(--cs-radius-sm); padding: var(--cs-space-2) var(--cs-space-3); font-weight: var(--cs-event-weight-bold); letter-spacing: var(--cs-event-tight); }
+.desktop-note { font: var(--cs-text-xs) var(--cs-font-mono); color: var(--cs-ink-muted); }
+.stages { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); padding-block: var(--cs-space-5); gap: var(--cs-space-2); }
+.stage { justify-content: start; color: var(--cs-ink-muted); border-radius: var(--cs-radius-sm); }
+.stage:disabled { opacity: 1; }
+.stage.current { color: var(--cs-ink); background: var(--cs-surface); }
+.stage-number { font: var(--cs-text-xs) var(--cs-font-mono); }
+.live-dot { inline-size: var(--cs-space-2); block-size: var(--cs-space-2); border-radius: var(--cs-radius-pill); background: var(--cs-success); margin-inline-start: auto; }
+.host-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--cs-space-4); background: var(--cs-surface); padding: var(--cs-space-4) var(--cs-space-5); border-inline-start: var(--cs-space-1) solid var(--cs-lime-strong); border-radius: var(--cs-radius-sm); }
+footer { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--cs-space-4); margin-block-start: var(--cs-space-8); padding-block: var(--cs-space-5); border-block-start: var(--cs-event-rule) solid var(--cs-border); font-size: var(--cs-text-sm); }
+.mock-controls { border: var(--cs-event-rule) dashed var(--cs-border-strong); border-radius: var(--cs-radius-md); padding: var(--cs-space-5); margin-block-end: var(--cs-space-6); background: var(--cs-surface); }
+@media(max-width:767px) { .desktop-note { display: none; } .stages { grid-template-columns: repeat(2,minmax(0,1fr)); } .brand { font-size: var(--cs-text-md); } .brand strong { display: block; } }

@@ -1,1 +1,39 @@
-<cs-card><h1>FaithTech Toronto</h1><p>AI Build Night · September 9, 2026</p><button csButton>Welcome to the build</button></cs-card>
+<header class="masthead"><div class="brand"><span class="brand-mark" aria-hidden="true">ft.</span><span>FaithTech <strong>Toronto</strong></span></div><div class="actions"><span class="desktop-note">AI BUILD NIGHT / 09.09.26</span>@if (event.admin()) { <cs-badge>HOST VIEW</cs-badge><button csButton="ghost" (click)="event.logout()">Sign out</button> } @else { <button csButton="ghost" (click)="event.dismiss(); loginOpen.set(true)">Admin login</button> }</div></header>
+<main>
+  <nav class="stages" aria-label="Event progress">
+    @for (screen of screens; track screen; let i = $index) {
+      <button csButton="ghost" class="stage" [class.current]="screen === view()" [attr.aria-current]="screen === view() ? 'step' : null" [disabled]="!canVisit(screen)" (click)="view.set(screen)"><span class="stage-number">0{{ i + 1 }}</span><span>{{ labels[screen] }}</span>@if (screen === event.state().stage) { <span class="live-dot" aria-label="Live screen"></span> }</button>
+    }
+  </nav>
+  @if (event.offline()) { <cs-alert tone="warning" title="This tab is disconnected">Updates are paused. Reconnect using Mock controls below to catch up.</cs-alert> }
+  @if (event.error()) { <cs-alert tone="error" title="We couldn't complete that">{{ event.error() }} <button csButton="ghost" (click)="event.dismiss()">Dismiss</button></cs-alert> }
+  @if (event.notice()) { <cs-alert tone="success">{{ event.notice() }} <button csButton="ghost" (click)="event.dismiss()">Dismiss</button></cs-alert> }
+  @if (event.admin()) {
+    <div class="host-bar"><div><strong>You're hosting tonight.</strong><span class="muted"> Live: {{ labels[event.state().stage] }} · {{ event.state().participants.length }} entered</span></div>
+      @if (view() !== event.state().stage) { <button csButton="secondary" (click)="view.set(event.state().stage)">Return to live</button> }
+      @else if (next(); as screen) { <button csButton [disabled]="disabled()" (click)="event.dismiss(); confirm.set('advance')">{{ view() === 'countdown' ? 'Close countdown & open Projects' : 'Open ' + labels[screen] }} →</button> }
+    </div>
+  }
+  @if (event.ready()) { <router-outlet /> } @else { <cs-alert title="Preparing the evening">Loading your shared mock event… If browser storage is unavailable, allow it and reload.</cs-alert> }
+</main>
+<footer><div><strong>Made for this moment.</strong><span class="muted"> FaithTech Toronto · Build well, and rejoice.</span></div><button csButton="ghost" [attr.aria-expanded]="controls()" (click)="controls.set(!controls())">{{ controls() ? 'Hide' : 'Mock' }} controls {{ controls() ? '−' : '+' }}</button></footer>
+@if (controls()) {
+  <aside class="mock-controls" aria-label="Design review controls"><div><p class="eyebrow">DESIGN ARTIFACT · SYNTHETIC DATA</p><p>Try the host view with passcode <strong>0042</strong>. Open another tab to follow along as a participant.</p></div><div class="actions">
+    <a csButton="secondary" href="/countdown" target="_blank" rel="noopener">Open participant tab ↗</a>
+    <button csButton="secondary" (click)="event.setOffline(!event.offline())">{{ event.offline() ? 'Reconnect this tab' : 'Disconnect this tab' }}</button>
+    <button csButton="secondary" [attr.aria-pressed]="event.failNext()" (click)="event.simulateFailure()">{{ event.failNext() ? 'Cancel save failure' : 'Fail next save' }}</button>
+    <button csButton="secondary" [disabled]="disabled()" (click)="event.dispatch({type: 'restartCountdown'})">Restart 20-minute clock</button>
+    <button csButton="ghost" [disabled]="disabled()" (click)="event.dismiss(); confirm.set('populated')">Reset populated mock</button>
+    <button csButton="ghost" [disabled]="disabled()" (click)="event.dismiss(); confirm.set('empty')">Reset empty mock</button>
+  </div><p class="fine-print">Browser-only rehearsal. Changes are shared across tabs on this device; sign-in is illustrative. The countdown uses a relative rehearsal clock.</p></aside>
+}
+<mock-review-dialog title="Welcome back, host." [open]="loginOpen()" (closed)="loginOpen.set(false); passcode.set('')">
+  <p>Enter the four-digit passcode to manage tonight's event.</p><form class="form-stack" (ngSubmit)="login()"><cs-field label="Administrator passcode" forId="passcode"><input csInput id="passcode" name="passcode" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" [ngModel]="passcode()" (ngModelChange)="passcode.set($event)"></cs-field>@if (event.error()) { <cs-alert tone="error">{{ event.error() }}</cs-alert> }<button csButton type="submit">Enter host view →</button></form>
+</mock-review-dialog>
+<mock-review-dialog [title]="confirm() === 'advance' ? 'Move the room forward?' : 'Start a fresh rehearsal?'" [open]="confirm() !== null" (closed)="confirm.set(null)">
+  <p>{{ confirm() === 'advance' ? 'Everyone following the live event will move to ' + labels[next() || 'raffle'] + '.' : 'This resets participants, teams, projects, and raffle history in every connected tab.' }}</p>
+  @if (confirm() === 'advance' && view() === 'countdown') { <p>Email entry will close. You can still add late arrivals from the host roster.</p> }
+  @if (event.error()) { <cs-alert tone="error">{{ event.error() }}</cs-alert> }
+  <div class="actions"><button csButton [disabled]="disabled()" (click)="confirmAction()">{{ confirm() === 'advance' ? 'Open ' + labels[next() || 'raffle'] : 'Reset mock' }}</button><button csButton="ghost" (click)="confirm.set(null)">Keep things as they are</button></div>
+</mock-review-dialog>
+
