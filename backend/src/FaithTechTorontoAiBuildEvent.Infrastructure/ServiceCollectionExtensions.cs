@@ -13,6 +13,8 @@ using FaithTechTorontoAiBuildEvent.Application.Projects;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Projects;
 using FaithTechTorontoAiBuildEvent.Application.Raffle;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Raffle;
+using FaithTechTorontoAiBuildEvent.Application.Teams;
+using FaithTechTorontoAiBuildEvent.Infrastructure.Teams;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -41,6 +43,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IEventFlowStore, SqlEventFlowStore>();
         services.AddScoped<IProjectStore, SqlProjectStore>();
         services.AddScoped<IRaffleStore, SqlRaffleStore>();
+        services.AddScoped<ITeamStore, SqlTeamStore>();
         services.AddHostedService<EventStateInitializer>();
         return services;
     }
