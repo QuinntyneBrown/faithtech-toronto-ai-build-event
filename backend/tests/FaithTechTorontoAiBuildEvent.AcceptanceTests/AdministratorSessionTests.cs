@@ -91,4 +91,17 @@ public sealed class AdministratorSessionTests : IClassFixture<CountdownApiFactor
 
         Assert.Equal((HttpStatusCode)429, throttled.StatusCode);
     }
+
+    [Fact]
+    public async Task Sign_out_revokes_the_administrator_session()
+    {
+        await factory.ClearAdministratorLoginAttemptsAsync();
+        await factory.ProvisionAdministratorPasscodeAsync("0042");
+        using var client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/api/admin/session", new { passcode = "0042" })).StatusCode);
+
+        Assert.Equal(HttpStatusCode.NoContent, (await client.DeleteAsync("/api/admin/session")).StatusCode);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/admin/session")).StatusCode);
+    }
 }

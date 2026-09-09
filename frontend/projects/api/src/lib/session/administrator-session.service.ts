@@ -35,4 +35,11 @@ export class AdministratorSessionService implements IAdministratorSessionService
       }
     });
   }
+
+  signOut(): void {
+    this.http.delete<void>("/api/admin/session").subscribe({
+      next: () => { this.active.set(false); this.error.set(null); },
+      error: () => this.error.set("We could not sign out. Try again.")
+    });
+  }
 }

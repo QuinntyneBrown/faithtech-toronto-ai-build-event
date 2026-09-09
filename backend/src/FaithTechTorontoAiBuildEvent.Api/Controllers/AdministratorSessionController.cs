@@ -41,4 +41,12 @@ public sealed class AdministratorSessionController(ISender sender) : ControllerB
         var active = await sender.Send(new GetAdministratorSessionQuery(Request.Cookies["faithtech-admin"]), cancellationToken);
         return active ? Ok(new AdministratorSessionResponse(true)) : Unauthorized();
     }
+
+    [HttpDelete]
+    public async Task<IActionResult> Delete(CancellationToken cancellationToken)
+    {
+        await sender.Send(new RevokeAdministratorSessionCommand(Request.Cookies["faithtech-admin"]), cancellationToken);
+        Response.Cookies.Delete("faithtech-admin", new CookieOptions { Path = "/api/admin", Secure = true, HttpOnly = true, SameSite = SameSiteMode.Strict });
+        return NoContent();
+    }
 }

@@ -26,4 +26,13 @@ public sealed class SqlAdministratorSessionStore(CompanionDbContext database, Pa
         await database.SaveChangesAsync(cancellationToken);
         return new AdministratorAuthenticationResult(true, sessionSecret);
     }
+
+    public async Task RevokeAsync(byte[] secretDigest, CancellationToken cancellationToken)
+    {
+        var sessions = await database.AdministratorSessions.Where(session => !session.Revoked).ToListAsync(cancellationToken);
+        var session = sessions.SingleOrDefault(candidate => System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(candidate.SecretDigest, secretDigest));
+        if (session is null) return;
+        session.Revoked = true;
+        await database.SaveChangesAsync(cancellationToken);
+    }
 }

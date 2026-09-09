@@ -6,4 +6,5 @@ export interface IAdministratorSessionService {
   readonly error: Signal<string | null>;
   load(): void;
   signIn(passcode: string): void;
+  signOut(): void;
 }

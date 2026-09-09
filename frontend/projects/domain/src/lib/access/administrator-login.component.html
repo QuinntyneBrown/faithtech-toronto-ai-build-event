@@ -1,5 +1,6 @@
 @if (session.active()) {
   <p>Administrator controls are enabled in this browser.</p>
+  <button csButton="ghost" type="button" (click)="session.signOut()">Sign out</button>
 } @else if (open()) {
   <form (ngSubmit)="signIn()" aria-label="Administrator login">
     <cs-field label="Administrator passcode" forId="administrator-passcode">
