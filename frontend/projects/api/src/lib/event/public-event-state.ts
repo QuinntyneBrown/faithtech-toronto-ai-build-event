@@ -11,6 +11,7 @@ export interface PublicEventState {
   countdownTargetUtc: string;
   projects: ProjectCard[];
   teams: PublicTeam[];
+  unassignedMembers: PublicTeamMember[];
   raffle: RaffleSnapshot;
 }
 
@@ -26,5 +27,10 @@ export interface PublicTeam {
   id: string;
   label: string;
   projectId: string | null;
-  members: string[];
+  members: PublicTeamMember[];
+}
+
+export interface PublicTeamMember {
+  id: string;
+  label: string;
 }

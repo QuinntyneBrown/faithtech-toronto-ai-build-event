@@ -20,10 +20,55 @@
             </select>
           </cs-field>
         }
-        <ul>@for (member of team.members; track member) { <li>{{ member }}</li> }</ul>
+        @if (team.members.length) {
+          <ul>
+            @for (member of team.members; track member.id) {
+              <li>
+                <span>{{ member.label }}</span>
+                @if (administrator.active()) {
+                  <cs-field label="Move to team" [forId]="'move-' + member.id">
+                    <select csSelect [id]="'move-' + member.id" [ngModel]="''" (ngModelChange)="move(member.id, $event)" [disabled]="!event.connected() || teams.loading()">
+                      <option value="">Choose destination</option>
+                      <option value="unassigned">Unassigned</option>
+                      <option value="new">New team</option>
+                      @for (destination of state.teams; track destination.id) {
+                        @if (destination.id !== team.id) { <option [value]="destination.id">{{ destination.label }}</option> }
+                      }
+                    </select>
+                  </cs-field>
+                }
+              </li>
+            }
+          </ul>
+        } @else {
+          <cs-empty-state title="No members in this team" />
+        }
       </cs-card>
     }
   } @else {
     <cs-empty-state title="No teams have formed yet" />
   }
+  <cs-card>
+    <h2>Unassigned</h2>
+    @if (state.unassignedMembers.length) {
+      <ul>
+        @for (member of state.unassignedMembers; track member.id) {
+          <li>
+            <span>{{ member.label }}</span>
+            @if (administrator.active()) {
+              <cs-field label="Move to team" [forId]="'move-' + member.id">
+                <select csSelect [id]="'move-' + member.id" [ngModel]="''" (ngModelChange)="move(member.id, $event)" [disabled]="!event.connected() || teams.loading()">
+                  <option value="">Choose destination</option>
+                  <option value="new">New team</option>
+                  @for (destination of state.teams; track destination.id) { <option [value]="destination.id">{{ destination.label }}</option> }
+                </select>
+              </cs-field>
+            }
+          </li>
+        }
+      </ul>
+    } @else {
+      <cs-empty-state title="No unassigned participants" />
+    }
+  </cs-card>
 }

@@ -28,5 +28,16 @@ export class TeamsComponent {
     const version = this.event.state()?.version;
     if (version) this.teams.assignProject(team.id, projectId || null, version);
   }
+
+  move(memberId: string, selection: string): void {
+    const version = this.event.state()?.version;
+    if (!version || !selection) return;
+    if (selection === "unassigned" || selection === "new") {
+      this.teams.moveMember(memberId, selection, null, version);
+      return;
+    }
+    this.teams.moveMember(memberId, "existing", selection, version);
+  }
+
   advance(): void { const state = this.event.state(); if (state) this.flow.advance("teams", "raffle", state.version); }
 }
