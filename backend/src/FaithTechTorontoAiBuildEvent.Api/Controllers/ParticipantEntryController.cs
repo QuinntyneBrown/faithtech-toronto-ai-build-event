@@ -30,7 +30,7 @@ public sealed class ParticipantEntryController(ISender sender) : ControllerBase
         try
         {
             var result = await sender.Send(
-                new EnterParticipantCommand(request.OperationId, request.ExpectedVersion, request.Input, Request.Cookies["faithtech-entry-receipt"]),
+                new EnterParticipantCommand(request.OperationId, request.ExpectedVersion, request.Input, Request.Cookies["faithtech-entry-receipt"], HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown"),
                 cancellationToken);
             Response.Cookies.Append("faithtech-participant", result.SessionSecret, new CookieOptions
             {
@@ -42,6 +42,11 @@ public sealed class ParticipantEntryController(ISender sender) : ControllerBase
                 IsEssential = true
             });
             return Ok(new EntryResultResponse(result.ParticipantId, result.PublicLabel));
+        }
+        catch (PublicEntryThrottledException exception)
+        {
+            Response.Headers.RetryAfter = Math.Max(1, (int)Math.Ceiling(exception.RetryAfter.TotalSeconds)).ToString();
+            return StatusCode(StatusCodes.Status429TooManyRequests);
         }
         catch (EntryValidationException exception)
         {

@@ -33,6 +33,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IReadinessStore, SqlReadinessStore>();
         services.AddScoped<IEntryReceiptStore, SqlEntryReceiptStore>();
         services.AddScoped<IEntryStore, SqlEntryStore>();
+        services.AddScoped<IPublicEntryAttemptStore, SqlPublicEntryAttemptStore>();
         services.AddScoped<IParticipantSessionStore, SqlParticipantSessionStore>();
         services.AddScoped<IProfileStore, SqlProfileStore>();
         services.AddScoped<IAdministratorParticipantStore, SqlAdministratorParticipantStore>();

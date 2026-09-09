@@ -1,4 +1,4 @@
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { Injectable, inject, signal } from "@angular/core";
 import { switchMap } from "rxjs";
 import { EntryConfirmation, IEntryService } from "./entry-service.contract";
@@ -31,8 +31,11 @@ export class EntryService implements IEntryService {
         this.confirmation.set(confirmation);
         this.loading.set(false);
       },
-      error: () => {
-        this.error.set("We could not enter you into the raffle. Please check your email and try again.");
+      error: (response: HttpErrorResponse) => {
+        const retryAfter = response.headers.get("Retry-After");
+        this.error.set(response.status === 429 && retryAfter !== null
+          ? `Too many entry attempts. Try again in ${retryAfter} seconds.`
+          : "We could not enter you into the raffle. Please check your email and try again.");
         this.loading.set(false);
       }
     });

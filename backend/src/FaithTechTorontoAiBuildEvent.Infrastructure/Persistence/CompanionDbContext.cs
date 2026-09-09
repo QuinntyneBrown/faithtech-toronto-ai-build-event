@@ -14,6 +14,7 @@ public sealed class CompanionDbContext(DbContextOptions<CompanionDbContext> opti
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<EntryReceipt> EntryReceipts => Set<EntryReceipt>();
     public DbSet<Participant> Participants => Set<Participant>();
+    public DbSet<PublicEntryAttempt> PublicEntryAttempts => Set<PublicEntryAttempt>();
     public DbSet<ParticipantSession> ParticipantSessions => Set<ParticipantSession>();
     public DbSet<CompanionCredential> CompanionCredentials => Set<CompanionCredential>();
     public DbSet<AdministratorSession> AdministratorSessions => Set<AdministratorSession>();
@@ -54,6 +55,13 @@ public sealed class CompanionDbContext(DbContextOptions<CompanionDbContext> opti
             builder.Property(participant => participant.NormalizedEmail).HasMaxLength(508).IsRequired();
             builder.Property(participant => participant.PublicLabel).HasMaxLength(64).IsRequired();
             builder.HasIndex(participant => participant.NormalizedEmail).IsUnique();
+        });
+
+        modelBuilder.Entity<PublicEntryAttempt>(builder =>
+        {
+            builder.HasKey(attempt => attempt.Id);
+            builder.Property(attempt => attempt.Source).HasMaxLength(64).IsRequired();
+            builder.HasIndex(attempt => new { attempt.Source, attempt.AttemptedAtUtc });
         });
 
         modelBuilder.Entity<Team>(builder =>
