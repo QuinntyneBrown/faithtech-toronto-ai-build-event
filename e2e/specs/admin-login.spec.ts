@@ -103,6 +103,7 @@ test("L2-038/AC4: an invalidated administrator session clears the privileged vie
   await countdown.login.signIn(ADMINISTRATOR_PASSCODE);
   await countdown.roster.expectVisible();
 
+  await expect.poll(() => hub.administrator.connected).toBe(true);
   hub.invalidateAdministratorSession();
 
   await countdown.roster.expectHidden();
