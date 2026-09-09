@@ -2,6 +2,7 @@ using FaithTechTorontoAiBuildEvent.Domain.Projects;
 using FaithTechTorontoAiBuildEvent.Domain.Participants;
 using FaithTechTorontoAiBuildEvent.Domain.Access;
 using FaithTechTorontoAiBuildEvent.Domain.Teams;
+using FaithTechTorontoAiBuildEvent.Domain.Raffle;
 using Microsoft.EntityFrameworkCore;
 using DomainEventState = FaithTechTorontoAiBuildEvent.Domain.EventFlow.EventState;
 
@@ -17,6 +18,7 @@ public sealed class CompanionDbContext(DbContextOptions<CompanionDbContext> opti
     public DbSet<CompanionCredential> CompanionCredentials => Set<CompanionCredential>();
     public DbSet<AdministratorSession> AdministratorSessions => Set<AdministratorSession>();
     public DbSet<Team> Teams => Set<Team>();
+    public DbSet<RaffleDraw> RaffleDraws => Set<RaffleDraw>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -77,6 +79,13 @@ public sealed class CompanionDbContext(DbContextOptions<CompanionDbContext> opti
             builder.HasKey(session => session.Id);
             builder.Property(session => session.SecretDigest).HasMaxLength(32).IsRequired();
             builder.HasIndex(session => session.CreatedAtUtc);
+        });
+
+        modelBuilder.Entity<RaffleDraw>(builder =>
+        {
+            builder.HasKey(draw => draw.Id);
+            builder.Property(draw => draw.WinnerLabel).HasMaxLength(64).IsRequired();
+            builder.HasIndex(draw => draw.WinnerParticipantId).IsUnique();
         });
     }
 }
