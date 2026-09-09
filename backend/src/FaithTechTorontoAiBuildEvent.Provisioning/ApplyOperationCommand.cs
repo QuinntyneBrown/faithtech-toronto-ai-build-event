@@ -15,6 +15,7 @@ public sealed class ApplyOperationCommand : Command
         SetAction((parse, token) => OperatorCommandRunner.Run(parse, options, token, async (session, cancellation) => {
             var id = parse.GetValue(preview); session.PreviewId = id;
             var saved = session.Files.Read<OperatorPreview>($"{id:N}.preview"); session.OperationId = saved.OperationId;
+            session.CurrentPreview = saved;
             using var operationLock = session.Files.Lock(saved.OperationId);
             OperatorApproval.Verify(session, saved);
             if (parse.GetValue(approve) != id) {

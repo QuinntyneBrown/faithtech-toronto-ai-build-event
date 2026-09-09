@@ -42,6 +42,11 @@ public static class OperatorCommandRunner
                 _ => "Invalid input, configuration or artifact. Verify help, schema compatibility and protected configuration." };
             if (error is InputValidationException invalid) message += " Fields: " + string.Join(", ", invalid.Errors.Keys);
             result = new(session?.OperationId, session?.PreviewId, session?.Principal, outcome, watch.Elapsed.TotalMilliseconds, null, message);
+            if (session?.Started == true && !session.Committed && error is SqlException or DbUpdateException or OperationCanceledException or IOException) {
+                var recovered = await OperatorRecovery.Resolve(session, watch.Elapsed.TotalMilliseconds, error is OperationCanceledException);
+                if (recovered is not null) { result = recovered; exit = session.ExitCode; }
+                else { exit = 6; result = result with { Outcome = "unconfirmed", Error = "Outcome unconfirmed; reconcile before retrying." }; }
+            }
         }
         try {
             if (session?.OperationId is { } operation)

@@ -25,6 +25,7 @@ public sealed class OperatorSession : IAsyncDisposable
     public Guid? PreviewId { get; set; }
     public bool Started { get; set; }
     public bool Committed { get; set; }
+    public OperatorPreview? CurrentPreview { get; set; }
     public string Outcome { get; set; } = "succeeded";
     public int ExitCode { get; set; }
     public static string AssemblyHash => Convert.ToHexString(SHA256.HashData([
