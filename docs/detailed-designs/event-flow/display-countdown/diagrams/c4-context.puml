@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Display countdown, welcome, and event information — context
+Person(actor, "Public viewer", "Show synchronized remaining time without scheduling transitions")
+System(companion, "FaithTech event companion", "Display countdown, welcome, and event information")
+Rel(actor, companion, "Uses")
+@enduml

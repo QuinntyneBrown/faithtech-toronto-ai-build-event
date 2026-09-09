@@ -1,0 +1,45 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Synchronize and display remaining time
+actor "Public viewer" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "CountdownPageComponent" as page
+participant "IEventService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "EventStateController" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "GetEventSnapshotHandler" as handler
+participant "EventConfiguration" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+participant "EventChangePublisher" as push
+end box
+actor -> page : Open Countdown
+page -> client : Synchronize snapshot and time
+loop Three initial samples
+ client -> controller : GET time; record monotonic start
+ controller -> handler : Query server UTC
+ handler -> db : SELECT SYSUTCDATETIME()
+ db --> handler : UTC sample
+ handler --> controller : Server time
+ controller --> client : Sample; record RTT
+end
+alt Usable sample
+ client -> client : Lowest RTT; anchor UTC plus half RTT
+ client -> page : Target and estimated current UTC
+ page -> page : Render days and clamped remainder L2-005
+ page --> actor : Welcome, entry, countdown
+else Unavailable or uncertain clock
+ client -> page : Synchronization unavailable
+ page --> actor : Absolute target and warning
+end
+note over page : Zero never dispatches an advance
+@enduml
