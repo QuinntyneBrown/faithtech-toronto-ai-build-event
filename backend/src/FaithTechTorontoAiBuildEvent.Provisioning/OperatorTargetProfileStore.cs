@@ -25,7 +25,7 @@ public sealed class OperatorTargetProfileStore(string path)
         File.WriteAllText(path, JsonSerializer.Serialize(document, options));
     }
 
-    private OperatorTargetProfileDocument Read() => File.Exists(path)
+    private OperatorTargetProfileDocument Read() => File.Exists(path) && new FileInfo(path).Length > 0
         ? JsonSerializer.Deserialize<OperatorTargetProfileDocument>(File.ReadAllText(path)) ?? throw new InvalidOperationException("Target configuration is invalid.")
         : new OperatorTargetProfileDocument();
 }

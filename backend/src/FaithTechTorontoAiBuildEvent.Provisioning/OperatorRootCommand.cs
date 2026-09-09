@@ -9,6 +9,7 @@ public sealed class OperatorRootCommand
     public OperatorRootCommand()
     {
         root.Subcommands.Add(new MigrateCommand());
+        root.Subcommands.Add(new TargetCommand());
         root.Subcommands.Add(new CreateAdministratorCommand());
         root.Subcommands.Add(new AddUserCommand());
         root.Subcommands.Add(new ResetPasswordCommand());
