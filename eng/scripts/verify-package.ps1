@@ -18,7 +18,7 @@ try {
     $env:ASPNETCORE_URLS = 'https://127.0.0.1:5043'
     $env:ASPNETCORE_Kestrel__Certificates__Default__Path = $certificate
     $env:ASPNETCORE_Kestrel__Certificates__Default__Password = $password
-    $launch = @{FilePath = 'dotnet'; ArgumentList = "`"$root/api/FaithTechTorontoAiBuildEvent.Api.dll`""; PassThru = $true;
+    $launch = @{FilePath = 'dotnet'; ArgumentList = 'FaithTechTorontoAiBuildEvent.Api.dll'; WorkingDirectory = "$root/api"; PassThru = $true;
         RedirectStandardOutput = 'artifacts/package.stdout.log'; RedirectStandardError = 'artifacts/package.stderr.log'}
     if ($IsWindows) { $launch.WindowStyle = 'Hidden' }
     $process = Start-Process @launch
