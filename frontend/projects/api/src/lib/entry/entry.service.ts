@@ -4,6 +4,7 @@ import { HubConnection, HubConnectionBuilder, HubConnectionState } from "@micros
 import { switchMap } from "rxjs";
 import { EntryConfirmation, IEntryService } from "./entry-service.contract";
 import { PROFILE_SERVICE } from "../profile/profile-service.token";
+import { PublicEventState } from "../event/public-event-state";
 
 interface EntryReceiptResponse {
   operationId: string;
@@ -49,14 +50,43 @@ export class EntryService implements IEntryService {
         this.loading.set(false);
         void this.connect();
       },
-      error: (response: HttpErrorResponse) => {
-        const retryAfter = response.headers.get("Retry-After");
-        this.error.set(response.status === 429 && retryAfter !== null
-          ? `Too many entry attempts. Try again in ${retryAfter} seconds.`
-          : "We could not enter you into the raffle. Please check your email and try again.");
-        this.loading.set(false);
-      }
+      error: (response: HttpErrorResponse) => this.handleEntryError(response)
     });
+  }
+
+  private handleEntryError(response: HttpErrorResponse): void {
+    const retryAfter = response.headers.get("Retry-After");
+    if (response.status === 429 && retryAfter !== null) {
+      this.finishWithError(`Too many entry attempts. Try again in ${retryAfter} seconds.`);
+      return;
+    }
+
+    const detail = typeof response.error?.detail === "string" ? response.error.detail : "";
+    const expectedMessages = [
+      "This email is already entered; ask an administrator to update your details.",
+      "Entry is closed; ask an administrator for help."
+    ];
+    if (expectedMessages.includes(detail)) {
+      this.finishWithError(detail);
+      return;
+    }
+
+    if (response.status === 409) {
+      this.http.get<PublicEventState>("/api/event/state").subscribe({
+        next: state => this.finishWithError(state.currentScreen === "countdown"
+          ? expectedMessages[0]
+          : expectedMessages[1]),
+        error: () => this.finishWithError("We could not enter you into the raffle. Please check your email and try again.")
+      });
+      return;
+    }
+
+    this.finishWithError("We could not enter you into the raffle. Please check your email and try again.");
+  }
+
+  private finishWithError(message: string): void {
+    this.error.set(message);
+    this.loading.set(false);
   }
 
   load(): void {
