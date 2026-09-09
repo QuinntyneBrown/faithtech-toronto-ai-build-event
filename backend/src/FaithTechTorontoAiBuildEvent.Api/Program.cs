@@ -6,12 +6,12 @@ using FaithTechTorontoAiBuildEvent.Infrastructure;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
+builder.Services.AddMediatR(configuration => configuration.RegisterServicesFromAssemblyContaining<GetPublicEventSnapshotQuery>());
+builder.Services.AddCompanionInfrastructure(builder.Configuration);
 builder.Services.AddSingleton<IEventUpdatePublisher, SignalREventUpdatePublisher>();
 builder.Services.AddHostedService<EventChangePublisher>();
 builder.Services.AddSingleton<IPrivateConnectionRegistry, PrivateConnectionRegistry>();
 builder.Services.AddHostedService<PrivateSessionInvalidationWatcher>();
-builder.Services.AddMediatR(configuration => configuration.RegisterServicesFromAssemblyContaining<GetPublicEventSnapshotQuery>());
-builder.Services.AddCompanionInfrastructure(builder.Configuration);
 
 var application = builder.Build();
 application.UseMiddleware<SameOriginMutationMiddleware>();
