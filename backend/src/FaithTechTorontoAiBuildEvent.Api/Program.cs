@@ -5,6 +5,7 @@ using FaithTechTorontoAiBuildEvent.Infrastructure;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
+builder.Services.AddSingleton<IEventUpdatePublisher, SignalREventUpdatePublisher>();
 builder.Services.AddMediatR(configuration => configuration.RegisterServicesFromAssemblyContaining<GetPublicEventSnapshotQuery>());
 builder.Services.AddCompanionInfrastructure(builder.Configuration);
 

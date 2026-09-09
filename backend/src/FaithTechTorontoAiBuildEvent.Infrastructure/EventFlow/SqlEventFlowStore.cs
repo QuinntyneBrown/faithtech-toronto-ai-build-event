@@ -4,10 +4,11 @@ using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using FaithTechTorontoAiBuildEvent.Domain.Teams;
 using System.Security.Cryptography;
+using FaithTechTorontoAiBuildEvent.Application.EventState;
 
 namespace FaithTechTorontoAiBuildEvent.Infrastructure.EventFlow;
 
-public sealed class SqlEventFlowStore(CompanionDbContext database) : IEventFlowStore
+public sealed class SqlEventFlowStore(CompanionDbContext database, IEventUpdatePublisher updatePublisher) : IEventFlowStore
 {
     public async Task<bool> AdvanceAsync(long expectedVersion, string fromScreen, string toScreen, CancellationToken cancellationToken)
     {
@@ -40,6 +41,7 @@ public sealed class SqlEventFlowStore(CompanionDbContext database) : IEventFlowS
         }
         state.Version++;
         await database.SaveChangesAsync(cancellationToken);
+        await updatePublisher.PublishAsync(state.Version, cancellationToken);
         return true;
     }
 
