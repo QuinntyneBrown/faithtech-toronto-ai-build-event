@@ -15,10 +15,15 @@ builder.Services.AddCompanionInfrastructure(builder.Configuration);
 
 var application = builder.Build();
 application.UseMiddleware<SameOriginMutationMiddleware>();
+application.UseDefaultFiles();
+application.UseStaticFiles();
 application.MapControllers();
 application.MapHub<EventUpdatesHub>("/hubs/event-updates");
 application.MapHub<AdministratorUpdatesHub>("/api/admin/updates");
 application.MapHub<ParticipantUpdatesHub>("/api/participant/updates");
+application.Map("/api/{**path}", () => Results.NotFound());
+application.Map("/hubs/{**path}", () => Results.NotFound());
+application.MapFallbackToFile("index.html");
 application.Run();
 
 public partial class Program;

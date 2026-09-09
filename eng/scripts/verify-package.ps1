@@ -11,13 +11,9 @@ try {
     $connection = [System.Data.Common.DbConnectionStringBuilder]::new()
     $connection.set_ConnectionString($env:FAITHTECH_TEST_SQL)
     $connection['Database'] = $database
-    $env:ConnectionStrings__EventDatabase = $connection.ConnectionString
+    $env:ConnectionStrings__Companion = $connection.ConnectionString
     $env:Security__DigestKey = [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
     $env:DOTNET_ENVIRONMENT = 'Production'
-    & dotnet "$root/provisioning/FaithTechTorontoAiBuildEvent.Provisioning.dll" migrate
-    if ($LASTEXITCODE -ne 0) { throw 'Package database migration failed.' }
-    $password | & dotnet "$root/provisioning/FaithTechTorontoAiBuildEvent.Provisioning.dll" create-admin package-smoke
-    if ($LASTEXITCODE -ne 0) { throw 'Package account provisioning failed.' }
     $env:ASPNETCORE_ENVIRONMENT = 'Production'
     $env:ASPNETCORE_URLS = 'https://127.0.0.1:5043'
     $env:ASPNETCORE_Kestrel__Certificates__Default__Path = $certificate
@@ -26,7 +22,15 @@ try {
         RedirectStandardOutput = 'artifacts/package.stdout.log'; RedirectStandardError = 'artifacts/package.stderr.log'}
     if ($IsWindows) { $launch.WindowStyle = 'Hidden' }
     $process = Start-Process @launch
-    $env:SMOKE_USERNAME = 'package-smoke'; $env:SMOKE_PASSWORD = $password
+    $deadline = [DateTimeOffset]::UtcNow.AddMinutes(2)
+    do {
+        Start-Sleep -Seconds 2
+        try { $ready = Invoke-WebRequest 'https://127.0.0.1:5043/api/health/ready' -SkipCertificateCheck -SkipHttpErrorCheck -TimeoutSec 5 } catch { $ready = $null }
+    } until (($ready -and $ready.StatusCode -eq 200) -or [DateTimeOffset]::UtcNow -ge $deadline)
+    if (-not $ready -or $ready.StatusCode -ne 200) { throw 'Package database initialization failed.' }
+    & docker exec -e "SQLCMDPASSWORD=$env:MSSQL_SA_PASSWORD" faithtech-ci-sql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -b -d $database -Q "EXEC dbo.ReplaceAdminPasscode @Passcode = N'0042';"
+    if ($LASTEXITCODE -ne 0) { throw 'Package passcode provisioning failed.' }
+    $env:SMOKE_PASSCODE = '0042'
     $revision = (Get-Content "$root/release.json" -Raw | ConvertFrom-Json).revision
     & "$PSScriptRoot/smoke-release.ps1" -Url 'https://127.0.0.1:5043' -Revision $revision -TrustLocalCertificate
 } finally {
@@ -35,5 +39,5 @@ try {
     & docker exec -e "SQLCMDPASSWORD=$env:MSSQL_SA_PASSWORD" faithtech-ci-sql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -b -Q "IF DB_ID('$database') IS NOT NULL BEGIN ALTER DATABASE [$database] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [$database]; END"
     if ($LASTEXITCODE -ne 0) { throw 'Package database cleanup failed.' }
     Remove-Item -LiteralPath $certificate -ErrorAction SilentlyContinue
-    Remove-Item Env:ConnectionStrings__EventDatabase,Env:Security__DigestKey,Env:DOTNET_ENVIRONMENT,Env:ASPNETCORE_ENVIRONMENT,Env:ASPNETCORE_URLS,Env:ASPNETCORE_Kestrel__Certificates__Default__Path,Env:ASPNETCORE_Kestrel__Certificates__Default__Password,Env:SMOKE_USERNAME,Env:SMOKE_PASSWORD -ErrorAction SilentlyContinue
+    Remove-Item Env:ConnectionStrings__Companion,Env:Security__DigestKey,Env:DOTNET_ENVIRONMENT,Env:ASPNETCORE_ENVIRONMENT,Env:ASPNETCORE_URLS,Env:ASPNETCORE_Kestrel__Certificates__Default__Path,Env:ASPNETCORE_Kestrel__Certificates__Default__Password,Env:SMOKE_PASSCODE -ErrorAction SilentlyContinue
 }

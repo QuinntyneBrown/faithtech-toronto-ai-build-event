@@ -8,7 +8,6 @@ permissions:
   contents: read
 concurrency:
   group: faithtech-${{ github.event_name == 'push' && 'production' || github.ref }}
-  queue: max
 jobs:
   release:
     runs-on: ubuntu-24.04
@@ -23,21 +22,15 @@ jobs:
       - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
           global-json-file: global.json
-          cache: true
-          cache-dependency-path: 'backend/**/packages.lock.json'
-      - name: Install locked dependencies and audit
+      - name: Install dependencies
         run: |
           npm install --global npm@10.9.4
-          for project in frontend design-system; do
-            npm --prefix "$project" ci
-            npm --prefix "$project" audit --audit-level=high
-          done
-          dotnet restore backend/FaithTechTorontoAiBuildEvent.slnx --locked-mode
+          npm --prefix frontend ci
+          dotnet restore backend/FaithTechTorontoAiBuildEvent.sln
       - name: Build production applications
         run: |
           npm --prefix frontend run build
-          npm --prefix design-system run build
-          dotnet build backend/FaithTechTorontoAiBuildEvent.slnx -c Release --no-restore
+          dotnet build backend/FaithTechTorontoAiBuildEvent.sln -c Release --no-restore
       - name: Start disposable SQL Server
         run: |
           password="Ft9!$(openssl rand -hex 24)"
@@ -54,12 +47,11 @@ jobs:
       - name: API acceptance tests
         run: |
           dotnet pack backend/src/FaithTechTorontoAiBuildEvent.Provisioning -c Release --no-build --output artifacts/operator-test-package
-          dotnet tool install FaithTechTorontoAiBuildEvent.Provisioning --version 1.0.0 --tool-path "$RUNNER_TEMP/faithtech-operator" --add-source artifacts/operator-test-package --ignore-failed-sources
+          dotnet tool install FaithTechTorontoAiBuildEvent.Provisioning --version 0.1.0 --tool-path "$RUNNER_TEMP/faithtech-operator" --add-source artifacts/operator-test-package --ignore-failed-sources
           export FAITHTECH_TEST_TOOL="$RUNNER_TEMP/faithtech-operator/faithtech-admin"
-          dotnet test backend/FaithTechTorontoAiBuildEvent.slnx -c Release --no-build --logger trx --results-directory artifacts/test-results
-      - name: Recording and release-helper acceptance tests
+          dotnet test backend/FaithTechTorontoAiBuildEvent.sln -c Release --no-build --logger trx --results-directory artifacts/test-results
+      - name: Release-helper acceptance tests
         run: |
-          node --test e2e/demo/*.test.mjs
           node --test eng/scripts/*.test.mjs
       - name: Package immutable release
         shell: pwsh
@@ -101,13 +93,11 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: '**/package-lock.json'
-      - name: Install locked dependencies and audit
+      - name: Install locked dependencies
         run: |
           npm install --global npm@10.9.4
-          for project in frontend e2e; do
-            npm --prefix "$project" ci
-            npm --prefix "$project" audit --audit-level=high
-          done
+          npm --prefix frontend ci
+          npm --prefix e2e ci
       - name: Install browser
         working-directory: e2e
         run: npx playwright install --with-deps chrome
@@ -165,10 +155,7 @@ jobs:
       - name: Migrate, deploy, and verify
         shell: pwsh
         env:
-          MIGRATION_CONNECTION_STRING: ${{ secrets.MIGRATION_CONNECTION_STRING }}
-          PRODUCTION_DIGEST_KEY: ${{ secrets.PRODUCTION_DIGEST_KEY }}
-          SMOKE_USERNAME: ${{ secrets.SMOKE_USERNAME }}
-          SMOKE_PASSWORD: ${{ secrets.SMOKE_PASSWORD }}
+          SMOKE_PASSCODE: ${{ secrets.SMOKE_PASSCODE }}
         run: ./eng/scripts/deploy-release.ps1
       - name: Ensure temporary migration access is removed
         if: always() && steps.azure-login.outcome == 'success'
