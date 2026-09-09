@@ -1,6 +1,6 @@
 import type { Page, WebSocketRoute } from "@playwright/test";
 
-/** SignalR frames the record separator, not a newline. */
+/** SignalR terminates every record with 0x1E, not a newline. */
 const RECORD_SEPARATOR = "";
 
 const NEGOTIATION = {
