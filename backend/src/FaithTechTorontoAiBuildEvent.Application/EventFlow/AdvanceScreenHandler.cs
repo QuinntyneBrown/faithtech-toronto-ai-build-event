@@ -1,6 +1,8 @@
 using FaithTechTorontoAiBuildEvent.Application.Access;
 using FaithTechTorontoAiBuildEvent.Application.Participants;
 using MediatR;
+using FaithTechTorontoAiBuildEvent.Application.Operations;
+using System.Globalization;
 
 namespace FaithTechTorontoAiBuildEvent.Application.EventFlow;
 
@@ -20,7 +22,11 @@ public sealed class AdvanceScreenHandler(
         {
             throw new UnauthorizedAccessException();
         }
-        if (!await eventFlowStore.AdvanceAsync(expectedVersion, request.FromScreen, request.ToScreen, cancellationToken))
+        var inputDigest = OperationInputDigest.Create(
+            expectedVersion.ToString(CultureInfo.InvariantCulture),
+            request.FromScreen.ToLowerInvariant(),
+            request.ToScreen.ToLowerInvariant());
+        if (!await eventFlowStore.AdvanceAsync(request.OperationId, inputDigest, expectedVersion, request.FromScreen, request.ToScreen, cancellationToken))
         {
             throw new InvalidOperationException("Event state changed; reload and try again.");
         }

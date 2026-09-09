@@ -5,13 +5,24 @@ using Microsoft.EntityFrameworkCore;
 using FaithTechTorontoAiBuildEvent.Domain.Teams;
 using System.Security.Cryptography;
 using FaithTechTorontoAiBuildEvent.Application.EventState;
+using FaithTechTorontoAiBuildEvent.Domain.Operations;
 
 namespace FaithTechTorontoAiBuildEvent.Infrastructure.EventFlow;
 
 public sealed class SqlEventFlowStore(CompanionDbContext database, IEventUpdatePublisher updatePublisher) : IEventFlowStore
 {
-    public async Task<bool> AdvanceAsync(long expectedVersion, string fromScreen, string toScreen, CancellationToken cancellationToken)
+    public async Task<bool> AdvanceAsync(Guid operationId, byte[] inputDigest, long expectedVersion, string fromScreen, string toScreen, CancellationToken cancellationToken)
     {
+        var receipt = await database.EventOperationReceipts.SingleOrDefaultAsync(candidate => candidate.OperationId == operationId, cancellationToken);
+        if (receipt is not null)
+        {
+            if (receipt.OperationKind != "advance-screen" || !CryptographicOperations.FixedTimeEquals(receipt.InputDigest, inputDigest))
+            {
+                throw new ArgumentException("The operation identity was already used with different input.");
+            }
+            return true;
+        }
+
         var state = await database.EventStates.SingleAsync(cancellationToken);
         if (state.Version != expectedVersion || !Enum.TryParse<EventScreen>(fromScreen, true, out var from) || !Enum.TryParse<EventScreen>(toScreen, true, out var to))
         {
@@ -40,6 +51,14 @@ public sealed class SqlEventFlowStore(CompanionDbContext database, IEventUpdateP
             state.TeamsFormed = true;
         }
         state.Version++;
+        database.EventOperationReceipts.Add(new EventOperationReceipt
+        {
+            OperationId = operationId,
+            OperationKind = "advance-screen",
+            InputDigest = inputDigest,
+            ResultVersion = state.Version,
+            CreatedAtUtc = DateTimeOffset.UtcNow
+        });
         await database.SaveChangesAsync(cancellationToken);
         await updatePublisher.PublishAsync(state.Version, cancellationToken);
         return true;

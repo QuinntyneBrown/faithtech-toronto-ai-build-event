@@ -24,5 +24,9 @@ public sealed class EventFlowController(ISender sender) : ControllerBase
         {
             return Conflict(new ProblemDetails { Detail = exception.Message, Status = StatusCodes.Status409Conflict });
         }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(new ProblemDetails { Detail = exception.Message, Status = StatusCodes.Status400BadRequest });
+        }
     }
 }

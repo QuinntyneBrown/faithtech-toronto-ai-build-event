@@ -6,6 +6,7 @@ using FaithTechTorontoAiBuildEvent.Domain.Raffle;
 using Microsoft.EntityFrameworkCore;
 using DomainEventState = FaithTechTorontoAiBuildEvent.Domain.EventFlow.EventState;
 using DomainEventChange = FaithTechTorontoAiBuildEvent.Domain.EventFlow.EventChange;
+using FaithTechTorontoAiBuildEvent.Domain.Operations;
 
 namespace FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
 
@@ -25,6 +26,7 @@ public sealed class CompanionDbContext(DbContextOptions<CompanionDbContext> opti
     public DbSet<Team> Teams => Set<Team>();
     public DbSet<RaffleDraw> RaffleDraws => Set<RaffleDraw>();
     public DbSet<RaffleCandidate> RaffleCandidates => Set<RaffleCandidate>();
+    public DbSet<EventOperationReceipt> EventOperationReceipts => Set<EventOperationReceipt>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -38,6 +40,14 @@ public sealed class CompanionDbContext(DbContextOptions<CompanionDbContext> opti
         modelBuilder.Entity<DomainEventChange>(builder =>
         {
             builder.HasKey(change => change.Version);
+        });
+
+        modelBuilder.Entity<EventOperationReceipt>(builder =>
+        {
+            builder.HasKey(receipt => receipt.OperationId);
+            builder.Property(receipt => receipt.OperationKind).HasMaxLength(64).IsRequired();
+            builder.Property(receipt => receipt.InputDigest).HasMaxLength(32).IsRequired();
+            builder.HasIndex(receipt => receipt.CreatedAtUtc);
         });
 
         modelBuilder.Entity<Project>(builder =>

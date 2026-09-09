@@ -4,6 +4,7 @@ using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FaithTechTorontoAiBuildEvent.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(CompanionDbContext))]
-    partial class CompanionDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260909173532_AddEventOperationReceipts")]
+    partial class AddEventOperationReceipts
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
