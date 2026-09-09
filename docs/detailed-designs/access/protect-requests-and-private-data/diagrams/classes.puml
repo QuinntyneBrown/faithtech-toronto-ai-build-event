@@ -1,0 +1,46 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+title Protect requests, private data, and abuse budgets — structure
+interface ISessionService {
++reauthorize(): Promise<SessionState>
++clearPrivateState(): void
+}
+class AppComponent
+AppComponent ..> ISessionService : consumes contract
+class RequestBoundary
+class AuthorizeCompanionRequestBehavior {
+  +Handle(request: AuthorizedRequest): Task<AuthorizedResult>
+}
+class AuthorizedRequest {
++Principal Principal
++string Operation
++object Input
+}
+class RequestAuthority {
++Guid? ParticipantId
++Guid? AdministratorSessionId
++long? CredentialRevision
++ProjectionKind Projection
+}
+RequestBoundary ..> AuthorizeCompanionRequestBehavior : dispatches
+AuthorizeCompanionRequestBehavior ..> AuthorizedRequest : handles
+AuthorizeCompanionRequestBehavior --> RequestAuthority : uses
+class SubmissionAttempt {
+ +string SourceDigest
+ +DateTimeOffset AttemptedAtUtc
+}
+class AuthenticationFailure {
+ +string SourceDigest
+ +DateTimeOffset FailedAtUtc
+}
+AuthorizeCompanionRequestBehavior ..> RequestAuthority
+class CompanionInputValidator {
+ +ValidateScalars(input: string, maximum: int): ValidationResult
+ +ValidateEmail(input: string): ValidationResult
+ +ValidateHttpsUrl(input: string): ValidationResult
+}
+@enduml

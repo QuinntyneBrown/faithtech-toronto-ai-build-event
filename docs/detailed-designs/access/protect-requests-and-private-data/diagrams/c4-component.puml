@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Protect requests, private data, and abuse budgets — components
+Container(client, "AppComponent", "Companion Angular client", "Presents this capability")
+Container_Boundary(api, "Companion API") {
+Component(entry, "RequestBoundary", "ASP.NET Core controller", "Binds inputs and dispatches")
+Component(handler, "AuthorizeCompanionRequestBehavior", "Application handler", "Enforce identity and validation at every server boundary")
+Component(entity, "RequestAuthority", "Domain model", "Owns slice state")
+}
+ContainerDb(db, "Companion database", "SQL Server", "Durable state")
+Rel(client, entry, "Calls through ISessionService")
+Rel(entry, handler, "Dispatches")
+Rel(handler, entity, "Uses")
+Rel(handler, db, "Commits through application persistence contract")
+@enduml

@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Protect requests, private data, and abuse budgets — context
+Person(actor, "Viewer, participant, or administrator", "Enforce identity and validation at every server boundary")
+System(companion, "FaithTech event companion", "Protect requests, private data, and abuse budgets")
+Rel(actor, companion, "Uses")
+@enduml
