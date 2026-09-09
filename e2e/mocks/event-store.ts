@@ -6,6 +6,7 @@ import type {
   RaffleResult,
   RaffleSnapshot
 } from "../../frontend/projects/api/src/public-api";
+import type { BrowserSession } from "./browser-session";
 
 export type Screen = PublicEventState["currentScreen"];
 
@@ -48,7 +49,14 @@ export interface MockResponse {
 export interface ForcedOutcome {
   status?: number;
   json?: unknown;
+  /** Fails the request at the transport, which reaches the client as status 0. */
   abort?: boolean;
+  /**
+   * With `abort`, still applies the write before dropping the response. That is
+   * the honest shape of a lost response: the server committed, the client never
+   * found out.
+   */
+  commit?: boolean;
   headers?: Record<string, string>;
 }
 
@@ -73,17 +81,25 @@ export class EventStore {
   latestResult: RaffleResult | null = null;
   previousWinners: RaffleResult[] = [];
 
-  administratorAuthenticated = false;
-  participantSessionId: string | null = null;
   teamsFormed = false;
+
+  /** Set to null to model a deployment with no passcode provisioned at all. */
+  provisionedPasscode: string | null = ADMINISTRATOR_PASSCODE;
 
   /** Milliseconds added to the wall clock for every server time answer. */
   serverClockOffsetMs = 0;
+
+  /** How long a draw cycles names before the winner is revealed. */
+  drawRevealDelayMs = 4_000;
+
+  /** How long the celebration runs after the reveal. */
+  drawEffectsDurationMs = 5_000;
 
   private nextParticipantLabel = 1;
   private nextTeamLabel = 1;
   private sequence = 0;
   private readonly forced = new Map<string, ForcedOutcome[]>();
+  private readonly persistent = new Map<string, ForcedOutcome>();
 
   readonly requests: { method: string; path: string; body: unknown }[] = [];
 
@@ -152,12 +168,28 @@ export class EventStore {
     this.forced.set(key, queued);
   }
 
+  /**
+   * Forces every request matching "METHOD /path" until cleared. Needed where
+   * the client retries on its own — server time is sampled three times per
+   * refresh, so a single queued failure would not keep the clock unsynchronized.
+   */
+  failAlways(key: string, outcome: ForcedOutcome): void {
+    this.persistent.set(key, outcome);
+  }
+
+  clearFailure(key: string): void {
+    this.persistent.delete(key);
+    this.forced.delete(key);
+  }
+
   consumeForced(key: string): ForcedOutcome | undefined {
     const queued = this.forced.get(key);
-    if (!queued?.length) return undefined;
-    const outcome = queued.shift();
-    if (!queued.length) this.forced.delete(key);
-    return outcome;
+    if (queued?.length) {
+      const outcome = queued.shift();
+      if (!queued.length) this.forced.delete(key);
+      return outcome;
+    }
+    return this.persistent.get(key);
   }
 
   // ------------------------------------------------------------ projections
@@ -217,7 +249,7 @@ export class EventStore {
 
   // ---------------------------------------------------------------- routing
 
-  handle(method: string, path: string, body: unknown): MockResponse {
+  handle(method: string, path: string, body: unknown, session: BrowserSession): MockResponse {
     this.requests.push({ method, path, body });
     const payload = (body ?? {}) as Record<string, any>;
 
@@ -232,59 +264,59 @@ export class EventStore {
       case "POST /api/participant/entry-receipt":
         return { status: 200, json: { operationId: this.identifier("44444444") } };
       case "POST /api/participant/entries":
-        return this.enter(String(payload.input?.email ?? ""));
+        return this.enter(String(payload.input?.email ?? ""), session);
       case "GET /api/participant/session":
-        return this.participantSession();
+        return this.participantSession(session);
       case "DELETE /api/participant/session":
-        this.participantSessionId = null;
+        session.participantId = null;
         return { status: 204 };
       case "GET /api/participant/profile":
-        return this.readProfile();
+        return this.readProfile(session);
       case "PUT /api/participant/profile":
-        return this.saveProfile(payload.input ?? {});
+        return this.saveProfile(payload.input ?? {}, session);
 
       case "GET /api/admin/session":
-        return { status: 200, json: { authenticated: this.administratorAuthenticated } };
+        return { status: 200, json: { authenticated: session.administratorAuthenticated } };
       case "POST /api/admin/session":
-        return this.signIn(String(payload.passcode ?? ""));
+        return this.signIn(String(payload.passcode ?? ""), session);
       case "DELETE /api/admin/session":
-        this.administratorAuthenticated = false;
+        session.administratorAuthenticated = false;
         return { status: 204 };
       case "POST /api/admin/session/interaction":
-        return this.administratorAuthenticated ? { status: 204 } : { status: 401 };
+        return session.administratorAuthenticated ? { status: 204 } : { status: 401 };
 
       case "GET /api/admin/participants":
-        return this.administratorAuthenticated
+        return session.administratorAuthenticated
           ? { status: 200, json: this.administratorParticipants() }
           : { status: 401 };
       case "POST /api/admin/participants":
-        return this.addParticipantAsAdministrator(String(payload.email ?? ""));
+        return this.addParticipantAsAdministrator(String(payload.email ?? ""), session);
 
       case "POST /api/admin/projects":
-        return this.createProject(payload.input ?? {});
+        return this.createProject(payload.input ?? {}, session);
       case "POST /api/admin/event/advance":
-        return this.advance(String(payload.toScreen ?? ""), String(payload.expectedVersion ?? ""));
+        return this.advance(String(payload.toScreen ?? ""), String(payload.expectedVersion ?? ""), session);
       case "POST /api/admin/raffle/draws":
-        return this.draw();
+        return this.draw(session);
       case "POST /api/admin/teams/moves":
-        return this.moveMember(payload);
+        return this.moveMember(payload, session);
     }
 
     const participantMatch = /^\/api\/admin\/participants\/([^/]+)$/.exec(path);
     if (participantMatch) {
-      if (method === "PUT") return this.updateParticipant(participantMatch[1], payload.input ?? {});
-      if (method === "DELETE") return this.removeParticipant(participantMatch[1]);
+      if (method === "PUT") return this.updateParticipant(participantMatch[1], payload.input ?? {}, session);
+      if (method === "DELETE") return this.removeParticipant(participantMatch[1], session);
     }
 
     const projectMatch = /^\/api\/admin\/projects\/([^/]+)$/.exec(path);
     if (projectMatch) {
-      if (method === "PUT") return this.updateProject(projectMatch[1], payload.input ?? {});
-      if (method === "DELETE") return this.removeProject(projectMatch[1]);
+      if (method === "PUT") return this.updateProject(projectMatch[1], payload.input ?? {}, session);
+      if (method === "DELETE") return this.removeProject(projectMatch[1], session);
     }
 
     const teamProjectMatch = /^\/api\/admin\/teams\/([^/]+)\/project$/.exec(path);
     if (teamProjectMatch && method === "PUT") {
-      return this.assignProject(teamProjectMatch[1], payload.projectId ?? null);
+      return this.assignProject(teamProjectMatch[1], payload.projectId ?? null, session);
     }
 
     return { status: 404 };
@@ -292,11 +324,11 @@ export class EventStore {
 
   // --------------------------------------------------------------- handlers
 
-  private requireAdministrator(): MockResponse | null {
-    return this.administratorAuthenticated ? null : { status: 401 };
+  private requireAdministrator(session: BrowserSession): MockResponse | null {
+    return session.administratorAuthenticated ? null : { status: 401 };
   }
 
-  private enter(rawEmail: string): MockResponse {
+  private enter(rawEmail: string, session: BrowserSession): MockResponse {
     const email = rawEmail.trim();
     if (!EMAIL_PATTERN.test(email) || email.length > 254) return { status: 422 };
     if (this.currentScreen !== "countdown") return { status: 409 };
@@ -304,27 +336,27 @@ export class EventStore {
     const normalized = email.toUpperCase();
     const existing = this.participants.find(participant => participant.email.toUpperCase() === normalized);
     if (existing) {
-      if (this.participantSessionId === existing.id) {
+      if (session.participantId === existing.id) {
         return { status: 200, json: { participantId: existing.id, publicLabel: existing.publicLabel } };
       }
       return { status: 409 };
     }
 
     const participant = this.addParticipant(email);
-    this.participantSessionId = participant.id;
+    session.participantId = participant.id;
     this.version += 1;
     return { status: 200, json: { participantId: participant.id, publicLabel: participant.publicLabel } };
   }
 
-  private participantSession(): MockResponse {
-    const participant = this.participants.find(candidate => candidate.id === this.participantSessionId);
+  private participantSession(session: BrowserSession): MockResponse {
+    const participant = this.participants.find(candidate => candidate.id === session.participantId);
     return participant
       ? { status: 200, json: { participantId: participant.id, publicLabel: participant.publicLabel } }
       : { status: 401 };
   }
 
-  private readProfile(): MockResponse {
-    const participant = this.participants.find(candidate => candidate.id === this.participantSessionId);
+  private readProfile(session: BrowserSession): MockResponse {
+    const participant = this.participants.find(candidate => candidate.id === session.participantId);
     if (!participant) return { status: 401 };
     return {
       status: 200,
@@ -336,8 +368,8 @@ export class EventStore {
     };
   }
 
-  private saveProfile(input: Record<string, any>): MockResponse {
-    const participant = this.participants.find(candidate => candidate.id === this.participantSessionId);
+  private saveProfile(input: Record<string, any>, session: BrowserSession): MockResponse {
+    const participant = this.participants.find(candidate => candidate.id === session.participantId);
     if (!participant) return { status: 401 };
     if (String(input.name ?? "").length > 200) return { status: 422 };
     participant.name = blankToNull(input.name);
@@ -354,14 +386,16 @@ export class EventStore {
     };
   }
 
-  private signIn(passcode: string): MockResponse {
-    if (passcode !== ADMINISTRATOR_PASSCODE) return { status: 401 };
-    this.administratorAuthenticated = true;
+  private signIn(passcode: string, session: BrowserSession): MockResponse {
+    if (this.provisionedPasscode === null || passcode !== this.provisionedPasscode) {
+      return { status: 401 };
+    }
+    session.administratorAuthenticated = true;
     return { status: 200, json: { authenticated: true } };
   }
 
-  private addParticipantAsAdministrator(rawEmail: string): MockResponse {
-    const denied = this.requireAdministrator();
+  private addParticipantAsAdministrator(rawEmail: string, session: BrowserSession): MockResponse {
+    const denied = this.requireAdministrator(session);
     if (denied) return denied;
 
     const email = rawEmail.trim();
@@ -379,8 +413,8 @@ export class EventStore {
     };
   }
 
-  private updateParticipant(id: string, input: Record<string, any>): MockResponse {
-    const denied = this.requireAdministrator();
+  private updateParticipant(id: string, input: Record<string, any>, session: BrowserSession): MockResponse {
+    const denied = this.requireAdministrator(session);
     if (denied) return denied;
 
     const participant = this.participants.find(candidate => candidate.id === id);
@@ -401,15 +435,15 @@ export class EventStore {
     return { status: 200, json: this.administratorParticipants().find(candidate => candidate.id === id) };
   }
 
-  private removeParticipant(id: string): MockResponse {
-    const denied = this.requireAdministrator();
+  private removeParticipant(id: string, session: BrowserSession): MockResponse {
+    const denied = this.requireAdministrator(session);
     if (denied) return denied;
 
     const index = this.participants.findIndex(candidate => candidate.id === id);
     if (index < 0) return { status: 404 };
 
     const removed = this.participants.splice(index, 1)[0];
-    if (this.participantSessionId === removed.id) this.participantSessionId = null;
+    if (session.participantId === removed.id) session.participantId = null;
     for (const result of [this.latestResult, ...this.previousWinners]) {
       if (result && result.winnerLabel === (removed.name ?? removed.publicLabel)) {
         result.winnerLabel = "Removed participant";
@@ -419,8 +453,8 @@ export class EventStore {
     return { status: 204 };
   }
 
-  private createProject(input: Record<string, any>): MockResponse {
-    const denied = this.requireAdministrator();
+  private createProject(input: Record<string, any>, session: BrowserSession): MockResponse {
+    const denied = this.requireAdministrator(session);
     if (denied) return denied;
     const invalid = validateProject(input);
     if (invalid) return invalid;
@@ -435,8 +469,8 @@ export class EventStore {
     return { status: 200, json: project.id };
   }
 
-  private updateProject(id: string, input: Record<string, any>): MockResponse {
-    const denied = this.requireAdministrator();
+  private updateProject(id: string, input: Record<string, any>, session: BrowserSession): MockResponse {
+    const denied = this.requireAdministrator(session);
     if (denied) return denied;
     const project = this.projects.find(candidate => candidate.id === id);
     if (!project) return { status: 404 };
@@ -451,8 +485,8 @@ export class EventStore {
     return { status: 204 };
   }
 
-  private removeProject(id: string): MockResponse {
-    const denied = this.requireAdministrator();
+  private removeProject(id: string, session: BrowserSession): MockResponse {
+    const denied = this.requireAdministrator(session);
     if (denied) return denied;
     const index = this.projects.findIndex(candidate => candidate.id === id);
     if (index < 0) return { status: 404 };
@@ -463,8 +497,8 @@ export class EventStore {
     return { status: 204 };
   }
 
-  private advance(toScreen: string, expectedVersion: string): MockResponse {
-    const denied = this.requireAdministrator();
+  private advance(toScreen: string, expectedVersion: string, session: BrowserSession): MockResponse {
+    const denied = this.requireAdministrator(session);
     if (denied) return denied;
     if (expectedVersion !== String(this.version)) return { status: 409 };
 
@@ -477,32 +511,45 @@ export class EventStore {
     return { status: 204 };
   }
 
-  private draw(): MockResponse {
-    const denied = this.requireAdministrator();
+  private draw(session: BrowserSession): MockResponse {
+    const denied = this.requireAdministrator(session);
     if (denied) return denied;
+    return this.commitDraw() ? { status: 204 } : { status: 409 };
+  }
 
+  /**
+   * Commits a draw the way the server would, and returns the saved result.
+   * `startedAgoMs` places the draw in the past, so a test can seed a browser
+   * arriving part way through a draw, or after one has already been revealed.
+   */
+  seedDraw(startedAgoMs = 0): RaffleResult | null {
+    return this.commitDraw(startedAgoMs);
+  }
+
+  private commitDraw(startedAgoMs = 0): RaffleResult | null {
     const eligible = this.participants.filter(participant => !participant.hasWonRaffle);
-    if (!eligible.length) return { status: 409 };
+    if (!eligible.length) return null;
 
     const winner = eligible[0];
     winner.hasWonRaffle = true;
-    const startedAt = Date.now() + this.serverClockOffsetMs;
+    const startedAt = Date.now() + this.serverClockOffsetMs - startedAgoMs;
+    const revealAt = startedAt + this.drawRevealDelayMs;
     const result: RaffleResult = {
       drawId: this.identifier("55555555"),
       winnerLabel: winner.name ?? winner.publicLabel,
       candidateLabels: eligible.map(participant => participant.name ?? participant.publicLabel),
       startedAtUtc: new Date(startedAt).toISOString(),
-      revealAtUtc: new Date(startedAt + 4_000).toISOString(),
-      effectsEndAtUtc: new Date(startedAt + 9_000).toISOString()
+      revealAtUtc: new Date(revealAt).toISOString(),
+      effectsEndAtUtc: new Date(revealAt + this.drawEffectsDurationMs).toISOString()
     };
     if (this.latestResult) this.previousWinners = [this.latestResult, ...this.previousWinners];
     this.latestResult = result;
     this.version += 1;
-    return { status: 204 };
+    return result;
   }
 
-  private assignProject(teamId: string, projectId: string | null): MockResponse {
-    const denied = this.requireAdministrator();
+  private assignProject(teamId: string, projectId: string | null, session: BrowserSession): MockResponse {
+    const denied = this.requireAdministrator(session);
     if (denied) return denied;
     const team = this.teams.find(candidate => candidate.id === teamId);
     if (!team) return { status: 404 };
@@ -513,8 +560,8 @@ export class EventStore {
     return { status: 204 };
   }
 
-  private moveMember(payload: Record<string, any>): MockResponse {
-    const denied = this.requireAdministrator();
+  private moveMember(payload: Record<string, any>, session: BrowserSession): MockResponse {
+    const denied = this.requireAdministrator(session);
     if (denied) return denied;
 
     const participant = this.participants.find(candidate => candidate.id === payload.participantId);

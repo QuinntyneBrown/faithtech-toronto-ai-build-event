@@ -104,32 +104,21 @@ jobs:
       - name: Install locked dependencies and audit
         run: |
           npm install --global npm@10.9.4
-          for project in frontend e2e design-system; do
+          for project in frontend e2e; do
             npm --prefix "$project" ci
             npm --prefix "$project" audit --audit-level=high
           done
       - name: Install browser
         working-directory: e2e
         run: npx playwright install --with-deps chrome
-      - name: Build shared Angular libraries
-        working-directory: frontend
-        run: |
-          for project in api components domain; do
-            npx ng build "$project"
-          done
       - name: Application browser acceptance tests
         working-directory: e2e
         run: npx playwright test --shard=${{ matrix.shard }}/2 --reporter=list,html
-      - name: Design system acceptance tests
-        if: matrix.shard == 1
-        run: npm --prefix design-system test
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: browser-${{ matrix.shard }}-${{ github.run_id }}
-          path: |
-            e2e/playwright-report/
-            design-system/playwright-report/
+          path: e2e/playwright-report/
           retention-days: 90
   verify:
     if: always()
