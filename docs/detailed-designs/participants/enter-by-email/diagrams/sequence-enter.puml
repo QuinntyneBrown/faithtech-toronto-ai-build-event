@@ -1,0 +1,44 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Create or recover email entry
+actor "Viewer or entered participant" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "CountdownPageComponent" as page
+participant "IEntryService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "EventEntryController" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "EnterParticipantHandler" as handler
+participant "Participant" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+participant "EventChangePublisher" as push
+end box
+actor -> page : Submit email after privacy notice
+page -> client : Ensure receipt; enter
+client -> controller : POST receipt then entries + CSRF
+controller -> handler : Dispatch command
+handler -> db : Budget; event lock; receipt and version
+alt Authorized operation already committed
+ db --> handler : Original participant identity
+ handler -> db : Reissue session within original expiry
+else Countdown open and new email
+ handler -> entity : Normalize and validate L2-003
+ handler -> db : Commit participant, receipt, version and change
+ db --> handler : Durable result
+else Duplicate unrelated email or closed entry
+ handler --> controller : Duplicate notice without identity / closure conflict
+end
+handler --> controller : Authorized result
+controller --> client : Outcome; private cookie only for creator
+client --> page : Confirm raffle entry or show precise error
+page --> actor : Optional profile after success
+@enduml

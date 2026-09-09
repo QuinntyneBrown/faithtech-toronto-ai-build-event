@@ -1,0 +1,40 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Restore or clear private access
+actor "Viewer or entered participant" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "CountdownPageComponent" as page
+participant "IEntryService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "EventEntryController" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "EnterParticipantHandler" as handler
+participant "Participant" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+participant "EventChangePublisher" as push
+end box
+actor -> page : Refresh or clear session
+page -> client : Restore / clear
+client -> controller : GET / DELETE participant session
+controller -> handler : Dispatch query / revocation
+handler -> db : Read digest, expiry, participant and receipt
+alt Valid restore
+ db --> handler : Owner-only fields
+ handler --> controller : ParticipantSnapshot
+else Clear or invalid session
+ handler -> db : Revoke session and receipt when applicable
+ handler --> controller : Cleared / unauthorized
+end
+controller --> client : Authorized result; expire cleared cookie
+client -> page : Replace or clear private signals
+page --> actor : Saved live public screen
+@enduml

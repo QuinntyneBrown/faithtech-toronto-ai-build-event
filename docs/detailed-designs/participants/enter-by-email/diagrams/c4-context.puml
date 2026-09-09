@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Enter by email and restore the private session — context
+Person(actor, "Viewer or entered participant", "Create one raffle identity without granting ownership by email")
+System(companion, "FaithTech event companion", "Enter by email and restore the private session")
+Rel(actor, companion, "Uses")
+@enduml
