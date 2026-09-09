@@ -82,6 +82,12 @@ export class EventStore {
   /** Milliseconds added to the wall clock for every server time answer. */
   serverClockOffsetMs = 0;
 
+  /** How long a draw cycles names before the winner is revealed. */
+  drawRevealDelayMs = 4_000;
+
+  /** How long the celebration runs after the reveal. */
+  drawEffectsDurationMs = 5_000;
+
   private nextParticipantLabel = 1;
   private nextTeamLabel = 1;
   private sequence = 0;
@@ -501,25 +507,38 @@ export class EventStore {
   private draw(session: BrowserSession): MockResponse {
     const denied = this.requireAdministrator(session);
     if (denied) return denied;
+    return this.commitDraw() ? { status: 204 } : { status: 409 };
+  }
 
+  /**
+   * Commits a draw the way the server would, and returns the saved result.
+   * `startedAgoMs` places the draw in the past, so a test can seed a browser
+   * arriving part way through a draw, or after one has already been revealed.
+   */
+  seedDraw(startedAgoMs = 0): RaffleResult | null {
+    return this.commitDraw(startedAgoMs);
+  }
+
+  private commitDraw(startedAgoMs = 0): RaffleResult | null {
     const eligible = this.participants.filter(participant => !participant.hasWonRaffle);
-    if (!eligible.length) return { status: 409 };
+    if (!eligible.length) return null;
 
     const winner = eligible[0];
     winner.hasWonRaffle = true;
-    const startedAt = Date.now() + this.serverClockOffsetMs;
+    const startedAt = Date.now() + this.serverClockOffsetMs - startedAgoMs;
+    const revealAt = startedAt + this.drawRevealDelayMs;
     const result: RaffleResult = {
       drawId: this.identifier("55555555"),
       winnerLabel: winner.name ?? winner.publicLabel,
       candidateLabels: eligible.map(participant => participant.name ?? participant.publicLabel),
       startedAtUtc: new Date(startedAt).toISOString(),
-      revealAtUtc: new Date(startedAt + 4_000).toISOString(),
-      effectsEndAtUtc: new Date(startedAt + 9_000).toISOString()
+      revealAtUtc: new Date(revealAt).toISOString(),
+      effectsEndAtUtc: new Date(revealAt + this.drawEffectsDurationMs).toISOString()
     };
     if (this.latestResult) this.previousWinners = [this.latestResult, ...this.previousWinners];
     this.latestResult = result;
     this.version += 1;
-    return { status: 204 };
+    return result;
   }
 
   private assignProject(teamId: string, projectId: string | null, session: BrowserSession): MockResponse {
