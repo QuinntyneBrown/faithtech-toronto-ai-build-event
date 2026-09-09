@@ -11,7 +11,7 @@ public sealed class SqlOperatorUnitOfWork(EventDbContext db, OperatorPrincipal p
 {
     public async Task Lock(string resource, CancellationToken token)
     {
-        var timeout = (db.Database.GetCommandTimeout() ?? 60) * 1000;
+        var timeout = (int)Math.Min((long)(db.Database.GetCommandTimeout() ?? 60) * 1000, int.MaxValue);
         await db.Database.ExecuteSqlInterpolatedAsync($"DECLARE @result int; EXEC @result = sp_getapplock @Resource={resource}, @LockMode='Exclusive', @LockOwner='Transaction', @LockTimeout={timeout}; IF @result < 0 THROW 51000, 'Operation lock unavailable', 1;", token);
     }
     public async Task Permissions(CancellationToken token)
