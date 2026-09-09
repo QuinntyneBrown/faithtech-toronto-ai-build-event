@@ -11,9 +11,15 @@ public sealed class SqlAdministratorLoginAttemptStore(CompanionDbContext databas
 
     public async Task<TimeSpan?> GetRetryAfterAsync(string source, DateTimeOffset nowUtc, CancellationToken cancellationToken)
     {
-        var oldest = await database.AdministratorLoginAttempts.Where(attempt => attempt.Source == source && attempt.AttemptedAtUtc > nowUtc - Window).OrderBy(attempt => attempt.AttemptedAtUtc).Select(attempt => (DateTimeOffset?)attempt.AttemptedAtUtc).FirstOrDefaultAsync(cancellationToken);
-        var count = await database.AdministratorLoginAttempts.CountAsync(attempt => attempt.Source == source && attempt.AttemptedAtUtc > nowUtc - Window, cancellationToken);
-        return count < 5 || oldest is null ? null : oldest.Value.Add(Window) - nowUtc;
+        var recent = database.AdministratorLoginAttempts.Where(attempt => attempt.AttemptedAtUtc > nowUtc - Window);
+        var sourceAttempts = recent.Where(attempt => attempt.Source == source);
+        var sourceCount = await sourceAttempts.CountAsync(cancellationToken);
+        var deploymentCount = await recent.CountAsync(cancellationToken);
+        if (sourceCount < 5 && deploymentCount < 20) return null;
+
+        var limitingAttempts = sourceCount >= 5 ? sourceAttempts : recent;
+        var oldest = await limitingAttempts.OrderBy(attempt => attempt.AttemptedAtUtc).Select(attempt => attempt.AttemptedAtUtc).FirstAsync(cancellationToken);
+        return oldest.Add(Window) - nowUtc;
     }
 
     public async Task RecordFailureAsync(string source, DateTimeOffset nowUtc, CancellationToken cancellationToken)

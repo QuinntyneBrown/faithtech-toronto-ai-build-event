@@ -60,4 +60,18 @@ public sealed class AdministratorSessionTests : IClassFixture<CountdownApiFactor
         Assert.Equal((HttpStatusCode)429, throttled.StatusCode);
         Assert.True(int.Parse(throttled.Headers.GetValues("Retry-After").Single()) > 0);
     }
+
+    [Fact]
+    public async Task Twenty_failed_checks_across_sources_throttle_the_deployment()
+    {
+        await factory.ClearAdministratorLoginAttemptsAsync();
+        await factory.ProvisionAdministratorPasscodeAsync("0042");
+        await factory.RecordAdministratorLoginFailuresAsync(20);
+        using var client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+
+        var throttled = await client.PostAsJsonAsync("/api/admin/session", new { passcode = "0042" });
+
+        Assert.Equal((HttpStatusCode)429, throttled.StatusCode);
+        Assert.True(int.Parse(throttled.Headers.GetValues("Retry-After").Single()) > 0);
+    }
 }

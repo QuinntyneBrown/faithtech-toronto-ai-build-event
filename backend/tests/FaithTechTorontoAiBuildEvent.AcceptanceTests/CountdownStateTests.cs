@@ -82,4 +82,11 @@ public sealed class CountdownApiFactory : WebApplicationFactory<Program>
         database.AdministratorLoginAttempts.RemoveRange(database.AdministratorLoginAttempts);
         await database.SaveChangesAsync();
     }
+
+    public async Task RecordAdministratorLoginFailuresAsync(int count)
+    {
+        using var scope = Services.CreateScope();
+        var attempts = scope.ServiceProvider.GetRequiredService<IAdministratorLoginAttemptStore>();
+        for (var index = 0; index < count; index++) await attempts.RecordFailureAsync($"source-{index}", DateTimeOffset.UtcNow, CancellationToken.None);
+    }
 }
