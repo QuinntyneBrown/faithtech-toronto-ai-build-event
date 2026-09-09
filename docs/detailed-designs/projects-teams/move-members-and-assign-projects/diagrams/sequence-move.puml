@@ -1,0 +1,46 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Move a member using either interaction
+actor "Administrator" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "TeamsPageComponent" as page
+participant "ITeamService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "TeamsController" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "MoveTeamMemberHandler" as handler
+participant "Team" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+participant "EventChangePublisher" as push
+end box
+actor -> page : Drop member / choose Move to
+page -> client : MemberMove + operation ID/version
+client -> controller : POST team moves
+controller -> handler : Dispatch authorized move
+handler -> db : Lock event; validate session / receipt / version / IDs
+alt New team destination
+ handler -> entity : Create distinct label; no project
+ handler -> db : Insert team and update Participant.TeamId
+else Existing or Unassigned
+ handler -> db : Replace Participant.TeamId with target or null
+end
+alt Valid commit
+ handler -> db : Commit membership, receipt and change L2-009
+ db --> handler : Saved board version
+ handler --> controller : TeamResult
+else Stale target or storage failure
+ handler --> controller : Conflict / failure; no partial move
+end
+controller --> client : Outcome
+client --> page : Authoritative board; preserve rejected intent
+page --> actor : Announce once; restore reachable focus
+@enduml
