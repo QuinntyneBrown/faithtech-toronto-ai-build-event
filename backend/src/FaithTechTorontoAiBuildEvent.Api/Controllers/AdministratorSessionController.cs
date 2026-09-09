@@ -42,6 +42,15 @@ public sealed class AdministratorSessionController(ISender sender) : ControllerB
         return active ? Ok(new AdministratorSessionResponse(true)) : Unauthorized();
     }
 
+    [HttpPost("interaction")]
+    public async Task<IActionResult> RecordInteraction(CancellationToken cancellationToken)
+    {
+        var active = await sender.Send(
+            new RecordAdministratorInteractionCommand(Request.Cookies["faithtech-admin"]),
+            cancellationToken);
+        return active ? NoContent() : Unauthorized();
+    }
+
     [HttpDelete]
     public async Task<IActionResult> Delete(CancellationToken cancellationToken)
     {

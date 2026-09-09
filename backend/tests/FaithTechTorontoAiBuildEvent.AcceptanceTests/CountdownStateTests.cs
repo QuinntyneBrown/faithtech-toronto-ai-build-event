@@ -89,4 +89,20 @@ public sealed class CountdownApiFactory : WebApplicationFactory<Program>
         var attempts = scope.ServiceProvider.GetRequiredService<IAdministratorLoginAttemptStore>();
         for (var index = 0; index < count; index++) await attempts.RecordFailureAsync($"source-{index}", DateTimeOffset.UtcNow, CancellationToken.None);
     }
+
+    public async Task SetAdministratorLastInteractionAsync(DateTimeOffset interactionAtUtc)
+    {
+        using var scope = Services.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<CompanionDbContext>();
+        var session = await database.AdministratorSessions.SingleAsync(session => !session.Revoked);
+        session.LastInteractionAtUtc = interactionAtUtc;
+        await database.SaveChangesAsync();
+    }
+
+    public async Task<DateTimeOffset> GetAdministratorLastInteractionAsync()
+    {
+        using var scope = Services.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<CompanionDbContext>();
+        return (await database.AdministratorSessions.SingleAsync(session => !session.Revoked)).LastInteractionAtUtc;
+    }
 }

@@ -104,4 +104,40 @@ public sealed class AdministratorSessionTests : IClassFixture<CountdownApiFactor
 
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/admin/session")).StatusCode);
     }
+
+    [Fact]
+    public async Task Explicit_interaction_renews_idle_expiry_but_background_reads_do_not()
+    {
+        await factory.ClearAdministratorLoginAttemptsAsync();
+        await factory.ProvisionAdministratorPasscodeAsync("0042");
+        using var client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/api/admin/session", new { passcode = "0042" })).StatusCode);
+        var initialInteraction = await factory.GetAdministratorLastInteractionAsync();
+
+        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsync("/api/admin/session/interaction", null)).StatusCode);
+        Assert.Equal(initialInteraction, await factory.GetAdministratorLastInteractionAsync());
+
+        var oldInteraction = DateTimeOffset.UtcNow.AddMinutes(-29);
+        await factory.SetAdministratorLastInteractionAsync(oldInteraction);
+
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/admin/session")).StatusCode);
+        Assert.Equal(oldInteraction, await factory.GetAdministratorLastInteractionAsync());
+
+        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsync("/api/admin/session/interaction", null)).StatusCode);
+        Assert.True(await factory.GetAdministratorLastInteractionAsync() > oldInteraction);
+    }
+
+    [Fact]
+    public async Task Explicit_interaction_cannot_revive_an_idle_expired_session()
+    {
+        await factory.ClearAdministratorLoginAttemptsAsync();
+        await factory.ProvisionAdministratorPasscodeAsync("0042");
+        using var client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/api/admin/session", new { passcode = "0042" })).StatusCode);
+        var expiredInteraction = DateTimeOffset.UtcNow.AddMinutes(-31);
+        await factory.SetAdministratorLastInteractionAsync(expiredInteraction);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsync("/api/admin/session/interaction", null)).StatusCode);
+        Assert.Equal(expiredInteraction, await factory.GetAdministratorLastInteractionAsync());
+    }
 }

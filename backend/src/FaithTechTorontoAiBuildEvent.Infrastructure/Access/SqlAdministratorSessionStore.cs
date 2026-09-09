@@ -35,4 +35,43 @@ public sealed class SqlAdministratorSessionStore(CompanionDbContext database, Pa
         session.Revoked = true;
         await database.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<bool> RecordInteractionAsync(byte[] secretDigest, DateTimeOffset nowUtc, CancellationToken cancellationToken)
+    {
+        var credential = await database.CompanionCredentials.SingleOrDefaultAsync(cancellationToken);
+        if (credential is null) return false;
+
+        var sessions = await database.AdministratorSessions
+            .Where(session => !session.Revoked)
+            .ToListAsync(cancellationToken);
+        var session = sessions.SingleOrDefault(candidate =>
+            System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(candidate.SecretDigest, secretDigest));
+        if (session is null
+            || session.CredentialRevision != credential.Revision
+            || session.CreatedAtUtc.AddHours(8) <= nowUtc
+            || session.LastInteractionAtUtc.AddMinutes(30) <= nowUtc)
+        {
+            return false;
+        }
+
+        if (session.LastInteractionAtUtc.AddSeconds(30) > nowUtc) return true;
+
+        if (database.Database.IsRelational())
+        {
+            await database.AdministratorSessions
+                .Where(candidate => candidate.Id == session.Id
+                    && candidate.LastInteractionAtUtc < nowUtc
+                    && candidate.LastInteractionAtUtc <= nowUtc.AddSeconds(-30))
+                .ExecuteUpdateAsync(
+                    setters => setters.SetProperty(candidate => candidate.LastInteractionAtUtc, nowUtc),
+                    cancellationToken);
+        }
+        else
+        {
+            session.LastInteractionAtUtc = nowUtc;
+            await database.SaveChangesAsync(cancellationToken);
+        }
+
+        return true;
+    }
 }
