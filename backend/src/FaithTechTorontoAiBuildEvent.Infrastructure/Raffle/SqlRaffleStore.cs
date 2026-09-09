@@ -32,6 +32,11 @@ public sealed class SqlRaffleStore(CompanionDbContext database, IEventUpdatePubl
             throw new InvalidOperationException("Raffle state changed; reload and try again.");
         }
 
+        if (await database.RaffleDraws.AnyAsync(draw => draw.EffectsEndAtUtc > nowUtc, cancellationToken))
+        {
+            throw new InvalidOperationException("The current raffle draw is still presenting.");
+        }
+
         var priorWinners = await database.RaffleDraws.Select(draw => draw.WinnerParticipantId).ToListAsync(cancellationToken);
         var eligibleParticipants = await database.Participants
             .Where(participant => !priorWinners.Contains(participant.Id))
