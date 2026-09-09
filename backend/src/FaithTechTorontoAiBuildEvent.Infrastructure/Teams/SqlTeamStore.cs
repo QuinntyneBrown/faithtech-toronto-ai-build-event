@@ -5,6 +5,8 @@ using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using DomainEventState = FaithTechTorontoAiBuildEvent.Domain.EventFlow.EventState;
 using FaithTechTorontoAiBuildEvent.Application.EventState;
+using FaithTechTorontoAiBuildEvent.Domain.Operations;
+using System.Security.Cryptography;
 
 namespace FaithTechTorontoAiBuildEvent.Infrastructure.Teams;
 
@@ -24,8 +26,18 @@ public sealed class SqlTeamStore(CompanionDbContext database, IEventUpdatePublis
         await updatePublisher.PublishAsync(state.Version, cancellationToken);
     }
 
-    public async Task MoveAsync(Guid participantId, string destination, Guid? teamId, long expectedVersion, CancellationToken cancellationToken)
+    public async Task MoveAsync(Guid operationId, byte[] inputDigest, Guid participantId, string destination, Guid? teamId, long expectedVersion, CancellationToken cancellationToken)
     {
+        var receipt = await database.EventOperationReceipts.SingleOrDefaultAsync(candidate => candidate.OperationId == operationId, cancellationToken);
+        if (receipt is not null)
+        {
+            if (receipt.OperationKind != "move-team-member" || !CryptographicOperations.FixedTimeEquals(receipt.InputDigest, inputDigest))
+            {
+                throw new ArgumentException("The operation identity was already used with different input.");
+            }
+            return;
+        }
+
         var state = await GetTeamsStateAsync(expectedVersion, cancellationToken);
         var participant = await database.Participants.SingleOrDefaultAsync(candidate => candidate.Id == participantId, cancellationToken)
             ?? throw new KeyNotFoundException("Participant not found.");
@@ -49,6 +61,15 @@ public sealed class SqlTeamStore(CompanionDbContext database, IEventUpdatePublis
         }
 
         state.Version++;
+        database.EventOperationReceipts.Add(new EventOperationReceipt
+        {
+            OperationId = operationId,
+            OperationKind = "move-team-member",
+            InputDigest = inputDigest,
+            ResultId = participant.TeamId,
+            ResultVersion = state.Version,
+            CreatedAtUtc = DateTimeOffset.UtcNow
+        });
         await database.SaveChangesAsync(cancellationToken);
         await updatePublisher.PublishAsync(state.Version, cancellationToken);
     }
