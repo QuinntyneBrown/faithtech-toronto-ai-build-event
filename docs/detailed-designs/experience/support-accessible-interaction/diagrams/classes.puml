@@ -1,0 +1,41 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+title Support responsive and accessible interaction — structure
+interface IEventService {
++readonly state: Signal<PublicEventSnapshot>
++readonly synchronized: Signal<boolean>
+}
+class AppComponent
+AppComponent ..> IEventService : consumes contract
+class EventStateController
+class GetEventSnapshotHandler {
+  +Handle(request: GetEventSnapshotQuery): Task<PublicEventSnapshot>
+}
+class GetEventSnapshotQuery {
++ProjectionKind Projection
+}
+class PresentationState {
++Screen CurrentScreen
++bool Synchronizing
++bool ReducedMotion
++string? StatusMessage
+}
+EventStateController ..> GetEventSnapshotHandler : dispatches
+GetEventSnapshotHandler ..> GetEventSnapshotQuery : handles
+GetEventSnapshotHandler --> PresentationState : uses
+class LiveScreenCoordinator {
+ +Apply(snapshot: PublicEventSnapshot): void
+ +RestoreFocus(previous: HTMLElement?): void
+}
+class ReviewDialogComponent {
+ +Open(): void
+ +Close(): void
+ +trigger: HTMLElement?
+}
+AppComponent --> LiveScreenCoordinator
+AppComponent --> ReviewDialogComponent
+@enduml

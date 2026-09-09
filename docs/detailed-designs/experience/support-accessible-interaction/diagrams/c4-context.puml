@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Support responsive and accessible interaction — context
+Person(actor, "Viewer or administrator using keyboard, touch, or assistive technology", "Keep all four screens usable across viewport and capability changes")
+System(companion, "FaithTech event companion", "Support responsive and accessible interaction")
+Rel(actor, companion, "Uses")
+@enduml
