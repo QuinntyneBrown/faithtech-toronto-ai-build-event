@@ -15,6 +15,8 @@ var application = builder.Build();
 application.UseMiddleware<SameOriginMutationMiddleware>();
 application.MapControllers();
 application.MapHub<EventUpdatesHub>("/hubs/event-updates");
+application.MapHub<AdministratorUpdatesHub>("/hubs/administrator-updates");
+application.MapHub<ParticipantUpdatesHub>("/hubs/participant-updates");
 application.Run();
 
 public partial class Program;
