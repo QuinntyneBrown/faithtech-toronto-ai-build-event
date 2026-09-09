@@ -14,12 +14,16 @@ public sealed class AdvanceScreenHandler(
     {
         if (string.IsNullOrEmpty(request.AdministratorSecret) || !long.TryParse(request.ExpectedVersion, out var expectedVersion))
         {
-            return false;
+            throw new UnauthorizedAccessException();
         }
         if (!await authorizationStore.IsAuthorizedAsync(secretService.Digest(request.AdministratorSecret), DateTimeOffset.UtcNow, cancellationToken))
         {
-            return false;
+            throw new UnauthorizedAccessException();
         }
-        return await eventFlowStore.AdvanceAsync(expectedVersion, request.FromScreen, request.ToScreen, cancellationToken);
+        if (!await eventFlowStore.AdvanceAsync(expectedVersion, request.FromScreen, request.ToScreen, cancellationToken))
+        {
+            throw new InvalidOperationException("Event state changed; reload and try again.");
+        }
+        return true;
     }
 }
