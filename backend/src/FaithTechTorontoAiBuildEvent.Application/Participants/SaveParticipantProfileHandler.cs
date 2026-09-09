@@ -1,4 +1,5 @@
 using MediatR;
+using FaithTechTorontoAiBuildEvent.Application.Validation;
 
 namespace FaithTechTorontoAiBuildEvent.Application.Participants;
 
@@ -21,7 +22,9 @@ public sealed class SaveParticipantProfileHandler(IProfileStore profileStore, IE
 
     private static void Validate(ProfileInput input)
     {
-        if ((input.Name?.Trim().Length ?? 0) > 200 || (input.WhatYouMake?.Trim().Length ?? 0) > 2000 || (input.OnYourHeart?.Trim().Length ?? 0) > 2000)
+        if (!UnicodeText.IsWithinScalarLimit(input.Name, 200)
+            || !UnicodeText.IsWithinScalarLimit(input.WhatYouMake, 2000)
+            || !UnicodeText.IsWithinScalarLimit(input.OnYourHeart, 2000))
         {
             throw new EntryValidationException("Profile fields are too long.");
         }
