@@ -27,16 +27,17 @@ public sealed class RaffleRenameTests : IClassFixture<CountdownApiFactory>
         await client.PostAsJsonAsync("/api/admin/event/advance", new { operationId = Guid.NewGuid(), expectedVersion = "3", fromScreen = "teams", toScreen = "raffle" });
         await client.PostAsJsonAsync("/api/admin/raffle/draws", new { operationId = Guid.NewGuid(), expectedVersion = "4" });
 
+        var renamed = string.Concat(Enumerable.Repeat("😀", 200));
         await client.PutAsJsonAsync($"/api/admin/participants/{participant!.Id}", new
         {
             operationId = Guid.NewGuid(),
             expectedVersion = "5",
-            input = new { email = participant.Email, name = "Renamed winner", whatYouMake = (string?)null, onYourHeart = (string?)null }
+            input = new { email = participant.Email, name = renamed, whatYouMake = (string?)null, onYourHeart = (string?)null }
         });
         var raffle = await client.GetFromJsonAsync<RaffleSnapshotResponse>("/api/event/raffle");
 
-        Assert.Equal("Renamed winner (Participant 001)", raffle!.LatestResult!.WinnerLabel);
-        Assert.Equal(["Renamed winner (Participant 001)"], raffle.LatestResult.CandidateLabels);
+        Assert.Equal($"{renamed} (Participant 001)", raffle!.LatestResult!.WinnerLabel);
+        Assert.Equal([$"{renamed} (Participant 001)"], raffle.LatestResult.CandidateLabels);
     }
 
     private sealed record ParticipantResponse(Guid Id, string Email);

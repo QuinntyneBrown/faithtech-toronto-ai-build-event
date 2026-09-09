@@ -125,7 +125,7 @@ public sealed class CompanionDbContext(DbContextOptions<CompanionDbContext> opti
         modelBuilder.Entity<RaffleDraw>(builder =>
         {
             builder.HasKey(draw => draw.Id);
-            builder.Property(draw => draw.WinnerLabel).HasMaxLength(64).IsRequired();
+            builder.Property(draw => draw.WinnerLabel).HasMaxLength(512).IsRequired();
             builder.HasIndex(draw => draw.OperationId).IsUnique();
             builder.HasIndex(draw => draw.WinnerParticipantId).IsUnique();
         });
@@ -133,7 +133,7 @@ public sealed class CompanionDbContext(DbContextOptions<CompanionDbContext> opti
         modelBuilder.Entity<RaffleCandidate>(builder =>
         {
             builder.HasKey(candidate => new { candidate.DrawId, candidate.ParticipantId });
-            builder.Property(candidate => candidate.Label).HasMaxLength(64).IsRequired();
+            builder.Property(candidate => candidate.Label).HasMaxLength(512).IsRequired();
         });
     }
 
