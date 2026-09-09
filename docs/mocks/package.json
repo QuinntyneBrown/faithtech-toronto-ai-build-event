@@ -1,0 +1,12 @@
+{
+  "name": "faithtech-event-mock", "version": "0.0.0", "private": true,
+  "scripts": {"start": "ng serve app --port 4300", "build": "ng build components && ng build app"},
+  "dependencies": {
+    "@angular/animations": "21.2.22", "@angular/cdk": "21.2.14",
+    "@angular/common": "21.2.22", "@angular/compiler": "21.2.22",
+    "@angular/core": "21.2.22", "@angular/forms": "21.2.22",
+    "@angular/platform-browser": "21.2.22", "@angular/router": "21.2.22",
+    "@quinntyne/cornerstone": "0.1.3", "rxjs": "7.8.2", "tslib": "2.8.1"
+  },
+  "devDependencies": {"@angular/build": "21.2.23", "@angular/cli": "21.2.23", "@angular/compiler-cli": "21.2.22", "ng-packagr": "21.2.7", "typescript": "5.9.3", "@webgpu/types": "0.1.69"}
+}
