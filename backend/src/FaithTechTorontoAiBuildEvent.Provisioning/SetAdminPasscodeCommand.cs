@@ -9,8 +9,8 @@ public static class SetAdminPasscodeCommand
         var target = new Option<string>("--target") { Required = true, Description = "Explicit connection-string environment target name." };
         var stdin = new Option<bool>("--passcode-stdin") { Description = "Read the four-digit passcode from standard input." };
         var interactive = new Option<bool>("--interactive") { Description = "Read the four-digit passcode through a masked prompt." };
-        var connectionTimeout = new Option<int?>("--connection-timeout-seconds", "Positive connection timeout in seconds (default: 30).");
-        var commandTimeout = new Option<int?>("--command-timeout-seconds", "Positive command timeout in seconds (default: 60).");
+        var connectionTimeout = new Option<int?>("--connection-timeout-seconds") { Description = "Positive connection timeout in seconds (default: 30)." };
+        var commandTimeout = new Option<int?>("--command-timeout-seconds") { Description = "Positive command timeout in seconds (default: 60)." };
         var command = new Command("set-admin-passcode", "Replace the administrator passcode without printing it.");
         command.Options.Add(target);
         command.Options.Add(stdin);
