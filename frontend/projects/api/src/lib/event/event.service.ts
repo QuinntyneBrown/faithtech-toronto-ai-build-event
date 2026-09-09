@@ -18,6 +18,7 @@ export class EventService implements IEventService {
   private serverAnchorMilliseconds: number | null = null;
   private monotonicAnchorMilliseconds: number | null = null;
   private clockRefreshPending: Promise<void> | null = null;
+  private recoveryRequired = false;
   private readonly destroyRef = inject(DestroyRef);
   private readonly connection: HubConnection;
 
@@ -30,6 +31,7 @@ export class EventService implements IEventService {
       }
     });
     this.connection.onreconnecting(() => {
+      this.recoveryRequired = true;
       this.connected.set(false);
       this.connectionError.set("Live updates are reconnecting. Changes are disabled until the event is synchronized.");
     });
@@ -37,6 +39,7 @@ export class EventService implements IEventService {
       this.synchronize();
     });
     this.connection.onclose(() => {
+      this.recoveryRequired = true;
       this.connected.set(false);
       this.connectionError.set("Live updates are unavailable. Changes are disabled until you reconnect.");
     });
@@ -83,6 +86,7 @@ export class EventService implements IEventService {
   }
 
   retryLiveUpdates(): void {
+    this.recoveryRequired = false;
     if (this.connection.state === HubConnectionState.Disconnected) void this.startConnection();
     else this.synchronize();
   }
@@ -126,7 +130,7 @@ export class EventService implements IEventService {
   private async startConnection(): Promise<void> {
     try {
       await this.connection.start();
-      this.synchronize();
+      if (!this.recoveryRequired) this.synchronize();
     } catch {
       this.connected.set(false);
       this.connectionError.set("Live updates are unavailable. Changes are disabled until you reconnect.");
