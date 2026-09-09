@@ -1,5 +1,5 @@
 import { DatePipe } from "@angular/common";
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from "@angular/core";
+import { ChangeDetectionStrategy, Component, DestroyRef, effect, inject, signal } from "@angular/core";
 import { CardComponent, CountdownComponent as CsCountdownComponent } from "@quinntyne/cornerstone";
 import { ADMINISTRATOR_SESSION_SERVICE, EVENT_FLOW_SERVICE, EVENT_SERVICE } from "@faithtech/api";
 import { EventHeaderComponent } from "@faithtech/components";
@@ -22,6 +22,9 @@ export class CountdownComponent {
 
   constructor() {
     this.event.load();
+    effect(() => {
+      if (this.event.clockSynchronized()) this.now.set(this.event.serverNow());
+    });
     const timer = window.setInterval(() => this.now.set(this.event.serverNow()), 250);
     inject(DestroyRef).onDestroy(() => window.clearInterval(timer));
   }
