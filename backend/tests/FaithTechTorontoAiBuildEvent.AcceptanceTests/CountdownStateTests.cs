@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
 using FaithTechTorontoAiBuildEvent.Application.Access;
+using Microsoft.Data.SqlClient;
 
 namespace FaithTechTorontoAiBuildEvent.AcceptanceTests;
 
@@ -51,6 +52,7 @@ public sealed class CountdownStateTests : IClassFixture<CountdownApiFactory>
 public sealed class CountdownApiFactory : WebApplicationFactory<Program>
 {
     private readonly string databaseName = Guid.NewGuid().ToString();
+    private readonly string? sqlServerConnection = Environment.GetEnvironmentVariable("FAITHTECH_TEST_SQL");
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -65,7 +67,18 @@ public sealed class CountdownApiFactory : WebApplicationFactory<Program>
             services.RemoveAll<DbContextOptions<CompanionDbContext>>();
             services.RemoveAll<DbContextOptions>();
             services.RemoveAll<IDbContextOptionsConfiguration<CompanionDbContext>>();
-            services.AddDbContext<CompanionDbContext>(options => options.UseInMemoryDatabase(databaseName));
+            if (sqlServerConnection is null)
+            {
+                services.AddDbContext<CompanionDbContext>(options => options.UseInMemoryDatabase(databaseName));
+            }
+            else
+            {
+                var connection = new SqlConnectionStringBuilder(sqlServerConnection)
+                {
+                    InitialCatalog = $"FaithTechAcceptance_{databaseName.Replace("-", string.Empty)}"
+                };
+                services.AddDbContext<CompanionDbContext>(options => options.UseSqlServer(connection.ConnectionString));
+            }
         });
     }
 
