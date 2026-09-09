@@ -46,7 +46,10 @@ export class EventService implements IEventService {
     this.error.set(null);
     this.http.get<PublicEventState>("/api/event/state").subscribe({
       next: state => {
-        this.state.set(state);
+        const current = this.state();
+        if (current === null || BigInt(state.version) >= BigInt(current.version)) {
+          this.state.set(state);
+        }
         this.loading.set(false);
         this.refreshServerTime();
       },
