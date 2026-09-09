@@ -1,0 +1,45 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Form and persist the first grouping
+actor "Administrator" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "TeamsPageComponent" as page
+participant "IEventService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "EventFlowController" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "AdvanceScreenHandler" as handler
+participant "FormTeamsPolicy" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+participant "EventChangePublisher" as push
+end box
+actor -> page : Open Team selection from Projects
+page -> client : Advance with original operation ID/version
+client -> controller : POST event advance
+controller -> handler : Dispatch authorized advance
+handler -> db : Lock event; check receipt, version, stage
+alt New valid first opening
+ handler -> db : Read current nondeleted participant IDs
+ db --> handler : Complete ordered roster IDs
+ handler -> entity : Fisher-Yates with unbiased IRandomSource L2-010
+ entity --> handler : Consecutive groups of three plus remainder
+ handler -> db : Commit teams, memberships, formed flag and stage
+ db --> handler : One durable grouping and version
+else Exact retry
+ db --> handler : Original operation result
+else Stale or already formed new command
+ handler --> controller : Conflict; no reshuffle
+end
+handler --> controller : Result
+controller --> client : Committed state or rejection
+client -> page : Render saved board; zero roster has empty state
+@enduml
