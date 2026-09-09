@@ -74,4 +74,20 @@ public sealed class AdministratorSessionTests : IClassFixture<CountdownApiFactor
         Assert.Equal((HttpStatusCode)429, throttled.StatusCode);
         Assert.True(int.Parse(throttled.Headers.GetValues("Retry-After").Single()) > 0);
     }
+
+    [Fact]
+    public async Task Successful_login_does_not_erase_prior_failed_checks()
+    {
+        await factory.ClearAdministratorLoginAttemptsAsync();
+        await factory.ProvisionAdministratorPasscodeAsync("0042");
+        using var client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+
+        for (var attempt = 0; attempt < 4; attempt++) Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync("/api/admin/session", new { passcode = "9999" })).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/api/admin/session", new { passcode = "0042" })).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync("/api/admin/session", new { passcode = "9999" })).StatusCode);
+
+        var throttled = await client.PostAsJsonAsync("/api/admin/session", new { passcode = "0042" });
+
+        Assert.Equal((HttpStatusCode)429, throttled.StatusCode);
+    }
 }
