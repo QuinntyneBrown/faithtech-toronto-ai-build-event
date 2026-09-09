@@ -19,7 +19,11 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddEventInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddMediatR(options => options.RegisterServicesFromAssemblyContaining<AuthenticateAdministratorCommand>());
+        services.AddMediatR(options => {
+            options.TypeEvaluator = type => type != typeof(Application.Operations.ReviewEventImportHandler) &&
+                type != typeof(Application.Operations.ApplyEventImportHandler) && type != typeof(Application.Operations.ReconcileEventImportHandler);
+            options.RegisterServicesFromAssemblyContaining<AuthenticateAdministratorCommand>();
+        });
         services.AddOptions<DatabaseOptions>().Bind(configuration.GetSection("ConnectionStrings"))
             .Validate(options => options.IsValid(), "Configure ConnectionStrings:EventDatabase with a server, database and MARS disabled.").ValidateOnStart();
         services.AddDbContext<EventDbContext>((provider, options) => options.UseSqlServer(

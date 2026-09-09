@@ -4,6 +4,7 @@ public sealed class OperationReceipt
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid ActorId { get; set; }
+    public ActorKind ActorKind { get; set; }
     public Guid? EventId { get; set; }
     public Guid OperationId { get; set; }
     public required string Target { get; set; }

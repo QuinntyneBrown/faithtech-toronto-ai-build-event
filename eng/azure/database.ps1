@@ -20,8 +20,7 @@ try {
     $digest = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes((Get-DeploymentSecret 'digest')))
     $env:Security__DigestKey = $digest
     $env:DOTNET_ENVIRONMENT = 'Production'
-    & dotnet artifacts/release/provisioning/FaithTechTorontoAiBuildEvent.Provisioning.dll migrate
-    if ($LASTEXITCODE -ne 0) { throw 'Initial database migration failed.' }
+    & "$PSScriptRoot/../scripts/Invoke-ReviewedMigration.ps1" -ToolPath artifacts/release/provisioning/FaithTechTorontoAiBuildEvent.Provisioning.dll
     $env:SQLCMDPASSWORD = Get-DeploymentSecret 'sql-administrator'
     $sqlArguments = @('-S', $resources.sqlHostname.value, '-d', 'FaithTech', '-U', 'faithtech_provisioner', '-b', '-l', '30')
     foreach ($role in @('runtime', 'migration')) {

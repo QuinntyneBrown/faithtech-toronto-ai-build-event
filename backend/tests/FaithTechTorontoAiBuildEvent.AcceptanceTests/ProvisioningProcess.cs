@@ -11,7 +11,7 @@ internal static class ProvisioningProcess
         => (await Execute(factory, arguments, password)).ExitCode;
 
     public static async Task<ProvisioningResult> Execute(EventApiFactory factory, string[] arguments, string? password = null,
-        bool closeOutputBeforeMutation = false)
+        bool closeOutputBeforeMutation = false, bool closeOutputImmediately = false)
     {
         using var scope = factory.Services.CreateScope();
         var start = new ProcessStartInfo("dotnet")
@@ -35,12 +35,13 @@ internal static class ProvisioningProcess
             .GetRequiredService<EventDbContext>().Database.GetConnectionString();
         start.Environment["Security__DigestKey"] = Convert.ToBase64String(new byte[32]);
         using var process = Process.Start(start)!;
+        if (closeOutputImmediately) process.StandardOutput.Close();
         if (closeOutputBeforeMutation)
         {
             await process.StandardOutput.ReadLineAsync().WaitAsync(TimeSpan.FromSeconds(30));
             process.StandardOutput.Close();
         }
-        var output = closeOutputBeforeMutation ? Task.FromResult("") : process.StandardOutput.ReadToEndAsync();
+        var output = closeOutputBeforeMutation || closeOutputImmediately ? Task.FromResult("") : process.StandardOutput.ReadToEndAsync();
         var error = process.StandardError.ReadToEndAsync();
         if (password is not null) await process.StandardInput.WriteLineAsync(password);
         process.StandardInput.Close();
