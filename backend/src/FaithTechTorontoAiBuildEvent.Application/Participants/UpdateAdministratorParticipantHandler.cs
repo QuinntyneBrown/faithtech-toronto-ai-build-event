@@ -1,5 +1,6 @@
 using FaithTechTorontoAiBuildEvent.Application.Access;
 using FaithTechTorontoAiBuildEvent.Application.Operations;
+using FaithTechTorontoAiBuildEvent.Application.Validation;
 using MediatR;
 using System.Globalization;
 
@@ -12,6 +13,12 @@ public sealed class UpdateAdministratorParticipantHandler(IAdministratorAuthoriz
         if (string.IsNullOrEmpty(request.AdministratorSecret) || !long.TryParse(request.ExpectedVersion, out var version) || !await authorizationStore.IsAuthorizedAsync(secretService.Digest(request.AdministratorSecret), DateTimeOffset.UtcNow, cancellationToken)) throw new UnauthorizedAccessException();
         var email = request.Input.Email.Trim();
         var normalizedEmail = EmailNormalizer.Normalize(email);
+        if (!UnicodeText.IsWithinScalarLimit(request.Input.Name, 200)
+            || !UnicodeText.IsWithinScalarLimit(request.Input.WhatYouMake, 2000)
+            || !UnicodeText.IsWithinScalarLimit(request.Input.OnYourHeart, 2000))
+        {
+            throw new EntryValidationException("Participant fields are too long.");
+        }
         var inputDigest = OperationInputDigest.Create(
             request.ParticipantId.ToString("D"),
             version.ToString(CultureInfo.InvariantCulture),
