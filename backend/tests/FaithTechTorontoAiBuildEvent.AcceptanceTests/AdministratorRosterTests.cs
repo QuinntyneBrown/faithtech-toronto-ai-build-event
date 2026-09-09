@@ -24,12 +24,17 @@ public sealed class AdministratorRosterTests : IClassFixture<CountdownApiFactory
         await entrant.PutAsJsonAsync("/api/participant/profile", new { operationId = Guid.NewGuid(), expectedVersion = "1", input = new { name = "Private Name", whatYouMake = "Tools", onYourHeart = "Hope" } });
 
         var anonymous = await entrant.GetAsync("/api/admin/participants");
+        var publicState = await entrant.GetStringAsync("/api/event/state");
         await factory.ProvisionAdministratorPasscodeAsync("0042");
         using var administrator = factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
         await administrator.PostAsJsonAsync("/api/admin/session", new { passcode = "0042" });
         var roster = await administrator.GetFromJsonAsync<IReadOnlyList<RosterResponse>>("/api/admin/participants");
 
         Assert.Equal(HttpStatusCode.Unauthorized, anonymous.StatusCode);
+        Assert.DoesNotContain("private@example.com", publicState, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Private Name", publicState, StringComparison.Ordinal);
+        Assert.DoesNotContain("Tools", publicState, StringComparison.Ordinal);
+        Assert.DoesNotContain("Hope", publicState, StringComparison.Ordinal);
         Assert.NotNull(roster);
         Assert.Contains(roster, participant => participant.Email == "private@example.com" && participant.Name == "Private Name" && participant.WhatYouMake == "Tools");
     }
