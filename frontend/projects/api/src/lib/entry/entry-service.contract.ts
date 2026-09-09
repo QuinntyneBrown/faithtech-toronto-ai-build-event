@@ -10,4 +10,6 @@ export interface IEntryService {
   readonly loading: Signal<boolean>;
   readonly error: Signal<string | null>;
   enter(email: string, expectedVersion: string): void;
+  load(): void;
+  leave(): void;
 }

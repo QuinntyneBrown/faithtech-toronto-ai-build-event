@@ -16,6 +16,10 @@ export class EntryFormComponent {
   readonly email = signal("");
   readonly eventVersion = input.required<string>();
 
+  constructor() {
+    this.entry.load();
+  }
+
   enter(): void {
     this.entry.enter(this.email(), this.eventVersion());
   }

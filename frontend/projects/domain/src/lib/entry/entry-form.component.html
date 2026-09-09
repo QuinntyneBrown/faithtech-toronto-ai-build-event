@@ -5,6 +5,7 @@
     <p>{{ confirmation.publicLabel }}</p>
     <p>You can add optional details while Countdown remains open.</p>
     <event-profile-form [eventVersion]="eventVersion()" />
+    <button csButton="ghost" type="button" (click)="entry.leave()">Leave this browser</button>
   } @else {
     <h2>Start with hello.</h2>
     <p>Enter your email to join the raffle. Your email stays with the hosts.</p>

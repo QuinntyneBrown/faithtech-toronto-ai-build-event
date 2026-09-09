@@ -35,4 +35,18 @@ export class EntryService implements IEntryService {
       }
     });
   }
+
+  load(): void {
+    this.http.get<EntryConfirmation>("/api/participant/session").subscribe({
+      next: confirmation => this.confirmation.set(confirmation),
+      error: () => this.confirmation.set(null)
+    });
+  }
+
+  leave(): void {
+    this.http.delete<void>("/api/participant/session").subscribe({
+      next: () => { this.confirmation.set(null); this.error.set(null); },
+      error: () => this.error.set("We could not clear this browser session. Try again.")
+    });
+  }
 }
