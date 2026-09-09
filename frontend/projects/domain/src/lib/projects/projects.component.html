@@ -2,6 +2,19 @@
   <cs-card><p>Loading projects…</p></cs-card>
 } @else if (event.state(); as state) {
   <h1>Projects</h1>
+  @if (administrator.active()) {
+    <cs-card>
+      <h2>Add project</h2>
+      <form (ngSubmit)="add()">
+        <cs-field label="Title" forId="new-project-title"><input csInput id="new-project-title" name="title" required [ngModel]="newProject().title" (ngModelChange)="updateNew('title', $event)"></cs-field>
+        <cs-field label="Description" forId="new-project-description"><textarea csTextarea id="new-project-description" name="description" required [ngModel]="newProject().description" (ngModelChange)="updateNew('description', $event)"></textarea></cs-field>
+        <cs-field label="Repository URL" forId="new-project-repository"><input csInput id="new-project-repository" name="repositoryUrl" type="url" [ngModel]="newProject().repositoryUrl" (ngModelChange)="updateNew('repositoryUrl', $event)"></cs-field>
+        <cs-field label="Demo URL" forId="new-project-demo"><input csInput id="new-project-demo" name="demoUrl" type="url" [ngModel]="newProject().demoUrl" (ngModelChange)="updateNew('demoUrl', $event)"></cs-field>
+        <button csButton type="submit" [disabled]="!event.connected() || projects.loading()">Add project</button>
+      </form>
+    </cs-card>
+  }
+  @if (projects.error(); as error) { <p role="alert">{{ error }}</p> }
   @if (state.projects.length) {
     @for (project of state.projects; track project.id) {
       <cs-card>
@@ -9,6 +22,16 @@
         <p>{{ project.description }}</p>
         @if (project.repositoryUrl) { <a [href]="project.repositoryUrl" target="_blank" rel="noopener noreferrer">Repository</a> }
         @if (project.demoUrl) { <a [href]="project.demoUrl" target="_blank" rel="noopener noreferrer">Demo</a> }
+        @if (administrator.active()) {
+          <form (ngSubmit)="save(project)" [attr.aria-label]="'Edit ' + project.title">
+            <cs-field label="Title" [forId]="'title-' + project.id"><input csInput [id]="'title-' + project.id" name="title" required [ngModel]="draftFor(project).title" (ngModelChange)="updateDraft(project, 'title', $event)"></cs-field>
+            <cs-field label="Description" [forId]="'description-' + project.id"><textarea csTextarea [id]="'description-' + project.id" name="description" required [ngModel]="draftFor(project).description" (ngModelChange)="updateDraft(project, 'description', $event)"></textarea></cs-field>
+            <cs-field label="Repository URL" [forId]="'repository-' + project.id"><input csInput [id]="'repository-' + project.id" name="repositoryUrl" type="url" [ngModel]="draftFor(project).repositoryUrl" (ngModelChange)="updateDraft(project, 'repositoryUrl', $event)"></cs-field>
+            <cs-field label="Demo URL" [forId]="'demo-' + project.id"><input csInput [id]="'demo-' + project.id" name="demoUrl" type="url" [ngModel]="draftFor(project).demoUrl" (ngModelChange)="updateDraft(project, 'demoUrl', $event)"></cs-field>
+            <button csButton type="submit" [disabled]="!event.connected() || projects.loading()">Save project</button>
+            <button csButton="secondary" type="button" (click)="remove(project)" [disabled]="!event.connected() || projects.loading()">Remove project</button>
+          </form>
+        }
       </cs-card>
     }
   } @else {
