@@ -39,8 +39,16 @@ public sealed class RaffleDrawTests : IClassFixture<CountdownApiFactory>
         Assert.Equal(HttpStatusCode.OK, draw.StatusCode);
         Assert.NotNull(result);
         Assert.Equal("Participant 001", result.WinnerLabel);
+
+        var publicRaffle = await entrant.GetFromJsonAsync<RaffleSnapshotResponse>("/api/event/raffle");
+        Assert.NotNull(publicRaffle);
+        Assert.Equal(0, publicRaffle.EligibleCount);
+        Assert.Equal("Participant 001", publicRaffle.LatestResult?.WinnerLabel);
+        Assert.Single(publicRaffle.PreviousWinners);
     }
 
     private sealed record ReceiptResponse(Guid OperationId);
     private sealed record DrawResponse(string WinnerLabel);
+    private sealed record RaffleSnapshotResponse(int EligibleCount, RaffleResultResponse? LatestResult, IReadOnlyList<RaffleResultResponse> PreviousWinners);
+    private sealed record RaffleResultResponse(string WinnerLabel);
 }

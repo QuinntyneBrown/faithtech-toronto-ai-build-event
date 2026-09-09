@@ -19,6 +19,7 @@ public sealed class CompanionDbContext(DbContextOptions<CompanionDbContext> opti
     public DbSet<AdministratorSession> AdministratorSessions => Set<AdministratorSession>();
     public DbSet<Team> Teams => Set<Team>();
     public DbSet<RaffleDraw> RaffleDraws => Set<RaffleDraw>();
+    public DbSet<RaffleCandidate> RaffleCandidates => Set<RaffleCandidate>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -86,6 +87,12 @@ public sealed class CompanionDbContext(DbContextOptions<CompanionDbContext> opti
             builder.HasKey(draw => draw.Id);
             builder.Property(draw => draw.WinnerLabel).HasMaxLength(64).IsRequired();
             builder.HasIndex(draw => draw.WinnerParticipantId).IsUnique();
+        });
+
+        modelBuilder.Entity<RaffleCandidate>(builder =>
+        {
+            builder.HasKey(candidate => new { candidate.DrawId, candidate.ParticipantId });
+            builder.Property(candidate => candidate.Label).HasMaxLength(64).IsRequired();
         });
     }
 }

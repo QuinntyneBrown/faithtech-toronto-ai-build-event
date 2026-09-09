@@ -11,3 +11,7 @@ export * from "./lib/profile/profile.service";
 export * from "./lib/session/administrator-session-service.contract";
 export * from "./lib/session/administrator-session-service.token";
 export * from "./lib/session/administrator-session.service";
+export * from "./lib/raffle/raffle-service.contract";
+export * from "./lib/raffle/raffle-service.token";
+export * from "./lib/raffle/raffle-snapshot";
+export * from "./lib/raffle/raffle.service";

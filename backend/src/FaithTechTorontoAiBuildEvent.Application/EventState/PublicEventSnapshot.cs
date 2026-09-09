@@ -1,5 +1,7 @@
 namespace FaithTechTorontoAiBuildEvent.Application.EventState;
 
+using FaithTechTorontoAiBuildEvent.Application.Raffle;
+
 public sealed record PublicEventSnapshot(
     string Version,
     string CurrentScreen,
@@ -10,4 +12,5 @@ public sealed record PublicEventSnapshot(
     string EventTime,
     DateTimeOffset CountdownTargetUtc,
     IReadOnlyList<ProjectCard> Projects,
-    IReadOnlyList<PublicTeam> Teams);
+    IReadOnlyList<PublicTeam> Teams,
+    RaffleSnapshot Raffle);

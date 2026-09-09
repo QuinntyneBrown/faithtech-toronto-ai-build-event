@@ -1,0 +1,17 @@
+<h1>Raffle</h1>
+@if (raffle.state(); as state) {
+  <cs-card>
+    <p>{{ state.eligibleCount }} eligible {{ state.eligibleCount === 1 ? "participant remains." : "participants remain." }}</p>
+    <cs-raffle-stage [result]="stageResult()" [now]="now()" />
+    @if (administrator.active()) {
+      <button csButton type="button" (click)="draw()" [disabled]="raffle.drawing() || state.eligibleCount === 0">DRAW NAME</button>
+    }
+    @if (raffle.error(); as error) { <p role="alert">{{ error }}</p> }
+  </cs-card>
+  @if (state.previousWinners.length) {
+    <cs-card>
+      <h2>Previous winners</h2>
+      <ol>@for (winner of state.previousWinners; track winner.drawId) { <li>{{ winner.winnerLabel }}</li> }</ol>
+    </cs-card>
+  }
+}

@@ -1,3 +1,5 @@
+import { RaffleSnapshot } from "../raffle/raffle-snapshot";
+
 export interface PublicEventState {
   version: string;
   currentScreen: "countdown" | "projects" | "teams" | "raffle";
@@ -9,6 +11,7 @@ export interface PublicEventState {
   countdownTargetUtc: string;
   projects: ProjectCard[];
   teams: PublicTeam[];
+  raffle: RaffleSnapshot;
 }
 
 export interface ProjectCard {
