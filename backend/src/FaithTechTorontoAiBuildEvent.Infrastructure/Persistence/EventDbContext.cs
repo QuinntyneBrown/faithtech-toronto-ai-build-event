@@ -22,6 +22,7 @@ public sealed class EventDbContext(DbContextOptions<EventDbContext> options)
     public DbSet<Registration> Registrations => Set<Registration>();
     public DbSet<OperationReceipt> OperationReceipts => Set<OperationReceipt>();
     public DbSet<AuditRecord> AuditRecords => Set<AuditRecord>();
+    public DbSet<OperatorIdentity> OperatorIdentities => Set<OperatorIdentity>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -53,7 +54,11 @@ public sealed class EventDbContext(DbContextOptions<EventDbContext> options)
         builder.Entity<EventStage>().Property(x => x.ScreenType).HasMaxLength(50);
         builder.Entity<EventStage>().Property(x => x.Content).HasMaxLength(10000);
         builder.Entity<EventStage>().Property(x => x.ResourceUrl).HasMaxLength(4096);
-        builder.Entity<OperationReceipt>().HasIndex(x => new { x.ActorId, x.EventId, x.OperationId }).IsUnique().HasFilter(null);
+        builder.Entity<OperatorIdentity>().Property(x => x.PrincipalKey).HasMaxLength(64);
+        builder.Entity<OperatorIdentity>().HasIndex(x => x.PrincipalKey).IsUnique();
+        builder.Entity<OperationReceipt>().HasQueryFilter(x => x.ActorKind == ActorKind.Application);
+        builder.Entity<AuditRecord>().HasQueryFilter(x => x.ActorKind == ActorKind.Application);
+        builder.Entity<OperationReceipt>().HasIndex(x => new { x.ActorKind, x.ActorId, x.EventId, x.OperationId }).IsUnique().HasFilter(null);
         builder.Entity<OperationReceipt>().Property(x => x.Target).HasMaxLength(200);
         builder.Entity<OperationReceipt>().Property(x => x.PayloadHash).HasMaxLength(64);
         builder.Entity<AuditRecord>().Property(x => x.Action).HasMaxLength(100);
