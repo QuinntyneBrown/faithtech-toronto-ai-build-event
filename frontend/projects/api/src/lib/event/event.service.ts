@@ -22,7 +22,7 @@ export class EventService implements IEventService {
   private readonly connection: HubConnection;
 
   constructor(private readonly http: HttpClient) {
-    this.connection = new HubConnectionBuilder().withUrl("/hubs/event-updates").withAutomaticReconnect([0, 2000, 5000, 10000]).build();
+    this.connection = new HubConnectionBuilder().withUrl("/hubs/event-updates").build();
     this.connection.on("eventUpdated", (version: string) => {
       const current = this.state()?.version;
       if (current === undefined || BigInt(version) > BigInt(current)) {
