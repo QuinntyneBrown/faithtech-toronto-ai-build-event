@@ -9,6 +9,18 @@ namespace FaithTechTorontoAiBuildEvent.AcceptanceTests;
 public sealed class EventImportFailureTests(EventApiFactory factory) : IClassFixture<EventApiFactory>
 {
     [Fact]
+    public async Task Given_a_closed_output_pipe_when_import_commits_then_delivery_failure_can_be_reconciled()
+    {
+        using var files = new OperatorCliFixture(factory);
+        var preview = await Preview(files);
+        var id = preview.GetProperty("previewId").GetGuid().ToString();
+        var result = await ProvisioningProcess.Execute(factory, ["operations", "apply", id, "--approve", id, .. files.Options], closeOutputImmediately: true);
+        Assert.Equal(7, result.ExitCode);
+        var reconciled = await ProvisioningProcess.Execute(factory, ["operations", "reconcile", preview.GetProperty("operationId").GetGuid().ToString(), .. files.Options]);
+        Assert.Equal(0, reconciled.ExitCode);
+    }
+
+    [Fact]
     public async Task Given_a_changed_file_when_apply_is_attempted_then_the_preview_is_rejected_without_mutation()
     {
         using var files = new OperatorCliFixture(factory);

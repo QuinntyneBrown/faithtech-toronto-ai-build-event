@@ -51,7 +51,7 @@ public static class OperatorCommandRunner
         try {
             if (session?.OperationId is { } operation)
                 session.Files.Journal(operation, new { operationId = operation, session.PreviewId, session.Principal, result.Outcome, result.DurationMs, atUtc = DateTimeOffset.UtcNow });
-            Console.WriteLine(JsonSerializer.Serialize(result, new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = !parse.GetValue(options.Json) }));
+            CommittedResultOutput.Write([JsonSerializer.Serialize(result, new JsonSerializerOptions(JsonSerializerDefaults.Web) { WriteIndented = !parse.GetValue(options.Json) })]);
         } catch (IOException) {
             Console.Error.WriteLine($"Result delivery failed; operation {session?.OperationId}; outcome {result.Outcome}.");
             exit = session?.Committed == true ? 7 : exit == 6 ? 6 : 2;
