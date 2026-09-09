@@ -1,0 +1,41 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Add or update a participant
+actor "Administrator" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "ParticipantManagerComponent" as page
+participant "IRosterService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "RosterController" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "SaveParticipantHandler" as handler
+participant "Participant" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+participant "EventChangePublisher" as push
+end box
+actor -> page : Add / edit participant
+page -> client : Submit fields and version
+client -> controller : POST / PUT admin participants
+controller -> handler : Dispatch after authorization
+handler -> db : Lock event; recheck authority; receipt/version
+handler -> entity : Validate email and optional fields L2-002
+alt Valid and unique
+ handler -> db : Commit participant / labels / change / receipt
+ db --> handler : Durable roster result
+else Invalid / duplicate / stale
+ handler --> controller : Field error or authorized conflict
+end
+handler --> controller : Result
+controller --> client : Authorized outcome
+client --> page : Update roster or retain draft
+page --> actor : Saved status or retry guidance
+@enduml
