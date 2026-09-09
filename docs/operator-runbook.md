@@ -37,7 +37,7 @@ This runbook is for the September 9, 2026 FaithTech Toronto AI Build Event compa
 
 1. Stop participant and administrator traffic to the restore target. Preserve the live database and backup; never use a verification restore to overwrite production.
 2. Restore into a distinct explicitly named database. Run database consistency checks and confirm the expected migration history.
-3. Before admitting traffic, revoke administrator sessions, participant sessions, and entry receipts, then rotate the administrator passcode through the supported SQL or CLI operation.
+3. Before admitting traffic, revoke administrator sessions, participant sessions, and entry receipts, then rotate the administrator passcode through the supported SQL or CLI operation. The current tool exposes the passcode rotation but not the participant-session/receipt revocation maintenance command; do not cut over a restored database until that remaining maintenance operation has been executed and verified.
 4. Point a private verification API instance at the restored database. Check readiness, current screen, projects, teams, raffle draw IDs/times, and redacted deleted-winner labels. Verify old browsers and entry receipts cannot recover private data.
 5. Record the backup timestamp, restore timestamp, counts, and known data-loss interval. A cutover to the restored target is a separate operator decision.
 
