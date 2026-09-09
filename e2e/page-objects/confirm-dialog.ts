@@ -14,6 +14,10 @@ export class ConfirmDialog {
     this.root = page.locator("cs-confirm-dialog");
   }
 
+  async expectOpen(): Promise<void> {
+    await expect(this.root).toBeVisible();
+  }
+
   async expectTitle(title: string): Promise<void> {
     await expect(this.root.getByRole("heading", { name: title, exact: true })).toBeVisible();
   }

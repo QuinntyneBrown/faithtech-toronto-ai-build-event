@@ -1,4 +1,5 @@
 import type { Page } from "@playwright/test";
+import type { BrowserSession } from "./browser-session";
 import type { EventStore } from "./event-store";
 import { HUB_PATHS } from "./hub-mock";
 
@@ -9,7 +10,11 @@ import { HUB_PATHS } from "./hub-mock";
  * public state on every screen, after every mutation, and whenever the tab
  * becomes visible again, so a one-shot route would starve it.
  */
-export async function installApiMock(page: Page, store: EventStore): Promise<void> {
+export async function installApiMock(
+  page: Page,
+  store: EventStore,
+  session: BrowserSession
+): Promise<void> {
   await page.route("**/api/**", async route => {
     const request = route.request();
     const method = request.method();
@@ -39,7 +44,8 @@ export async function installApiMock(page: Page, store: EventStore): Promise<voi
       return;
     }
 
-    const outcome = forced?.status === undefined ? store.handle(method, path, body) : forced;
+    const outcome =
+      forced?.status === undefined ? store.handle(method, path, body, session) : forced;
     const payload = outcome.json === undefined ? "" : JSON.stringify(outcome.json);
 
     await route.fulfill({

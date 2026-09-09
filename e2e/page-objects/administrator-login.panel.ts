@@ -25,12 +25,17 @@ export class AdministratorLoginPanel {
   }
 
   async submitPasscode(passcode: string): Promise<void> {
+    await this.ensureOpen();
     await this.passcodeField.fill(passcode);
     await this.submit.click();
   }
 
+  /** Types key by key, so the field's own length limit applies. */
+  async typePasscode(passcode: string): Promise<void> {
+    await this.passcodeField.pressSequentially(passcode);
+  }
+
   async signIn(passcode: string): Promise<void> {
-    await this.open();
     await this.submitPasscode(passcode);
   }
 
@@ -44,8 +49,22 @@ export class AdministratorLoginPanel {
     ).toBeVisible();
   }
 
+  /**
+   * Signed out covers two shapes: the collapsed "Administrator login" button,
+   * and the expanded form, which stays expanded when a session ends while it
+   * is open.
+   */
   async expectSignedOut(): Promise<void> {
-    await expect(this.openControl).toBeVisible();
+    await expect(
+      this.page.getByText("Administrator controls are enabled in this browser.", { exact: true })
+    ).toHaveCount(0);
+    await expect(this.openControl.or(this.passcodeField)).toBeVisible();
+  }
+
+  /** Opens the form only when it is still collapsed. */
+  async ensureOpen(): Promise<void> {
+    if (await this.openControl.count()) await this.open();
+    await expect(this.passcodeField).toBeVisible();
   }
 
   async expectError(message: string | RegExp): Promise<void> {
