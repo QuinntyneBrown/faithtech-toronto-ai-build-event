@@ -74,4 +74,12 @@ public sealed class CountdownApiFactory : WebApplicationFactory<Program>
         var provisioner = scope.ServiceProvider.GetRequiredService<IAdministratorCredentialProvisioner>();
         await provisioner.ProvisionAsync(passcode, CancellationToken.None);
     }
+
+    public async Task ClearAdministratorLoginAttemptsAsync()
+    {
+        using var scope = Services.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<CompanionDbContext>();
+        database.AdministratorLoginAttempts.RemoveRange(database.AdministratorLoginAttempts);
+        await database.SaveChangesAsync();
+    }
 }

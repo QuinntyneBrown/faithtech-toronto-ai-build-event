@@ -20,6 +20,7 @@ public sealed class AdministratorSessionTests : IClassFixture<CountdownApiFactor
     [Fact]
     public async Task Exact_four_digit_provisioned_passcode_creates_administrator_session()
     {
+        await factory.ClearAdministratorLoginAttemptsAsync();
         await factory.ProvisionAdministratorPasscodeAsync("0042");
         using var client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
 
@@ -32,11 +33,31 @@ public sealed class AdministratorSessionTests : IClassFixture<CountdownApiFactor
     [Fact]
     public async Task Invalid_or_non_four_digit_passcodes_do_not_create_session()
     {
+        await factory.ClearAdministratorLoginAttemptsAsync();
         await factory.ProvisionAdministratorPasscodeAsync("0042");
         using var client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
 
         var response = await client.PostAsJsonAsync("/api/admin/session", new { passcode = "42" });
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Sixth_failed_check_is_throttled_before_passcode_verification()
+    {
+        await factory.ClearAdministratorLoginAttemptsAsync();
+        await factory.ProvisionAdministratorPasscodeAsync("0042");
+        using var client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+
+        for (var attempt = 0; attempt < 5; attempt++)
+        {
+            var failed = await client.PostAsJsonAsync("/api/admin/session", new { passcode = "9999" });
+            Assert.Equal(HttpStatusCode.Unauthorized, failed.StatusCode);
+        }
+
+        var throttled = await client.PostAsJsonAsync("/api/admin/session", new { passcode = "0042" });
+
+        Assert.Equal((HttpStatusCode)429, throttled.StatusCode);
+        Assert.True(int.Parse(throttled.Headers.GetValues("Retry-After").Single()) > 0);
     }
 }

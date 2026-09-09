@@ -17,6 +17,7 @@ public sealed class CompanionDbContext(DbContextOptions<CompanionDbContext> opti
     public DbSet<ParticipantSession> ParticipantSessions => Set<ParticipantSession>();
     public DbSet<CompanionCredential> CompanionCredentials => Set<CompanionCredential>();
     public DbSet<AdministratorSession> AdministratorSessions => Set<AdministratorSession>();
+    public DbSet<AdministratorLoginAttempt> AdministratorLoginAttempts => Set<AdministratorLoginAttempt>();
     public DbSet<Team> Teams => Set<Team>();
     public DbSet<RaffleDraw> RaffleDraws => Set<RaffleDraw>();
     public DbSet<RaffleCandidate> RaffleCandidates => Set<RaffleCandidate>();
@@ -80,6 +81,13 @@ public sealed class CompanionDbContext(DbContextOptions<CompanionDbContext> opti
             builder.HasKey(session => session.Id);
             builder.Property(session => session.SecretDigest).HasMaxLength(32).IsRequired();
             builder.HasIndex(session => session.CreatedAtUtc);
+        });
+
+        modelBuilder.Entity<AdministratorLoginAttempt>(builder =>
+        {
+            builder.HasKey(attempt => attempt.Id);
+            builder.Property(attempt => attempt.Source).HasMaxLength(64).IsRequired();
+            builder.HasIndex(attempt => new { attempt.Source, attempt.AttemptedAtUtc });
         });
 
         modelBuilder.Entity<RaffleDraw>(builder =>

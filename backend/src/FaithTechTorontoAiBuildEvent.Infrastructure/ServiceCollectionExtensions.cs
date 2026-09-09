@@ -40,6 +40,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<PasscodeVerifier>();
         services.AddScoped<IAdministratorCredentialProvisioner, SqlAdministratorCredentialProvisioner>();
         services.AddScoped<IAdministratorSessionStore, SqlAdministratorSessionStore>();
+        services.AddScoped<IAdministratorLoginAttemptStore, SqlAdministratorLoginAttemptStore>();
         services.AddScoped<IAdministratorAuthorizationStore, SqlAdministratorAuthorizationStore>();
         services.AddScoped<IEventFlowStore, SqlEventFlowStore>();
         services.AddScoped<IProjectStore, SqlProjectStore>();
