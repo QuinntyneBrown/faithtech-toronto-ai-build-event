@@ -1,5 +1,7 @@
 using FaithTechTorontoAiBuildEvent.Application.Access;
+using FaithTechTorontoAiBuildEvent.Application.Operations;
 using MediatR;
+using System.Globalization;
 
 namespace FaithTechTorontoAiBuildEvent.Application.Participants;
 
@@ -12,6 +14,10 @@ public sealed class AddAdministratorParticipantHandler(IAdministratorAuthorizati
             throw new UnauthorizedAccessException();
         }
         var email = request.Email.Trim();
-        return await participantStore.AddAsync(email, EmailNormalizer.Normalize(email), version, cancellationToken);
+        var normalizedEmail = EmailNormalizer.Normalize(email);
+        var inputDigest = OperationInputDigest.Create(
+            version.ToString(CultureInfo.InvariantCulture),
+            normalizedEmail);
+        return await participantStore.AddAsync(request.OperationId, inputDigest, email, normalizedEmail, version, cancellationToken);
     }
 }

@@ -3,13 +3,29 @@ using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using FaithTechTorontoAiBuildEvent.Domain.Participants;
 using FaithTechTorontoAiBuildEvent.Application.EventState;
+using FaithTechTorontoAiBuildEvent.Domain.Operations;
+using System.Security.Cryptography;
+using System.Text.Json;
 
 namespace FaithTechTorontoAiBuildEvent.Infrastructure.Participants;
 
 public sealed class SqlAdministratorParticipantStore(CompanionDbContext database, IEventUpdatePublisher updatePublisher) : IAdministratorParticipantStore
 {
-    public async Task<AdministratorParticipant> AddAsync(string email, string normalizedEmail, long expectedVersion, CancellationToken cancellationToken)
+    public async Task<AdministratorParticipant> AddAsync(Guid operationId, byte[] inputDigest, string email, string normalizedEmail, long expectedVersion, CancellationToken cancellationToken)
     {
+        var receipt = await database.EventOperationReceipts.SingleOrDefaultAsync(candidate => candidate.OperationId == operationId, cancellationToken);
+        if (receipt is not null)
+        {
+            if (receipt.OperationKind != "add-administrator-participant"
+                || !CryptographicOperations.FixedTimeEquals(receipt.InputDigest, inputDigest)
+                || receipt.ResultJson is null)
+            {
+                throw new EntryValidationException("The operation identity was already used with different input.");
+            }
+            return JsonSerializer.Deserialize<AdministratorParticipant>(receipt.ResultJson)
+                ?? throw new InvalidOperationException("The saved operation result is unavailable.");
+        }
+
         var state = await database.EventStates.SingleAsync(cancellationToken);
         if (state.Version != expectedVersion)
         {
@@ -23,9 +39,20 @@ public sealed class SqlAdministratorParticipantStore(CompanionDbContext database
         state.NextParticipantLabel++;
         state.Version++;
         database.Participants.Add(participant);
+        var result = new AdministratorParticipant(participant.Id, participant.Email, participant.PublicLabel, null, null, null, null, false);
+        database.EventOperationReceipts.Add(new EventOperationReceipt
+        {
+            OperationId = operationId,
+            OperationKind = "add-administrator-participant",
+            InputDigest = inputDigest,
+            ResultId = participant.Id,
+            ResultJson = JsonSerializer.Serialize(result),
+            ResultVersion = state.Version,
+            CreatedAtUtc = DateTimeOffset.UtcNow
+        });
         await database.SaveChangesAsync(cancellationToken);
         await updatePublisher.PublishAsync(state.Version, cancellationToken);
-        return new AdministratorParticipant(participant.Id, participant.Email, participant.PublicLabel, null, null, null, null, false);
+        return result;
     }
 
     public async Task DeleteAsync(Guid participantId, long expectedVersion, CancellationToken cancellationToken)
