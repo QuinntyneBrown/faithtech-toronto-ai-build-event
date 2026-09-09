@@ -43,4 +43,19 @@ public sealed class CrossOriginMutationTests : IClassFixture<CountdownApiFactory
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Different_scheme_on_same_host_is_not_a_trusted_origin()
+    {
+        using var client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/admin/event/advance")
+        {
+            Content = JsonContent.Create(new { operationId = Guid.NewGuid(), expectedVersion = "0", fromScreen = "countdown", toScreen = "projects" })
+        };
+        request.Headers.Add("Origin", "http://localhost");
+
+        var response = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
 }
