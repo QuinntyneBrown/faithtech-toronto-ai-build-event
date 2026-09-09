@@ -1,4 +1,4 @@
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { Injectable, signal } from "@angular/core";
 import { IAdministratorSessionService } from "./administrator-session-service.contract";
 
@@ -25,9 +25,12 @@ export class AdministratorSessionService implements IAdministratorSessionService
         this.active.set(state.authenticated);
         this.loading.set(false);
       },
-      error: () => {
+      error: (response: HttpErrorResponse) => {
         this.active.set(false);
-        this.error.set("That passcode was not accepted.");
+        const retryAfter = response.headers.get("Retry-After");
+        this.error.set(response.status === 429 && retryAfter !== null
+          ? `Too many attempts. Try again in ${retryAfter} seconds.`
+          : "That passcode was not accepted.");
         this.loading.set(false);
       }
     });
