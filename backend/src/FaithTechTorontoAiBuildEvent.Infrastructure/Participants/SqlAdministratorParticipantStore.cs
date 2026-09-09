@@ -2,10 +2,11 @@ using FaithTechTorontoAiBuildEvent.Application.Participants;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using FaithTechTorontoAiBuildEvent.Domain.Participants;
+using FaithTechTorontoAiBuildEvent.Application.EventState;
 
 namespace FaithTechTorontoAiBuildEvent.Infrastructure.Participants;
 
-public sealed class SqlAdministratorParticipantStore(CompanionDbContext database) : IAdministratorParticipantStore
+public sealed class SqlAdministratorParticipantStore(CompanionDbContext database, IEventUpdatePublisher updatePublisher) : IAdministratorParticipantStore
 {
     public async Task<AdministratorParticipant> AddAsync(string email, string normalizedEmail, long expectedVersion, CancellationToken cancellationToken)
     {
@@ -23,6 +24,7 @@ public sealed class SqlAdministratorParticipantStore(CompanionDbContext database
         state.Version++;
         database.Participants.Add(participant);
         await database.SaveChangesAsync(cancellationToken);
+        await updatePublisher.PublishAsync(state.Version, cancellationToken);
         return new AdministratorParticipant(participant.Id, participant.Email, participant.PublicLabel, null, null, null, null, false);
     }
 
@@ -45,6 +47,7 @@ public sealed class SqlAdministratorParticipantStore(CompanionDbContext database
         database.Participants.Remove(participant);
         state.Version++;
         await database.SaveChangesAsync(cancellationToken);
+        await updatePublisher.PublishAsync(state.Version, cancellationToken);
     }
 
     public async Task<IReadOnlyList<AdministratorParticipant>> ListAsync(CancellationToken cancellationToken)
