@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, signal } from "@angular/core";
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject, signal } from "@angular/core";
 import { CardComponent, CsButtonDirective, RaffleResult as CornerstoneRaffleResult, RaffleStageComponent } from "@quinntyne/cornerstone";
 import { ADMINISTRATOR_SESSION_SERVICE, EVENT_SERVICE, RAFFLE_SERVICE } from "@faithtech/api";
 
@@ -27,9 +27,11 @@ export class RaffleComponent {
   });
 
   constructor() {
-    this.raffle.load();
     this.event.load();
     this.administrator.load();
+    effect(() => {
+      if (this.event.state()?.version) this.raffle.load();
+    });
     const timer = window.setInterval(() => this.now.set(this.event.serverNow()), 250);
     inject(DestroyRef).onDestroy(() => window.clearInterval(timer));
   }

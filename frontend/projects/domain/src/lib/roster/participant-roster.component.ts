@@ -21,7 +21,7 @@ export class ParticipantRosterComponent {
 
   constructor() {
     effect(() => {
-      if (this.administrator.active()) this.roster.load();
+      if (this.administrator.active() && this.event.state()?.version) this.roster.load();
     });
   }
 
