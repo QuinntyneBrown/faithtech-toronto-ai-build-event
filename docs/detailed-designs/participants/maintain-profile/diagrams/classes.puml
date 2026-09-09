@@ -1,0 +1,36 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+title Maintain optional introduction information — structure
+interface IProfileService {
++readonly profile: Signal<ParticipantSnapshot>
++save(input: ProfileInput): Promise<ProfileResult>
+}
+class CountdownPageComponent
+CountdownPageComponent ..> IProfileService : consumes contract
+class ParticipantProfileController
+class SaveParticipantProfileHandler {
+  +Handle(request: SaveParticipantProfileCommand): Task<ProfileResult>
+}
+class SaveParticipantProfileCommand {
++string? Name
++string? WhatYouMake
++string? OnYourHeart
++Guid OperationId
++long ExpectedVersion
+}
+class ParticipantProfile {
++Guid ParticipantId
++string? Name
++string? WhatYouMake
++string? OnYourHeart
++Replace(input: ProfileInput): void
+}
+ParticipantProfileController ..> SaveParticipantProfileHandler : dispatches
+SaveParticipantProfileHandler ..> SaveParticipantProfileCommand : handles
+SaveParticipantProfileHandler --> ParticipantProfile : uses
+
+@enduml

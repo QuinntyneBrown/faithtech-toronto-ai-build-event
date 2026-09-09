@@ -1,0 +1,35 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Discard a private draft on public closure
+actor "Entered participant" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "CountdownPageComponent" as page
+participant "IProfileService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "ParticipantProfileController" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "SaveParticipantProfileHandler" as handler
+participant "ParticipantProfile" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+participant "EventChangePublisher" as push
+end box
+push -> client : EventChanged(version)
+client -> controller : Request current public state
+controller -> handler : Get snapshot
+handler -> db : Read coherent state
+ db --> handler : Projects current
+handler --> controller : Public snapshot
+controller --> client : Snapshot version
+client -> page : Apply L2-013 closure
+page -> page : Clear draft; follow Projects
+page --> actor : Unsaved details not submitted; entry retained
+@enduml

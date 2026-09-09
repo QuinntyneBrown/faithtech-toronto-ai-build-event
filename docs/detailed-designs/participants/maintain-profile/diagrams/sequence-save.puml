@@ -1,0 +1,45 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Save or skip optional details
+actor "Entered participant" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "CountdownPageComponent" as page
+participant "IProfileService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "ParticipantProfileController" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "SaveParticipantProfileHandler" as handler
+participant "ParticipantProfile" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+participant "EventChangePublisher" as push
+end box
+actor -> page : Save optional fields or Skip
+alt Skip
+ page --> actor : Entry remains confirmed
+else Save
+ page -> client : Save ProfileInput and version
+ client -> controller : PUT owner profile + CSRF
+ controller -> handler : Dispatch authenticated command
+ handler -> db : Lock event; validate session / receipt / version
+ alt Owner and Countdown open
+  handler -> entity : Apply scalar limits and blank clearing L2-013
+  handler -> db : Commit profile, redacted public labels and change
+  db --> handler : Saved result
+  handler --> controller : ProfileResult
+ else Closed / unauthorized / invalid / conflict
+  handler --> controller : Typed rejection without partial save
+ end
+ controller --> client : Authorized outcome
+ client --> page : Saved values or retained draft
+ page --> actor : Entry remains raffle-eligible
+end
+@enduml

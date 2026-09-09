@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Maintain optional introduction information — components
+Container(client, "CountdownPageComponent", "Companion Angular client", "Presents this capability")
+Container_Boundary(api, "Companion API") {
+Component(entry, "ParticipantProfileController", "ASP.NET Core controller", "Binds inputs and dispatches")
+Component(handler, "SaveParticipantProfileHandler", "Application handler", "Save optional details while public entry remains open")
+Component(entity, "ParticipantProfile", "Domain model", "Owns slice state")
+}
+ContainerDb(db, "Companion database", "SQL Server", "Durable state")
+Rel(client, entry, "Calls through IProfileService")
+Rel(entry, handler, "Dispatches")
+Rel(handler, entity, "Uses")
+Rel(handler, db, "Commits through application persistence contract")
+@enduml
