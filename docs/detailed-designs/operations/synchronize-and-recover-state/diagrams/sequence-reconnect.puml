@@ -1,0 +1,50 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Reconnect and resolve a snapshot race
+actor "Connected or reconnecting viewer" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "AppComponent" as page
+participant "IEventService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "EventStateController" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "GetEventSnapshotHandler" as handler
+participant "EventChange" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+participant "EventChangePublisher" as push
+end box
+actor -> page : Resume tab / reconnect
+page -> client : Synchronize; clear stale private display
+client -> client : Mark synchronizing; disable mutations
+client -> controller : Reauthorize private sessions; connect hubs
+controller -> handler : Validate session authority
+handler -> db : Read revision, revocation and expiry
+ db --> handler : Current authority
+handler --> controller : Authorized scopes or denied
+controller --> client : Connection / session outcome
+client -> controller : GET current snapshots
+push -> client : Buffer concurrent higher version
+controller -> handler : Read coherent projection
+handler -> db : Snapshot isolation read
+ db --> handler : Versioned state
+handler --> controller : Snapshot
+controller --> client : Snapshot
+alt Buffered version newer
+ client -> controller : Fetch again; never apply older state
+else Snapshot current and authorization valid
+ client -> page : Apply state; enable permitted controls
+ page --> actor : Live screen, current result, no replay
+else Unavailable or session invalid
+ client -> page : Clear private state; keep changes disabled
+ page --> actor : Explicit unavailable / reauthentication feedback
+end
+@enduml

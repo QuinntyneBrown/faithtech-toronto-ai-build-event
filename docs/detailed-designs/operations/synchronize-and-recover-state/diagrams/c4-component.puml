@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Synchronize and recover authoritative event state — components
+Container(client, "AppComponent", "Companion Angular client", "Presents this capability")
+Container_Boundary(api, "Companion API") {
+Component(entry, "EventStateController", "ASP.NET Core controller", "Binds inputs and dispatches")
+Component(handler, "GetEventSnapshotHandler", "Application handler", "Converge on durable authorized state without duplicate mutations")
+Component(entity, "EventChange", "Domain model", "Owns slice state")
+}
+ContainerDb(db, "Companion database", "SQL Server", "Durable state")
+Rel(client, entry, "Calls through IEventService")
+Rel(entry, handler, "Dispatches")
+Rel(handler, entity, "Uses")
+Rel(handler, db, "Commits through application persistence contract")
+@enduml

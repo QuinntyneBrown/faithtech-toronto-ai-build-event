@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Synchronize and recover authoritative event state — context
+Person(actor, "Connected or reconnecting viewer", "Converge on durable authorized state without duplicate mutations")
+System(companion, "FaithTech event companion", "Synchronize and recover authoritative event state")
+Rel(actor, companion, "Uses")
+@enduml

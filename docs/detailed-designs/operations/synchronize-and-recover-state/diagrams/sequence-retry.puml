@@ -1,0 +1,45 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Resolve an explicit retry without applying it twice
+actor "Connected or reconnecting viewer" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "AppComponent" as page
+participant "IEventService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "EventStateController" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "GetEventSnapshotHandler" as handler
+participant "EventChange" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+participant "EventChangePublisher" as push
+end box
+actor -> page : Retry an uncertain save explicitly
+page -> client : Original operation ID and unchanged input
+client -> controller : Send original envelope after synchronization
+controller -> handler : Dispatch authorized command
+handler -> db : Acquire authority/event locks; lookup receipt
+alt Receipt exists and input digest matches
+ db --> handler : Original result IDs and committed version
+ handler -> entity : Resolve current privacy-safe labels / tombstone
+ handler --> controller : Original operation outcome
+else Receipt exists with changed input
+ handler --> controller : 409 operation-mismatch
+else No receipt and stale version
+ handler --> controller : 409 stale-version; current authorized values
+else New valid operation
+ handler -> db : Commit once with receipt and change
+ db --> handler : Durable outcome
+ handler --> controller : Success
+end
+controller --> client : Typed result
+client --> page : Confirm or retain draft for deliberate reapply
+@enduml
