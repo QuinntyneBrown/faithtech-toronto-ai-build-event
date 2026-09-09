@@ -6,6 +6,7 @@
     @for (team of state.teams; track team.label) {
       <cs-card>
         <h2>{{ team.label }}</h2>
+        @if (projectTitle(team.projectId); as projectTitle) { <p>Project: {{ projectTitle }}</p> }
         <ul>@for (member of team.members; track member) { <li>{{ member }}</li> }</ul>
       </cs-card>
     }

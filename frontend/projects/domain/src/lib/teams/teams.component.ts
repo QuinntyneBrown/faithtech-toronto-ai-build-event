@@ -15,4 +15,8 @@ export class TeamsComponent {
   constructor() {
     this.event.load();
   }
+
+  projectTitle(projectId: string | null): string | null {
+    return projectId === null ? null : this.event.state()?.projects.find(project => project.id === projectId)?.title ?? null;
+  }
 }

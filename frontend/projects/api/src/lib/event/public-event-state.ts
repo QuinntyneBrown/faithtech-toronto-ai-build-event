@@ -23,6 +23,8 @@ export interface ProjectCard {
 }
 
 export interface PublicTeam {
+  id: string;
   label: string;
+  projectId: string | null;
   members: string[];
 }
