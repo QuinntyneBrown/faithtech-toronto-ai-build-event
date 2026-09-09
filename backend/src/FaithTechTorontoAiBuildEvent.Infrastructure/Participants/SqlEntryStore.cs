@@ -16,6 +16,19 @@ public sealed class SqlEntryStore(CompanionDbContext database) : IEntryStore
         {
             throw new EntryValidationException("Entry operation does not match its receipt.");
         }
+        if (receipt.ParticipantId is not null)
+        {
+            var replayedParticipant = await database.Participants.SingleAsync(participant => participant.Id == receipt.ParticipantId, cancellationToken);
+            database.ParticipantSessions.Add(new ParticipantSession
+            {
+                Id = Guid.NewGuid(),
+                ParticipantId = replayedParticipant.Id,
+                SecretDigest = request.SessionDigest,
+                ExpiresAtUtc = receipt.ExpiresAtUtc
+            });
+            await database.SaveChangesAsync(cancellationToken);
+            return new EntryStoreResult(replayedParticipant.Id, replayedParticipant.PublicLabel);
+        }
 
         var state = await database.EventStates.SingleAsync(cancellationToken);
         if (state.CurrentScreen != EventScreen.Countdown)
@@ -25,11 +38,6 @@ public sealed class SqlEntryStore(CompanionDbContext database) : IEntryStore
         if (state.Version != request.ExpectedVersion)
         {
             throw new EntryValidationException("Event state changed; reload and try again.");
-        }
-        if (receipt.ParticipantId is not null)
-        {
-            var replayedParticipant = await database.Participants.SingleAsync(participant => participant.Id == receipt.ParticipantId, cancellationToken);
-            return new EntryStoreResult(replayedParticipant.Id, replayedParticipant.PublicLabel);
         }
         if (await database.Participants.AnyAsync(participant => participant.NormalizedEmail == request.NormalizedEmail, cancellationToken))
         {
