@@ -1,4 +1,4 @@
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { Injectable, inject, signal } from "@angular/core";
 import { EVENT_SERVICE } from "../event/event-service.token";
 import { IRaffleService } from "./raffle-service.contract";
@@ -11,6 +11,7 @@ export class RaffleService implements IRaffleService {
   readonly drawing = signal(false);
   readonly error = signal<string | null>(null);
   private readonly event = inject(EVENT_SERVICE);
+  private pendingDraw: { operationId: string; expectedVersion: string } | null = null;
 
   constructor(private readonly http: HttpClient) {}
 
@@ -31,15 +32,20 @@ export class RaffleService implements IRaffleService {
   draw(expectedVersion: string): void {
     this.drawing.set(true);
     this.error.set(null);
-    this.http.post("/api/admin/raffle/draws", { operationId: crypto.randomUUID(), expectedVersion }).subscribe({
+    const request = this.pendingDraw ?? { operationId: crypto.randomUUID(), expectedVersion };
+    this.http.post("/api/admin/raffle/draws", request).subscribe({
       next: () => {
+        this.pendingDraw = null;
         this.drawing.set(false);
         this.load();
         this.event.load();
       },
-      error: () => {
+      error: (response: HttpErrorResponse) => {
+        this.pendingDraw = response.status === 0 ? request : null;
         this.drawing.set(false);
-        this.error.set("The name could not be drawn. Refresh the raffle and try again.");
+        this.error.set(response.status === 0
+          ? "The draw result may already be saved. Select DRAW NAME again to retry safely."
+          : "The name could not be drawn. Refresh the raffle and try again.");
       }
     });
   }
