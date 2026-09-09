@@ -4,6 +4,7 @@ using FaithTechTorontoAiBuildEvent.Domain.Participants;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using FaithTechTorontoAiBuildEvent.Application.EventState;
+using FaithTechTorontoAiBuildEvent.Application.Validation;
 
 namespace FaithTechTorontoAiBuildEvent.Infrastructure.Participants;
 
@@ -73,5 +74,5 @@ public sealed class SqlProfileStore(CompanionDbContext database, IEventUpdatePub
         => new(participant.Name, participant.WhatYouMake, participant.OnYourHeart);
 
     private static string? BlankToNull(string? value)
-        => string.IsNullOrWhiteSpace(value) ? null : value.Trim().Replace("\r\n", "\n", StringComparison.Ordinal);
+        => string.IsNullOrWhiteSpace(value) ? null : UnicodeText.Normalize(value);
 }

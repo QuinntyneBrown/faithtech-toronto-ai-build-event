@@ -6,6 +6,7 @@ using FaithTechTorontoAiBuildEvent.Application.EventState;
 using FaithTechTorontoAiBuildEvent.Domain.Operations;
 using System.Security.Cryptography;
 using System.Text.Json;
+using FaithTechTorontoAiBuildEvent.Application.Validation;
 
 namespace FaithTechTorontoAiBuildEvent.Infrastructure.Participants;
 
@@ -159,5 +160,5 @@ public sealed class SqlAdministratorParticipantStore(CompanionDbContext database
         return participants.Select(participant => new AdministratorParticipant(participant.Id, participant.Email, participant.PublicLabel, participant.Name, participant.WhatYouMake, participant.OnYourHeart, participant.TeamId is { } teamId && teams.TryGetValue(teamId, out var label) ? label : null, winners.Contains(participant.Id))).ToList();
     }
 
-    private static string? BlankToNull(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim().Replace("\r\n", "\n", StringComparison.Ordinal);
+    private static string? BlankToNull(string? value) => string.IsNullOrWhiteSpace(value) ? null : UnicodeText.Normalize(value);
 }
