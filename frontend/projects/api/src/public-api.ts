@@ -5,3 +5,6 @@ export * from "./lib/event/public-event-state";
 export * from "./lib/entry/entry-service.contract";
 export * from "./lib/entry/entry-service.token";
 export * from "./lib/entry/entry.service";
+export * from "./lib/profile/profile-service.contract";
+export * from "./lib/profile/profile-service.token";
+export * from "./lib/profile/profile.service";

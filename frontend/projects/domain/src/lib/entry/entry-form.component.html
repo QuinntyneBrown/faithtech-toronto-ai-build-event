@@ -4,6 +4,7 @@
     <h2>You have been entered into the raffle.</h2>
     <p>{{ confirmation.publicLabel }}</p>
     <p>You can add optional details while Countdown remains open.</p>
+    <event-profile-form [eventVersion]="eventVersion()" />
   } @else {
     <h2>Start with hello.</h2>
     <p>Enter your email to join the raffle. Your email stays with the hosts.</p>

@@ -1,0 +1,27 @@
+import { ChangeDetectionStrategy, Component, inject, input, signal } from "@angular/core";
+import { FormsModule } from "@angular/forms";
+import { CsButtonDirective, CsInputDirective, CsTextareaDirective, FieldComponent } from "@quinntyne/cornerstone";
+import { PROFILE_SERVICE } from "@faithtech/api";
+
+@Component({
+  selector: "event-profile-form",
+  imports: [FormsModule, CsButtonDirective, CsInputDirective, CsTextareaDirective, FieldComponent],
+  templateUrl: "./profile-form.component.html",
+  styleUrl: "./profile-form.component.scss",
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class ProfileFormComponent {
+  readonly profileService = inject(PROFILE_SERVICE);
+  readonly eventVersion = input.required<string>();
+  readonly name = signal("");
+  readonly whatYouMake = signal("");
+  readonly onYourHeart = signal("");
+
+  save(): void {
+    this.profileService.save({
+      name: this.name() || null,
+      whatYouMake: this.whatYouMake() || null,
+      onYourHeart: this.onYourHeart() || null
+    }, this.eventVersion());
+  }
+}

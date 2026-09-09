@@ -2,10 +2,11 @@ import { ChangeDetectionStrategy, Component, inject, input, signal } from "@angu
 import { FormsModule } from "@angular/forms";
 import { BadgeComponent, CardComponent, CsButtonDirective, CsInputDirective, FieldComponent } from "@quinntyne/cornerstone";
 import { ENTRY_SERVICE } from "@faithtech/api";
+import { ProfileFormComponent } from "../profile/profile-form.component";
 
 @Component({
   selector: "event-entry-form",
-  imports: [FormsModule, BadgeComponent, CardComponent, CsButtonDirective, CsInputDirective, FieldComponent],
+  imports: [FormsModule, BadgeComponent, CardComponent, CsButtonDirective, CsInputDirective, FieldComponent, ProfileFormComponent],
   templateUrl: "./entry-form.component.html",
   styleUrl: "./entry-form.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush
