@@ -113,7 +113,7 @@ cs-field {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--cs-space-6);
   padding-block: var(--cs-space-6);
-  border-block-start: var(--cs-event-rule) solid var(--cs-border);
+  border-block-start: var(--cs-border-width) solid var(--cs-border);
 }
 .page-heading {
   display: flex;
@@ -160,12 +160,12 @@ table {
 th {
   font-size: var(--cs-text-xs);
   color: var(--cs-ink-muted);
-  font-weight: var(--cs-event-weight-medium);
+  font-weight: var(--cs-font-weight-bold);
 }
 th,
 td {
   padding: var(--cs-space-4) var(--cs-space-3);
-  border-block-end: var(--cs-event-rule) solid var(--cs-border);
+  border-block-end: var(--cs-border-width) solid var(--cs-border);
   vertical-align: middle;
 }
 td small {
