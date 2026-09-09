@@ -12,8 +12,18 @@ namespace FaithTechTorontoAiBuildEvent.Infrastructure.Projects;
 
 public sealed class SqlProjectStore(CompanionDbContext database, IEventUpdatePublisher updatePublisher) : IProjectStore
 {
-    public async Task UpdateAsync(Guid projectId, long expectedVersion, ProjectInput input, CancellationToken cancellationToken)
+    public async Task UpdateAsync(Guid operationId, byte[] inputDigest, Guid projectId, long expectedVersion, ProjectInput input, CancellationToken cancellationToken)
     {
+        var receipt = await database.EventOperationReceipts.SingleOrDefaultAsync(candidate => candidate.OperationId == operationId, cancellationToken);
+        if (receipt is not null)
+        {
+            if (receipt.OperationKind != "update-project" || !CryptographicOperations.FixedTimeEquals(receipt.InputDigest, inputDigest))
+            {
+                throw new ArgumentException("The operation identity was already used with different input.");
+            }
+            return;
+        }
+
         var state = await GetLiveStateAsync(expectedVersion, cancellationToken);
         var project = await database.Projects.SingleOrDefaultAsync(project => project.Id == projectId, cancellationToken)
             ?? throw new KeyNotFoundException("Project not found.");
@@ -22,6 +32,15 @@ public sealed class SqlProjectStore(CompanionDbContext database, IEventUpdatePub
         project.RepositoryUrl = BlankToNull(input.RepositoryUrl);
         project.DemoUrl = BlankToNull(input.DemoUrl);
         state.Version++;
+        database.EventOperationReceipts.Add(new EventOperationReceipt
+        {
+            OperationId = operationId,
+            OperationKind = "update-project",
+            InputDigest = inputDigest,
+            ResultId = project.Id,
+            ResultVersion = state.Version,
+            CreatedAtUtc = DateTimeOffset.UtcNow
+        });
         await database.SaveChangesAsync(cancellationToken);
         await updatePublisher.PublishAsync(state.Version, cancellationToken);
     }

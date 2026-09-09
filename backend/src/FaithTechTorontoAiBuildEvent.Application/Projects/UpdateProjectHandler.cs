@@ -1,6 +1,8 @@
 using FaithTechTorontoAiBuildEvent.Application.Access;
 using FaithTechTorontoAiBuildEvent.Application.Participants;
+using FaithTechTorontoAiBuildEvent.Application.Operations;
 using MediatR;
+using System.Globalization;
 
 namespace FaithTechTorontoAiBuildEvent.Application.Projects;
 
@@ -18,7 +20,14 @@ public sealed class UpdateProjectHandler(
         }
 
         Validate(request.Input);
-        await projectStore.UpdateAsync(request.ProjectId, expectedVersion, request.Input, cancellationToken);
+        var inputDigest = OperationInputDigest.Create(
+            request.ProjectId.ToString("D"),
+            expectedVersion.ToString(CultureInfo.InvariantCulture),
+            request.Input.Title,
+            request.Input.Description,
+            request.Input.RepositoryUrl,
+            request.Input.DemoUrl);
+        await projectStore.UpdateAsync(request.OperationId, inputDigest, request.ProjectId, expectedVersion, request.Input, cancellationToken);
     }
 
     private static void Validate(ProjectInput input)
