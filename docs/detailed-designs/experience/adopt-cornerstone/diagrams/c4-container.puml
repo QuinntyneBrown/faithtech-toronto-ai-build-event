@@ -1,0 +1,11 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+Container(examples, "Cornerstone examples", "Angular", "Independent behavior and accessibility examples")
+Container(package, "Cornerstone library", "Angular / CSS / WebGPU", "Controls, tokens and effects")
+Container(app, "Companion client", "Angular", "Application and domain composition")
+System_Ext(npm, "npm registry", "Published version")
+Rel(examples, package, "Exercises public API")
+Rel(package, npm, "Publishes build")
+Rel(app, npm, "Consumes released build")
+@enduml
