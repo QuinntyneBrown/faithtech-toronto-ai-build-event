@@ -24,8 +24,18 @@ public sealed class SqlRaffleStore(CompanionDbContext database, IEventUpdatePubl
         return new RaffleSnapshot(eligibleCount, results.FirstOrDefault(), results);
     }
 
-    public async Task<DrawWinnerResult> DrawAsync(long expectedVersion, DateTimeOffset nowUtc, CancellationToken cancellationToken)
+    public async Task<DrawWinnerResult> DrawAsync(Guid operationId, long expectedVersion, DateTimeOffset nowUtc, CancellationToken cancellationToken)
     {
+        var existing = await database.RaffleDraws.SingleOrDefaultAsync(draw => draw.OperationId == operationId, cancellationToken);
+        if (existing is not null)
+        {
+            if (existing.ExpectedVersion != expectedVersion)
+            {
+                throw new InvalidOperationException("This operation identity was already used with different input.");
+            }
+            return new DrawWinnerResult(existing.Id, existing.WinnerLabel, existing.RevealAtUtc, existing.EffectsEndAtUtc);
+        }
+
         var state = await database.EventStates.SingleAsync(cancellationToken);
         if (state.CurrentScreen != EventScreen.Raffle || state.Version != expectedVersion)
         {
@@ -51,6 +61,8 @@ public sealed class SqlRaffleStore(CompanionDbContext database, IEventUpdatePubl
         var draw = new RaffleDraw
         {
             Id = Guid.NewGuid(),
+            OperationId = operationId,
+            ExpectedVersion = expectedVersion,
             WinnerParticipantId = winner.Id,
             WinnerLabel = winner.Name ?? winner.PublicLabel,
             StartedAtUtc = nowUtc,

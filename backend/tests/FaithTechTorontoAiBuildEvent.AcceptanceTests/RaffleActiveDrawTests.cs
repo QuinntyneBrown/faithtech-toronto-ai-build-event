@@ -27,10 +27,16 @@ public sealed class RaffleActiveDrawTests : IClassFixture<CountdownApiFactory>
         await administrator.PostAsJsonAsync("/api/admin/event/advance", new { operationId = Guid.NewGuid(), expectedVersion = "3", fromScreen = "projects", toScreen = "teams" });
         await administrator.PostAsJsonAsync("/api/admin/event/advance", new { operationId = Guid.NewGuid(), expectedVersion = "4", fromScreen = "teams", toScreen = "raffle" });
 
-        var first = await administrator.PostAsJsonAsync("/api/admin/raffle/draws", new { operationId = Guid.NewGuid(), expectedVersion = "5" });
+        var operationId = Guid.NewGuid();
+        var first = await administrator.PostAsJsonAsync("/api/admin/raffle/draws", new { operationId, expectedVersion = "5" });
+        var replay = await administrator.PostAsJsonAsync("/api/admin/raffle/draws", new { operationId, expectedVersion = "5" });
         var second = await administrator.PostAsJsonAsync("/api/admin/raffle/draws", new { operationId = Guid.NewGuid(), expectedVersion = "6" });
 
         Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, replay.StatusCode);
+        Assert.Equal(
+            (await first.Content.ReadFromJsonAsync<DrawResponse>())?.DrawId,
+            (await replay.Content.ReadFromJsonAsync<DrawResponse>())?.DrawId);
         Assert.Equal(HttpStatusCode.Conflict, second.StatusCode);
     }
 
@@ -44,4 +50,5 @@ public sealed class RaffleActiveDrawTests : IClassFixture<CountdownApiFactory>
     }
 
     private sealed record ReceiptResponse(Guid OperationId);
+    private sealed record DrawResponse(Guid DrawId);
 }

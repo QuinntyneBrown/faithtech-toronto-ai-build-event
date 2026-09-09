@@ -102,6 +102,7 @@ public sealed class CompanionDbContext(DbContextOptions<CompanionDbContext> opti
         {
             builder.HasKey(draw => draw.Id);
             builder.Property(draw => draw.WinnerLabel).HasMaxLength(64).IsRequired();
+            builder.HasIndex(draw => draw.OperationId).IsUnique();
             builder.HasIndex(draw => draw.WinnerParticipantId).IsUnique();
         });
 

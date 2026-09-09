@@ -17,6 +17,6 @@ public sealed class DrawWinnerHandler(
             throw new UnauthorizedAccessException();
         }
 
-        return await raffleStore.DrawAsync(expectedVersion, DateTimeOffset.UtcNow, cancellationToken);
+        return await raffleStore.DrawAsync(request.OperationId, expectedVersion, DateTimeOffset.UtcNow, cancellationToken);
     }
 }
