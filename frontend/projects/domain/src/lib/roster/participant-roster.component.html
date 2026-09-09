@@ -1,6 +1,12 @@
 @if (administrator.active()) {
   <cs-card>
     <h2>Participant roster</h2>
+    <form (ngSubmit)="add()" aria-label="Add participant">
+      <cs-field label="Participant email" forId="roster-email">
+        <input csInput id="roster-email" name="email" type="email" required [ngModel]="email()" (ngModelChange)="email.set($event)">
+      </cs-field>
+      <button csButton type="submit" [disabled]="roster.loading()">Add participant</button>
+    </form>
     <button csButton="secondary" type="button" (click)="refresh()" [disabled]="roster.loading()">Refresh roster</button>
     @if (roster.error(); as error) { <p role="alert">{{ error }}</p> }
     @if (roster.participants().length) {

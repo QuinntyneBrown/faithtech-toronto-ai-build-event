@@ -16,4 +16,5 @@ export interface IRosterService {
   readonly loading: Signal<boolean>;
   readonly error: Signal<string | null>;
   load(): void;
+  add(email: string, expectedVersion: string): void;
 }
