@@ -19,6 +19,14 @@
               <cs-field label="Name" [forId]="'name-' + participant.id"><input csInput [id]="'name-' + participant.id" name="name" [ngModel]="draftFor(participant).name" (ngModelChange)="updateDraft(participant, 'name', $event)"></cs-field>
               <cs-field label="What you make" [forId]="'make-' + participant.id"><textarea csTextarea [id]="'make-' + participant.id" name="whatYouMake" [ngModel]="draftFor(participant).whatYouMake" (ngModelChange)="updateDraft(participant, 'whatYouMake', $event)"></textarea></cs-field>
               <cs-field label="On your heart" [forId]="'heart-' + participant.id"><textarea csTextarea [id]="'heart-' + participant.id" name="onYourHeart" [ngModel]="draftFor(participant).onYourHeart" (ngModelChange)="updateDraft(participant, 'onYourHeart', $event)"></textarea></cs-field>
+              @if (event.state(); as state) {
+                <cs-field label="Team" [forId]="'team-' + participant.id">
+                  <select csSelect [id]="'team-' + participant.id" [ngModel]="teamSelection(participant)" (ngModelChange)="move(participant, $event)" [disabled]="!event.connected() || roster.loading()">
+                    <option value="unassigned">Unassigned</option><option value="new">New team</option>
+                    @for (team of state.teams; track team.id) { <option [value]="team.id">{{ team.label }}</option> }
+                  </select>
+                </cs-field>
+              }
               <p>{{ participant.teamLabel ?? "Unassigned" }}; {{ participant.hasWonRaffle ? "Winner" : "Eligible" }}</p>
               <button csButton type="submit" [disabled]="!event.connected() || roster.loading()">Save participant</button>
               <button csButton="secondary" type="button" (click)="remove(participant)" [disabled]="!event.connected() || roster.loading()">Remove participant</button>

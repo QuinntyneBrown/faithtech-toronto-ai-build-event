@@ -14,4 +14,10 @@ export class TeamService implements ITeamService {
       next: () => this.event.load()
     });
   }
+
+  moveMember(participantId: string, destination: "unassigned" | "new" | "existing", teamId: string | null, expectedVersion: string): void {
+    this.http.post<void>("/api/admin/teams/moves", { operationId: crypto.randomUUID(), expectedVersion, participantId, destination, teamId }).subscribe({
+      next: () => this.event.load()
+    });
+  }
 }

@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, effect, inject, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { CardComponent, ConfirmDialogComponent, CsButtonDirective, CsInputDirective, CsTextareaDirective, DialogService, EmptyStateComponent, FieldComponent } from "@quinntyne/cornerstone";
-import { ADMINISTRATOR_SESSION_SERVICE, AdministratorParticipant, AdministratorParticipantInput, EVENT_SERVICE, ROSTER_SERVICE } from "@faithtech/api";
+import { CardComponent, ConfirmDialogComponent, CsButtonDirective, CsInputDirective, CsSelectDirective, CsTextareaDirective, DialogService, EmptyStateComponent, FieldComponent } from "@quinntyne/cornerstone";
+import { ADMINISTRATOR_SESSION_SERVICE, AdministratorParticipant, AdministratorParticipantInput, EVENT_SERVICE, ROSTER_SERVICE, TEAM_SERVICE } from "@faithtech/api";
 
 @Component({
   selector: "event-participant-roster",
-  imports: [CardComponent, CsButtonDirective, CsInputDirective, CsTextareaDirective, EmptyStateComponent, FieldComponent, FormsModule],
+  imports: [CardComponent, CsButtonDirective, CsInputDirective, CsSelectDirective, CsTextareaDirective, EmptyStateComponent, FieldComponent, FormsModule],
   templateUrl: "./participant-roster.component.html",
   styleUrl: "./participant-roster.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -14,6 +14,7 @@ export class ParticipantRosterComponent {
   readonly roster = inject(ROSTER_SERVICE);
   readonly administrator = inject(ADMINISTRATOR_SESSION_SERVICE);
   readonly event = inject(EVENT_SERVICE);
+  readonly teams = inject(TEAM_SERVICE);
   readonly email = signal("");
   readonly drafts = signal<Record<string, AdministratorParticipantInput>>({});
   private readonly dialogs = inject(DialogService);
@@ -58,5 +59,16 @@ export class ParticipantRosterComponent {
     dialog.closed.subscribe(result => {
       if (result === "confirm") this.roster.remove(participant.id, version);
     });
+  }
+
+  move(participant: AdministratorParticipant, selection: string): void {
+    const version = this.event.state()?.version;
+    if (!version) return;
+    if (selection === "unassigned" || selection === "new") this.teams.moveMember(participant.id, selection, null, version);
+    else this.teams.moveMember(participant.id, "existing", selection, version);
+  }
+
+  teamSelection(participant: AdministratorParticipant): string {
+    return this.event.state()?.teams.find(team => team.label === participant.teamLabel)?.id ?? "unassigned";
   }
 }
