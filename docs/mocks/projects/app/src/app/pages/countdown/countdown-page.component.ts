@@ -1,4 +1,3 @@
-import { NativeControlStateDirective } from "@mock/components";
 import {
   Component,
   ChangeDetectionStrategy,
@@ -15,14 +14,13 @@ import {
   CsInputDirective,
   CsTextareaDirective,
   BadgeComponent,
+  CountdownComponent,
 } from "@quinntyne/cornerstone";
-import { CountdownComponent } from "@mock/components";
 import { EVENT_SERVICE } from "../../data/event-service.token";
 import { ParticipantManagerComponent } from "./participant-manager.component";
 @Component({
   selector: "mock-countdown-page",
   imports: [
-    NativeControlStateDirective,
     FormsModule,
     CardComponent,
     CsButtonDirective,
