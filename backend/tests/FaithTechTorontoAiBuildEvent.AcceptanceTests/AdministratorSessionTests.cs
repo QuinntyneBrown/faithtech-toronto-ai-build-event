@@ -27,7 +27,11 @@ public sealed class AdministratorSessionTests : IClassFixture<CountdownApiFactor
         var response = await client.PostAsJsonAsync("/api/admin/session", new { passcode = "0042" });
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("faithtech-admin=", response.Headers.GetValues("Set-Cookie").Single(), StringComparison.Ordinal);
+        var cookie = response.Headers.GetValues("Set-Cookie").Single();
+        Assert.Contains("faithtech-admin=", cookie, StringComparison.Ordinal);
+        Assert.Contains("HttpOnly", cookie, StringComparison.Ordinal);
+        Assert.Contains("Secure", cookie, StringComparison.Ordinal);
+        Assert.Contains("samesite=strict", cookie, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
