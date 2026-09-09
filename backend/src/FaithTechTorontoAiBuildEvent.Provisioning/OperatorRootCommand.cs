@@ -10,6 +10,8 @@ public sealed class OperatorRootCommand
     {
         root.Subcommands.Add(new MigrateCommand());
         root.Subcommands.Add(new TargetCommand());
+        root.Subcommands.Add(new EventsCommand());
+        root.Subcommands.Add(new OperationsCommand());
         root.Subcommands.Add(new CreateAdministratorCommand());
         root.Subcommands.Add(new AddUserCommand());
         root.Subcommands.Add(new ResetPasswordCommand());
