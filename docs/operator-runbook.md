@@ -16,11 +16,13 @@ This runbook is for the September 9, 2026 FaithTech Toronto AI Build Event compa
 
    ```powershell
    $env:FAITHTECH_COMPANION_PRODUCTION_CONNECTION = 'Server=sql.example;Database=FaithTechCompanion;Encrypt=True;TrustServerCertificate=False;Integrated Security=True'
+   $env:FAITHTECH_COMPANION_PRODUCTION_SERVER = 'sql.example'
+   $env:FAITHTECH_COMPANION_PRODUCTION_DATABASE = 'FaithTechCompanion'
    faithtech-admin verify-connection --target production
    faithtech-admin set-admin-passcode --target production --interactive
    ```
 
-   The connection must use `Encrypt=True` and `TrustServerCertificate=False`. Never put a passcode in an argument, script, ticket, clipboard history, or saved SQL statement. Record only the returned revision and time.
+   The connection must use `Encrypt=True` and `TrustServerCertificate=False`. The CLI compares SQL Server's resolved server/database identity against the selected target's `*_SERVER` and `*_DATABASE` values before any write, and prints that nonsecret identity for confirmation. Never put a passcode in an argument, script, ticket, clipboard history, or saved SQL statement. Record only the returned revision and time.
 
 5. Open the public client in one browser and an administrator session in another. Confirm live screen changes and a roster refresh reach both browsers. Confirm the countdown page shows the live-event copy and the RTR project card.
 6. Take and record a database-native full backup before doors open. Store it separately from the live database.
