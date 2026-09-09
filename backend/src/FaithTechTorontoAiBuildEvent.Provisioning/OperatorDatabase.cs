@@ -37,13 +37,24 @@ public static class OperatorDatabase
             Console.WriteLine($"Verified target {target}: server {server}, database {database}.");
             await using var command = new SqlCommand("dbo.ReplaceAdminPasscode", connection) { CommandType = System.Data.CommandType.StoredProcedure, CommandTimeout = commandTimeout };
             command.Parameters.Add("@Passcode", System.Data.SqlDbType.NVarChar, -1).Value = passcode;
-            try { await command.ExecuteNonQueryAsync(); }
+            long revision;
+            DateTimeOffset changedAtUtc;
+            try
+            {
+                await using var reader = await command.ExecuteReaderAsync();
+                if (!await reader.ReadAsync())
+                {
+                    return Report(3, "The passcode replacement result is unknown. It was not retried.");
+                }
+                revision = reader.GetInt64(0);
+                changedAtUtc = reader.GetFieldValue<DateTimeOffset>(1);
+            }
             catch (SqlException exception) when (exception.Number == -2 || exception.Class >= 20)
             {
                 return Report(3, "The passcode replacement result is unknown. It was not retried.");
             }
             catch (SqlException exception) { return Report(1, $"Passcode replacement failed: {exception.Message}"); }
-            Console.WriteLine("Administrator passcode replaced.");
+            Console.WriteLine($"Administrator passcode replaced at revision {revision} (UTC {changedAtUtc:O}).");
             return 0;
         }
         catch (ArgumentException exception) { return Report(2, exception.Message); }
