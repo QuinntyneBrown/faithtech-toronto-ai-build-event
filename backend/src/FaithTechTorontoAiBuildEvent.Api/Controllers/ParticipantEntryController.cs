@@ -57,4 +57,12 @@ public sealed class ParticipantEntryController(ISender sender) : ControllerBase
             ? Unauthorized()
             : Ok(new ParticipantSessionResponse(session.ParticipantId, session.PublicLabel));
     }
+
+    [HttpDelete("session")]
+    public async Task<IActionResult> ClearSession(CancellationToken cancellationToken)
+    {
+        await sender.Send(new ClearParticipantSessionCommand(Request.Cookies["faithtech-participant"]), cancellationToken);
+        Response.Cookies.Delete("faithtech-participant", new CookieOptions { Path = "/api/participant" });
+        return NoContent();
+    }
 }
