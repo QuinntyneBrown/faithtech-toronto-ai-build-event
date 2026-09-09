@@ -22,7 +22,7 @@ public static class SetAdminPasscodeCommand
                 Console.Error.WriteLine("Specify exactly one of --interactive or --passcode-stdin.");
                 return 2;
             }
-            var passcode = useStdin ? await Console.In.ReadLineAsync() : PasscodeInput.ReadMasked();
+            var passcode = useStdin ? await PasscodeInput.ReadFromStandardInputAsync() : PasscodeInput.ReadMasked();
             return await OperatorDatabase.ReplacePasscodeAsync(parseResult.GetValue(target) ?? string.Empty, passcode);
         });
         return command;
