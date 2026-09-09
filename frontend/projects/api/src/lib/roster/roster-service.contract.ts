@@ -1,12 +1,19 @@
-import { RegistrationInput } from './registration-input';
-import { RosterEntry } from './roster-entry';
-import { RosterIssuance } from './roster-issuance';
+import { Signal } from "@angular/core";
+
+export interface AdministratorParticipant {
+  id: string;
+  email: string;
+  publicLabel: string;
+  name: string | null;
+  whatYouMake: string | null;
+  onYourHeart: string | null;
+  teamLabel: string | null;
+  hasWonRaffle: boolean;
+}
 
 export interface IRosterService {
-  list(eventId: string): Promise<RosterEntry[]>;
-  add(eventId: string, input: RegistrationInput, operationId: string): Promise<RosterIssuance>;
-  rename(eventId: string, registrationId: string, displayName: string, version: string, operationId: string): Promise<RosterEntry>;
-  deactivate(eventId: string, registrationId: string, version: string, operationId: string): Promise<RosterEntry>;
-  replaceCode(eventId: string, registrationId: string, version: string, operationId: string): Promise<RosterIssuance>;
-  reactivate(eventId: string, registrationId: string, version: string, operationId: string): Promise<RosterEntry>;
+  readonly participants: Signal<AdministratorParticipant[]>;
+  readonly loading: Signal<boolean>;
+  readonly error: Signal<string | null>;
+  load(): void;
 }

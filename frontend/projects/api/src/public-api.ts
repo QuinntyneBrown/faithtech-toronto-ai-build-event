@@ -15,3 +15,6 @@ export * from "./lib/raffle/raffle-service.contract";
 export * from "./lib/raffle/raffle-service.token";
 export * from "./lib/raffle/raffle-snapshot";
 export * from "./lib/raffle/raffle.service";
+export * from "./lib/roster/roster-service.contract";
+export * from "./lib/roster/roster-service.token";
+export * from "./lib/roster/roster.service";

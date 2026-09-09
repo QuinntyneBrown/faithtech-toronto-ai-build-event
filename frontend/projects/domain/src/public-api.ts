@@ -5,3 +5,4 @@ export * from "./lib/access/administrator-login.component";
 export * from "./lib/projects/projects.component";
 export * from "./lib/teams/teams.component";
 export * from "./lib/raffle/raffle.component";
+export * from "./lib/roster/participant-roster.component";

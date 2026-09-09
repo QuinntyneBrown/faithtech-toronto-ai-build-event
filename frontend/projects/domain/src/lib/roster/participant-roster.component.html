@@ -1,0 +1,16 @@
+@if (administrator.active()) {
+  <cs-card>
+    <h2>Participant roster</h2>
+    <button csButton="secondary" type="button" (click)="refresh()" [disabled]="roster.loading()">Refresh roster</button>
+    @if (roster.error(); as error) { <p role="alert">{{ error }}</p> }
+    @if (roster.participants().length) {
+      <ul>
+        @for (participant of roster.participants(); track participant.id) {
+          <li><strong>{{ participant.name ?? participant.publicLabel }}</strong> — {{ participant.email }}; {{ participant.teamLabel ?? "Unassigned" }}; {{ participant.hasWonRaffle ? "Winner" : "Eligible" }}</li>
+        }
+      </ul>
+    } @else if (!roster.loading()) {
+      <cs-empty-state title="No participants yet" />
+    }
+  </cs-card>
+}
