@@ -22,7 +22,9 @@ public sealed class SqlEventStateStore(CompanionDbContext database, IOptions<Eve
         var candidateLabels = candidates.GroupBy(candidate => candidate.DrawId)
             .ToDictionary(group => group.Key, group => (IReadOnlyList<string>)group.OrderBy(candidate => candidate.Label).Select(candidate => candidate.Label).ToList());
         var publicTeams = teams.Select(team => new PublicTeam(
+            team.Id,
             team.Label,
+            team.ProjectId,
             participants.Where(participant => participant.TeamId == team.Id).OrderBy(participant => participant.PublicLabel).Select(participant => participant.Name ?? participant.PublicLabel).ToList()))
             .ToList();
         var eventOptions = options.Value;
