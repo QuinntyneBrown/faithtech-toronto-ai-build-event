@@ -1,6 +1,8 @@
 using FaithTechTorontoAiBuildEvent.Application.Access;
 using FaithTechTorontoAiBuildEvent.Application.Participants;
+using FaithTechTorontoAiBuildEvent.Application.Operations;
 using MediatR;
+using System.Globalization;
 
 namespace FaithTechTorontoAiBuildEvent.Application.Projects;
 
@@ -17,6 +19,9 @@ public sealed class DeleteProjectHandler(
             throw new UnauthorizedAccessException();
         }
 
-        await projectStore.DeleteAsync(request.ProjectId, expectedVersion, cancellationToken);
+        var inputDigest = OperationInputDigest.Create(
+            request.ProjectId.ToString("D"),
+            expectedVersion.ToString(CultureInfo.InvariantCulture));
+        await projectStore.DeleteAsync(request.OperationId, inputDigest, request.ProjectId, expectedVersion, cancellationToken);
     }
 }

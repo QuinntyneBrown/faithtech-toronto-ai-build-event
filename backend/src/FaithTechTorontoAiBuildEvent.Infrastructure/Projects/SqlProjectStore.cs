@@ -45,8 +45,18 @@ public sealed class SqlProjectStore(CompanionDbContext database, IEventUpdatePub
         await updatePublisher.PublishAsync(state.Version, cancellationToken);
     }
 
-    public async Task DeleteAsync(Guid projectId, long expectedVersion, CancellationToken cancellationToken)
+    public async Task DeleteAsync(Guid operationId, byte[] inputDigest, Guid projectId, long expectedVersion, CancellationToken cancellationToken)
     {
+        var receipt = await database.EventOperationReceipts.SingleOrDefaultAsync(candidate => candidate.OperationId == operationId, cancellationToken);
+        if (receipt is not null)
+        {
+            if (receipt.OperationKind != "delete-project" || !CryptographicOperations.FixedTimeEquals(receipt.InputDigest, inputDigest))
+            {
+                throw new ArgumentException("The operation identity was already used with different input.");
+            }
+            return;
+        }
+
         var state = await GetLiveStateAsync(expectedVersion, cancellationToken);
         var project = await database.Projects.SingleOrDefaultAsync(project => project.Id == projectId, cancellationToken)
             ?? throw new KeyNotFoundException("Project not found.");
@@ -57,6 +67,15 @@ public sealed class SqlProjectStore(CompanionDbContext database, IEventUpdatePub
         }
         database.Projects.Remove(project);
         state.Version++;
+        database.EventOperationReceipts.Add(new EventOperationReceipt
+        {
+            OperationId = operationId,
+            OperationKind = "delete-project",
+            InputDigest = inputDigest,
+            ResultId = project.Id,
+            ResultVersion = state.Version,
+            CreatedAtUtc = DateTimeOffset.UtcNow
+        });
         await database.SaveChangesAsync(cancellationToken);
         await updatePublisher.PublishAsync(state.Version, cancellationToken);
     }
