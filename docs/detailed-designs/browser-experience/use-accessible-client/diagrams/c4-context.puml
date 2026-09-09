@@ -1,8 +1,0 @@
-@startuml
-!include <C4/C4_Context>
-LAYOUT_WITH_LEGEND()
-title Context - Accessible event experience
-Person(user, "Participant or administrator", "Keyboard, narrow screen and varied capabilities")
-System(app, "Event browser experience", "Accessible routes and state feedback")
-Rel(user, app, "Navigates and completes event actions")
-@enduml

@@ -1,9 +1,0 @@
-@startuml
-!include <C4/C4_Context>
-LAYOUT_WITH_LEGEND()
-title Context - Draw and present a raffle winner
-Person(actor, "Administrator and participant", "draw winner")
-System(system, "FaithTech event platform", "Choose a uniform eligible identity once before any optional celebration")
-Rel(actor, system, "Draw winner", "HTTPS")
-
-@enduml

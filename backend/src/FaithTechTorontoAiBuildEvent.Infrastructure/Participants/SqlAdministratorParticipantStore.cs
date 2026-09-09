@@ -40,6 +40,8 @@ public sealed class SqlAdministratorParticipantStore(CompanionDbContext database
         foreach (var session in sessions) { session.Revoked = true; }
         var receipts = await database.EntryReceipts.Where(receipt => receipt.ParticipantId == participantId).ToListAsync(cancellationToken);
         foreach (var receipt in receipts) { receipt.Revoked = true; }
+        var profileReceipts = await database.ProfileSaveReceipts.Where(receipt => receipt.ParticipantId == participantId).ToListAsync(cancellationToken);
+        database.ProfileSaveReceipts.RemoveRange(profileReceipts);
         var draws = await database.RaffleDraws.Where(draw => draw.WinnerParticipantId == participantId).ToListAsync(cancellationToken);
         foreach (var draw in draws) { draw.WinnerParticipantId = null; draw.WinnerLabel = "Removed participant"; }
         var candidates = await database.RaffleCandidates.Where(candidate => candidate.ParticipantId == participantId).ToListAsync(cancellationToken);

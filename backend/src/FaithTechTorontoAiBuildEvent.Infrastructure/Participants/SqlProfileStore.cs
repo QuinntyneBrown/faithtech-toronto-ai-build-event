@@ -22,6 +22,16 @@ public sealed class SqlProfileStore(CompanionDbContext database, IEventUpdatePub
             return null;
         }
 
+        var receipt = await database.ProfileSaveReceipts.SingleOrDefaultAsync(candidate => candidate.ParticipantId == participant.Id && candidate.OperationId == request.OperationId, cancellationToken);
+        if (receipt is not null)
+        {
+            if (!System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(receipt.InputDigest, request.InputDigest))
+            {
+                throw new EntryValidationException("This profile operation identity was already used with different input.");
+            }
+            return new ParticipantProfile(receipt.Name, receipt.WhatYouMake, receipt.OnYourHeart);
+        }
+
         var state = await database.EventStates.SingleAsync(cancellationToken);
         if (state.CurrentScreen != EventScreen.Countdown || state.Version != request.ExpectedVersion)
         {
@@ -31,6 +41,15 @@ public sealed class SqlProfileStore(CompanionDbContext database, IEventUpdatePub
         participant.Name = BlankToNull(request.Input.Name);
         participant.WhatYouMake = BlankToNull(request.Input.WhatYouMake);
         participant.OnYourHeart = BlankToNull(request.Input.OnYourHeart);
+        database.ProfileSaveReceipts.Add(new FaithTechTorontoAiBuildEvent.Domain.Participants.ProfileSaveReceipt
+        {
+            OperationId = request.OperationId,
+            ParticipantId = participant.Id,
+            InputDigest = request.InputDigest,
+            Name = participant.Name,
+            WhatYouMake = participant.WhatYouMake,
+            OnYourHeart = participant.OnYourHeart
+        });
         state.Version++;
         await database.SaveChangesAsync(cancellationToken);
         await updatePublisher.PublishAsync(state.Version, cancellationToken);

@@ -16,6 +16,7 @@ public sealed class CompanionDbContext(DbContextOptions<CompanionDbContext> opti
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<EntryReceipt> EntryReceipts => Set<EntryReceipt>();
     public DbSet<Participant> Participants => Set<Participant>();
+    public DbSet<ProfileSaveReceipt> ProfileSaveReceipts => Set<ProfileSaveReceipt>();
     public DbSet<PublicEntryAttempt> PublicEntryAttempts => Set<PublicEntryAttempt>();
     public DbSet<ParticipantSession> ParticipantSessions => Set<ParticipantSession>();
     public DbSet<CompanionCredential> CompanionCredentials => Set<CompanionCredential>();
@@ -62,6 +63,12 @@ public sealed class CompanionDbContext(DbContextOptions<CompanionDbContext> opti
             builder.Property(participant => participant.NormalizedEmail).HasMaxLength(508).IsRequired();
             builder.Property(participant => participant.PublicLabel).HasMaxLength(64).IsRequired();
             builder.HasIndex(participant => participant.NormalizedEmail).IsUnique();
+        });
+
+        modelBuilder.Entity<ProfileSaveReceipt>(builder =>
+        {
+            builder.HasKey(receipt => new { receipt.ParticipantId, receipt.OperationId });
+            builder.Property(receipt => receipt.InputDigest).HasMaxLength(32).IsRequired();
         });
 
         modelBuilder.Entity<PublicEntryAttempt>(builder =>

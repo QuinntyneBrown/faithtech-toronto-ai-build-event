@@ -1,9 +1,0 @@
-@startuml
-!include <C4/C4_Context>
-LAYOUT_WITH_LEGEND()
-title Context - Choose an event project
-Person(actor, "Participant and administrator", "choose project")
-System(system, "FaithTech event platform", "Accept event-owned proposals and atomically change a team project")
-Rel(actor, system, "Choose project", "HTTPS")
-
-@enduml

@@ -1,4 +1,0 @@
-:host { display: block; }
-form { display: grid; gap: var(--cs-space-3); }
-.actions { display: flex; justify-content: flex-end; margin-top: var(--cs-space-4); }
-[role="alert"] { color: var(--cs-error); }

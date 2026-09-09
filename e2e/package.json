@@ -1,7 +1,0 @@
-{
-  "name": "faithtech-acceptance",
-  "private": true,
-  "type": "module",
-  "scripts": { "test": "playwright test" },
-  "devDependencies": { "@playwright/test": "1.61.1", "@axe-core/playwright": "4.12.1" }
-}

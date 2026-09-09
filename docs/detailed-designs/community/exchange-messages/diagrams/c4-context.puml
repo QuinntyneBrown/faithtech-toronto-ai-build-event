@@ -1,9 +1,0 @@
-@startuml
-!include <C4/C4_Context>
-LAYOUT_WITH_LEGEND()
-title Context - Exchange private messages
-Person(actor, "Participant", "exchange messages")
-System(system, "FaithTech event platform", "Persist text-only messages for an authorized event participant pair")
-Rel(actor, system, "Exchange messages", "HTTPS")
-
-@enduml

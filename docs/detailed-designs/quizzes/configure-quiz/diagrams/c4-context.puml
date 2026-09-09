@@ -1,9 +1,0 @@
-@startuml
-!include <C4/C4_Context>
-LAYOUT_WITH_LEGEND()
-title Context - Configure a quiz lifecycle
-Person(actor, "Administrator", "configure quiz")
-System(system, "FaithTech event platform", "Validate draft questions, activate before opening and freeze opened content")
-Rel(actor, system, "Configure quiz", "HTTPS")
-
-@enduml

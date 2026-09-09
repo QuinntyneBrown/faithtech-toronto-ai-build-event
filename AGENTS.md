@@ -120,27 +120,27 @@ legacy implementation, not a required deliverable under the new scope.
 
 ## Implementation
 
-Implement with the **incremental implementation** skill from Addy Osmani's
-`agent-skills`. It is mandatory for any change touching more than one file, and it
-is not optional because the work looks small once you have read the requirement.
+Incremental implementation is mandatory for any change touching more than one
+file. Follow these steps, adapted from
+[Addy Osmani's incremental implementation skill](https://github.com/addyosmani/agent-skills/blob/main/skills/incremental-implementation/SKILL.md).
+Installing or invoking the skill is not required.
 
-    /agent-skills:incremental-implementation
-
-Install it once per machine:
-
-    /plugin marketplace add addyosmani/agent-skills
-    /plugin install agent-skills@addy-agent-skills
-
-What the skill requires of you:
-
-- Build in thin vertical slices. Implement one slice, test it, verify it, then
-  expand. Never implement a whole feature in one pass.
-- Leave the system working and testable at the end of every increment. An
-  increment that does not build is not an increment.
-- Stop and test before you have written ~100 lines. If you are tempted to write
-  more than that before running anything, the slice is too big - cut it.
-- Commit each verified increment, so the history reads as a sequence of working
-  states rather than one drop.
+1. Split the work into thin vertical slices, each completing one behavior. Keep
+   changes focused on the requirement and choose the simplest workable design.
+2. Begin each slice with a failing acceptance test tied to Given-When-Then
+   criteria, then implement the smallest complete behavior that passes it.
+   Stop and test before writing ~100 lines; split larger slices further.
+3. Verify each slice with the repository's applicable tests, build, type checks,
+   and lint checks; manually check behavior where needed. Fix failures before
+   continuing, leaving the system working and testable. Repeat successful checks
+   only after changes that could affect them.
+4. Review the diff for scope and simplicity. Keep increments independently
+   revertible; if unfinished functionality must be merged, hide it behind a
+   feature flag with a safe default.
+5. Commit each verified slice with a descriptive message, then build on it in the
+   next slice.
+6. Continue until every requirement is satisfied. Confirm the full test suite,
+   build, and end-to-end behavior pass before declaring the task complete.
 
 This pairs with ATDD below: the acceptance test defines the slice, and the slice
 is done when that test passes. It does not license shipping less than the whole

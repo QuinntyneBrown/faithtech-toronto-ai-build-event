@@ -13,7 +13,9 @@ public sealed class SaveParticipantProfileHandler(IProfileStore profileStore, IE
         }
 
         Validate(request.Input);
-        return await profileStore.SaveAsync(new ProfileSaveRequest(secretService.Digest(request.Secret), expectedVersion, request.Input, DateTimeOffset.UtcNow), cancellationToken)
+        var canonicalInput = System.Text.Json.JsonSerializer.Serialize(request.Input);
+        var inputDigest = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(canonicalInput));
+        return await profileStore.SaveAsync(new ProfileSaveRequest(request.OperationId, inputDigest, secretService.Digest(request.Secret), expectedVersion, request.Input, DateTimeOffset.UtcNow), cancellationToken)
             ?? throw new EntryValidationException("Participant session is no longer valid.");
     }
 
