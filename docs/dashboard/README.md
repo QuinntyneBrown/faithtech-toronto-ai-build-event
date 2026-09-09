@@ -31,14 +31,14 @@ reviews; exports are the backup. There is no cloud sync or server-side database.
 
 ## What the numbers mean
 
-The large headline is **estimated development completion**, initially **66%**.
+The large headline is **estimated development completion**, initially **64%**.
 It averages equal-weight requirements using these simple estimates: not started
 0%, in progress 50%, implementation awaiting verification 90%, accepted 100%.
 It updates with saved review statuses and ignores view filters. Only an entirely
 accepted scope displays 100%; other rounded values are capped at 99%. This is a
 rough status-based estimate, not a measurement of effort, hours or time remaining.
 
-`audit.json` is a dated review of all 34 active event L2 requirements, with a source
+`audit.json` is a dated review of all 30 MVP event L2 requirements, with a source
 reference and next action for each. Baseline: 17 need verification, 14 have known
 implementation gaps, 3 have verification work not started, and 0 are certified
 accepted. **Zero accepted does not mean zero code implemented.** The build passed,
