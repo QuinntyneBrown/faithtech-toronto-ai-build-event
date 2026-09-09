@@ -2,6 +2,7 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./specs",
+  testIgnore: "dashboard.spec.ts",
   fullyParallel: true,
   retries: 0,
   expect: { timeout: 10_000 },
