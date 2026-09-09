@@ -1,0 +1,17 @@
+@if (event.loading()) {
+  <cs-card><p>Loading projects…</p></cs-card>
+} @else if (event.state(); as state) {
+  <h1>Projects</h1>
+  @if (state.projects.length) {
+    @for (project of state.projects; track project.id) {
+      <cs-card>
+        <h2>{{ project.title }}</h2>
+        <p>{{ project.description }}</p>
+        @if (project.repositoryUrl) { <a [href]="project.repositoryUrl" target="_blank" rel="noopener noreferrer">Repository</a> }
+        @if (project.demoUrl) { <a [href]="project.demoUrl" target="_blank" rel="noopener noreferrer">Demo</a> }
+      </cs-card>
+    }
+  } @else {
+    <cs-empty-state title="No projects added yet" />
+  }
+}
