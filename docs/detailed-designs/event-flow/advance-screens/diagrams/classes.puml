@@ -1,0 +1,44 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+title Advance the four screens under presenter control — structure
+interface IEventService {
++advance(input: AdvanceInput): Promise<AdvanceResult>
++readonly state: Signal<PublicEventSnapshot>
+}
+class AppComponent
+AppComponent ..> IEventService : consumes contract
+class EventFlowController
+class AdvanceScreenHandler {
+  +Handle(request: AdvanceScreenCommand): Task<AdvanceResult>
+}
+class AdvanceScreenCommand {
++Screen FromScreen
++Screen ToScreen
++Guid OperationId
++long ExpectedVersion
+}
+class EventState {
++long Version
++Screen CurrentScreen
++bool TeamsFormed
++Advance(destination: Screen): void
+}
+EventFlowController ..> AdvanceScreenHandler : dispatches
+AdvanceScreenHandler ..> AdvanceScreenCommand : handles
+AdvanceScreenHandler --> EventState : uses
+enum Screen {
+ Countdown
+ Projects
+ Teams
+ Raffle
+}
+EventState --> Screen
+class FormTeamsPolicy {
+ +Form(participants: List<Participant>): List<Team>
+}
+AdvanceScreenHandler ..> FormTeamsPolicy : first Teams transition
+@enduml

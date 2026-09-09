@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Advance the four screens under presenter control — context
+Person(actor, "Administrator and public viewers", "Persist one deliberate stage transition without skipping screens")
+System(companion, "FaithTech event companion", "Advance the four screens under presenter control")
+Rel(actor, companion, "Uses")
+@enduml

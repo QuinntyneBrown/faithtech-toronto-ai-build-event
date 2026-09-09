@@ -1,0 +1,47 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Commit a single adjacent transition
+actor "Administrator and public viewers" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "AppComponent" as page
+participant "IEventService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "EventFlowController" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "AdvanceScreenHandler" as handler
+participant "EventState" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+participant "EventChangePublisher" as push
+end box
+actor -> page : Select explicit live advance
+page -> client : Advance(from, to, operationId, version)
+client -> controller : POST admin event advance
+controller -> handler : Dispatch authorized command
+handler -> db : Lock event; recheck session and receipt
+alt Exact prior operation
+ db --> handler : Original committed outcome
+else Current version and adjacent transition
+ handler -> entity : Apply L2-007 stage rule
+ opt First transition to Teams
+  handler -> db : Read current nondeleted participants
+  handler -> entity : Form and attach one grouping L2-010
+ end
+ handler -> db : Commit stage, grouping, receipt and change
+ db --> handler : Durable version
+else Stale / nonadjacent / unauthorized
+ handler --> controller : Reject; no stage change
+end
+handler --> controller : Outcome
+controller --> client : Confirmed result or conflict
+push -> client : EventChanged after commit
+client -> page : Reload and follow role-aware live state
+@enduml

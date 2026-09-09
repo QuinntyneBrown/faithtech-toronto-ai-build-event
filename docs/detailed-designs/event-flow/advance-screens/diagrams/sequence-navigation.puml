@@ -1,0 +1,42 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Resolve public and local administrator navigation
+actor "Administrator and public viewers" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "AppComponent" as page
+participant "IEventService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "EventFlowController" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "AdvanceScreenHandler" as handler
+participant "EventState" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+participant "EventChangePublisher" as push
+end box
+actor -> page : Deep link / back / choose earlier stage
+page -> client : Read synchronized role and current state
+client -> controller : GET authorized state and session
+controller -> handler : Dispatch read
+handler -> db : Read current screen and authority
+ db --> handler : Current screen / valid role
+handler --> controller : Authorized snapshot
+controller --> client : Snapshot
+client --> page : Authoritative role and stage
+alt Public or invalid admin session
+ page -> page : Navigate to live; clear privileged drafts
+else Admin chooses already-opened stage
+ page -> page : Keep local route with live indicator
+else Future stage or Return to live
+ page -> page : Navigate to current live stage
+end
+page --> actor : One of exactly four screens
+@enduml
