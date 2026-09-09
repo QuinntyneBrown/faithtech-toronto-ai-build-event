@@ -1,0 +1,50 @@
+# Throwaway project dashboard
+
+This developer aid is separate from the event companion and is not a fifth event
+screen. Its scope is the 34 active requirements in L2.md; legacy features and the
+dashboard itself do not count toward event completion.
+
+## DB-L1-001: Understand remaining work and track completion
+
+Show an evidence-based repository audit, actionable remaining work, and a burndown
+that records actual completion decisions. Keep operation local and simple.
+
+## DB-L2-001: Inspect the baseline
+
+Traces to: DB-L1-001.
+
+1. Given the audited baseline, when opened, then every active event requirement
+   appears with a status, source evidence, and an explicit next action.
+2. Given filters or a search, when changed, then matching requirements appear and
+   overall completion remains based on the full scope; no matches has an empty state.
+3. Given an unverified implementation, when totals are shown, then code presence
+   does not count as accepted completion; blocked checks are identified honestly.
+
+## DB-L2-002: Record progress through completion
+
+Traces to: DB-L1-001.
+
+1. Given a requirement and a review note, when its status is changed, then totals
+   and burndown update and survive reload; Done requires a nonblank evidence note.
+2. Given a completed requirement, when reopened, then remaining work increases;
+   completing the whole scope shows zero remaining without a divide-by-zero error.
+3. Given recorded progress, when exported and imported in a fresh browser, then
+   statuses, notes, and history return. Invalid data leaves existing progress intact.
+4. Given unavailable or corrupt browser storage, when loaded or saved, then a clear
+   warning appears and the baseline remains usable without silently deleting data.
+5. Given no historical completion observations, when the chart opens, then it starts
+   at the audit baseline and does not fabricate historical velocity or a finish date.
+
+## DB-L2-003: Use the local dashboard
+
+Traces to: DB-L1-001.
+
+1. Given desktop or 375px mobile Chrome, when inspecting and editing requirements,
+   then content and actions remain reachable without page-level horizontal overflow.
+2. Given keyboard input, when opening and closing the requirement inspector, then
+   controls are labeled and focus returns to the opening control.
+3. Given the checkout and Node.js, when the documented local launch command runs,
+   then the dashboard opens without a build, database, account, or external service.
+
+The baseline is a dated code review, not an automatic acceptance certificate.
+Status changes are explicit operator assessments. Export provides a portable backup.
