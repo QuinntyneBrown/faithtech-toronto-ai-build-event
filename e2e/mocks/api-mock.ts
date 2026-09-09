@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import type { EventStore } from "./event-store";
+import { HUB_PATHS } from "./hub-mock";
 
 /**
  * Answers every `/api/**` call from the in-memory store.
@@ -13,6 +14,13 @@ export async function installApiMock(page: Page, store: EventStore): Promise<voi
     const request = route.request();
     const method = request.method();
     const path = new URL(request.url()).pathname;
+
+    // Two of the SignalR hubs live under /api. Their negotiation belongs to the
+    // hub mock, not the store.
+    if (HUB_PATHS.some(hub => path.startsWith(hub))) {
+      await route.fallback();
+      return;
+    }
 
     let body: unknown = null;
     const raw = request.postData();

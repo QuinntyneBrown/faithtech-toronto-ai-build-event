@@ -84,6 +84,7 @@ export class EventStore {
   private nextTeamLabel = 1;
   private sequence = 0;
   private readonly forced = new Map<string, ForcedOutcome[]>();
+  private readonly persistent = new Map<string, ForcedOutcome>();
 
   readonly requests: { method: string; path: string; body: unknown }[] = [];
 
@@ -152,12 +153,28 @@ export class EventStore {
     this.forced.set(key, queued);
   }
 
+  /**
+   * Forces every request matching "METHOD /path" until cleared. Needed where
+   * the client retries on its own — server time is sampled three times per
+   * refresh, so a single queued failure would not keep the clock unsynchronized.
+   */
+  failAlways(key: string, outcome: ForcedOutcome): void {
+    this.persistent.set(key, outcome);
+  }
+
+  clearFailure(key: string): void {
+    this.persistent.delete(key);
+    this.forced.delete(key);
+  }
+
   consumeForced(key: string): ForcedOutcome | undefined {
     const queued = this.forced.get(key);
-    if (!queued?.length) return undefined;
-    const outcome = queued.shift();
-    if (!queued.length) this.forced.delete(key);
-    return outcome;
+    if (queued?.length) {
+      const outcome = queued.shift();
+      if (!queued.length) this.forced.delete(key);
+      return outcome;
+    }
+    return this.persistent.get(key);
   }
 
   // ------------------------------------------------------------ projections

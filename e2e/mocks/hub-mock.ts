@@ -7,41 +7,49 @@ import type { Page, WebSocketRoute } from "@playwright/test";
  */
 const RECORD_SEPARATOR = String.fromCharCode(30);
 
-const NEGOTIATION = {
-  negotiateVersion: 1,
-  connectionId: "e2e-connection",
-  connectionToken: "e2e-token",
-  availableTransports: [{ transport: "WebSockets", transferFormats: ["Text", "Binary"] }]
-};
+function negotiation(connection: string) {
+  return {
+    negotiateVersion: 1,
+    connectionId: connection,
+    connectionToken: connection,
+    availableTransports: [{ transport: "WebSockets", transferFormats: ["Text", "Binary"] }]
+  };
+}
 
 function frame(message: unknown): string {
   return JSON.stringify(message) + RECORD_SEPARATOR;
 }
 
 /**
- * Stands in for the `event-updates` hub.
+ * One mocked SignalR hub.
  *
  * The client negotiates over HTTP and then speaks the JSON hub protocol over a
  * web socket, so both halves are intercepted. Nothing is forwarded upstream:
  * the socket is answered entirely from here, which is what lets the suite run
  * with no SignalR server.
  */
-export class HubMock {
+export class HubChannel {
   private socket: WebSocketRoute | null = null;
   private handshakeComplete = false;
   private offline = false;
 
+  constructor(
+    private readonly name: string,
+    private readonly negotiateGlob: string,
+    private readonly socketPattern: RegExp
+  ) {}
+
   async install(page: Page): Promise<void> {
-    await page.route("**/hubs/event-updates/negotiate**", route => {
+    await page.route(this.negotiateGlob, route => {
       if (this.offline) return route.abort("failed");
       return route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify(NEGOTIATION)
+        body: JSON.stringify(negotiation(this.name))
       });
     });
 
-    await page.routeWebSocket(/\/hubs\/event-updates/, socket => {
+    await page.routeWebSocket(this.socketPattern, socket => {
       this.socket = socket;
       this.handshakeComplete = false;
 
@@ -80,9 +88,9 @@ export class HubMock {
     return this.socket !== null && this.handshakeComplete;
   }
 
-  /** Pushes the server's "something changed" signal for the given version. */
-  pushEventUpdate(version: number | string): void {
-    this.socket?.send(frame({ type: 1, target: "eventUpdated", arguments: [String(version)] }));
+  /** Invokes a hub method on the client. */
+  send(target: string, args: unknown[] = []): void {
+    this.socket?.send(frame({ type: 1, target, arguments: args }));
   }
 
   /**
@@ -100,5 +108,77 @@ export class HubMock {
   /** Lets the client negotiate again, so a reconnection can succeed. */
   goOnline(): void {
     this.offline = false;
+  }
+}
+
+/** Paths the API mock must leave alone, because a hub answers them. */
+export const HUB_PATHS = ["/hubs/event-updates", "/api/participant/updates", "/api/admin/updates"];
+
+/**
+ * The three hubs the companion connects to. Two of them live under `/api`, so
+ * they are installed after the REST mock and take precedence over it.
+ */
+export class HubMock {
+  readonly event = new HubChannel(
+    "event-updates",
+    "**/hubs/event-updates/negotiate**",
+    /\/hubs\/event-updates/
+  );
+
+  readonly participant = new HubChannel(
+    "participant-updates",
+    "**/api/participant/updates/negotiate**",
+    /\/api\/participant\/updates/
+  );
+
+  readonly administrator = new HubChannel(
+    "administrator-updates",
+    "**/api/admin/updates/negotiate**",
+    /\/api\/admin\/updates/
+  );
+
+  private get channels(): HubChannel[] {
+    return [this.event, this.participant, this.administrator];
+  }
+
+  async install(page: Page): Promise<void> {
+    for (const channel of this.channels) await channel.install(page);
+  }
+
+  get connected(): boolean {
+    return this.event.connected;
+  }
+
+  /** Pushes the server's "something changed" signal for the given version. */
+  pushEventUpdate(version: number | string): void {
+    this.event.send("eventUpdated", [String(version)]);
+  }
+
+  /** Tells this browser its participant entry session is no longer valid. */
+  invalidateParticipantSession(): void {
+    this.participant.send("sessionInvalidated");
+  }
+
+  /** Tells this browser its administrator session is no longer valid. */
+  invalidateAdministratorSession(): void {
+    this.administrator.send("sessionInvalidated");
+  }
+
+  /** Takes the event hub down. The private hubs stay up unless asked. */
+  goOffline(): void {
+    this.event.goOffline();
+  }
+
+  goOnline(): void {
+    this.event.goOnline();
+  }
+
+  /** Takes every hub down, as a total loss of connectivity would. */
+  goFullyOffline(): void {
+    for (const channel of this.channels) channel.goOffline();
+  }
+
+  goFullyOnline(): void {
+    for (const channel of this.channels) channel.goOnline();
   }
 }

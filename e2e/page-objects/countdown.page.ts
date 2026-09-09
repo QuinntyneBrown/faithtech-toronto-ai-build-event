@@ -1,6 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { AdministratorLoginPanel } from "./administrator-login.panel";
 import { ConnectionBanner } from "./connection-banner";
+import { ProfileFormPanel } from "./profile-form.panel";
 import { RosterPanel } from "./roster.panel";
 
 /**
@@ -11,6 +12,7 @@ export class CountdownPage {
   readonly banner: ConnectionBanner;
   readonly login: AdministratorLoginPanel;
   readonly roster: RosterPanel;
+  readonly profile: ProfileFormPanel;
 
   private readonly emailField: Locator;
   private readonly submit: Locator;
@@ -22,6 +24,7 @@ export class CountdownPage {
     this.banner = new ConnectionBanner(page);
     this.login = new AdministratorLoginPanel(page);
     this.roster = new RosterPanel(page);
+    this.profile = new ProfileFormPanel(page);
 
     this.emailField = page.locator("#entry-email");
     this.submit = page.getByRole("button", { name: "Count me in", exact: true });
@@ -80,6 +83,23 @@ export class CountdownPage {
   /** Reads the seconds unit so a test can prove the clock is decreasing. */
   async readSeconds(): Promise<number> {
     return Number(await this.unitValue("Seconds").innerText());
+  }
+
+  /**
+   * The whole remaining time in seconds, rebuilt from the rendered units.
+   * Days are only rendered once there is at least one, so they are optional.
+   */
+  async readRemainingSeconds(): Promise<number> {
+    const read = async (label: string, factor: number) => {
+      const unit = this.unitValue(label);
+      return (await unit.count()) ? Number(await unit.innerText()) * factor : 0;
+    };
+    return (
+      (await read("Days", 86_400)) +
+      (await read("Hours", 3_600)) +
+      (await read("Minutes", 60)) +
+      (await read("Seconds", 1))
+    );
   }
 
   async expectUnitAbsent(label: string): Promise<void> {
