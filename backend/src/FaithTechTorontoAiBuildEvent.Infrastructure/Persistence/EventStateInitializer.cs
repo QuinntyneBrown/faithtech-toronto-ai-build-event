@@ -26,7 +26,7 @@ public sealed class EventStateInitializer(IServiceScopeFactory scopeFactory) : I
             return;
         }
 
-        database.EventStates.Add(new DomainEventState());
+        database.EventStates.Add(new DomainEventState { Id = 0 });
         database.Projects.Add(new Project
         {
             Id = Guid.NewGuid(),
