@@ -12,8 +12,18 @@ namespace FaithTechTorontoAiBuildEvent.Infrastructure.Teams;
 
 public sealed class SqlTeamStore(CompanionDbContext database, IEventUpdatePublisher updatePublisher) : ITeamStore
 {
-    public async Task AssignProjectAsync(Guid teamId, Guid? projectId, long expectedVersion, CancellationToken cancellationToken)
+    public async Task AssignProjectAsync(Guid operationId, byte[] inputDigest, Guid teamId, Guid? projectId, long expectedVersion, CancellationToken cancellationToken)
     {
+        var receipt = await database.EventOperationReceipts.SingleOrDefaultAsync(candidate => candidate.OperationId == operationId, cancellationToken);
+        if (receipt is not null)
+        {
+            if (receipt.OperationKind != "assign-team-project" || !CryptographicOperations.FixedTimeEquals(receipt.InputDigest, inputDigest))
+            {
+                throw new ArgumentException("The operation identity was already used with different input.");
+            }
+            return;
+        }
+
         var state = await GetTeamsStateAsync(expectedVersion, cancellationToken);
         var team = await database.Teams.SingleOrDefaultAsync(candidate => candidate.Id == teamId, cancellationToken) ?? throw new KeyNotFoundException("Team not found.");
         if (projectId is not null && !await database.Projects.AnyAsync(project => project.Id == projectId, cancellationToken))
@@ -22,6 +32,15 @@ public sealed class SqlTeamStore(CompanionDbContext database, IEventUpdatePublis
         }
         team.ProjectId = projectId;
         state.Version++;
+        database.EventOperationReceipts.Add(new EventOperationReceipt
+        {
+            OperationId = operationId,
+            OperationKind = "assign-team-project",
+            InputDigest = inputDigest,
+            ResultId = team.Id,
+            ResultVersion = state.Version,
+            CreatedAtUtc = DateTimeOffset.UtcNow
+        });
         await database.SaveChangesAsync(cancellationToken);
         await updatePublisher.PublishAsync(state.Version, cancellationToken);
     }

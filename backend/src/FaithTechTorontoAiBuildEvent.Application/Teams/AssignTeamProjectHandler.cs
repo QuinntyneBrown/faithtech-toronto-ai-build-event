@@ -1,6 +1,8 @@
 using FaithTechTorontoAiBuildEvent.Application.Access;
 using FaithTechTorontoAiBuildEvent.Application.Participants;
+using FaithTechTorontoAiBuildEvent.Application.Operations;
 using MediatR;
+using System.Globalization;
 
 namespace FaithTechTorontoAiBuildEvent.Application.Teams;
 
@@ -12,6 +14,10 @@ public sealed class AssignTeamProjectHandler(IAdministratorAuthorizationStore au
         {
             throw new UnauthorizedAccessException();
         }
-        await teamStore.AssignProjectAsync(request.TeamId, request.ProjectId, version, cancellationToken);
+        var inputDigest = OperationInputDigest.Create(
+            request.TeamId.ToString("D"),
+            request.ProjectId?.ToString("D"),
+            version.ToString(CultureInfo.InvariantCulture));
+        await teamStore.AssignProjectAsync(request.OperationId, inputDigest, request.TeamId, request.ProjectId, version, cancellationToken);
     }
 }
