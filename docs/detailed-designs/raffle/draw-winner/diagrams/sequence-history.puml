@@ -1,0 +1,37 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Read eligibility and retained public results
+actor "Administrator" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "RafflePageComponent" as page
+participant "IRaffleService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "RaffleController" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "DrawWinnerHandler" as handler
+participant "RaffleDraw" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+participant "EventChangePublisher" as push
+end box
+actor -> page : Open or refresh Raffle
+page -> client : Read raffle snapshot
+client -> controller : GET public raffle
+controller -> handler : Dispatch GetRaffleSnapshotQuery
+handler -> db : Coherent read of participants and draws
+ db --> handler : Current identities, redacted labels, saved timelines
+handler -> entity : Project eligible count and history L2-020
+entity --> handler : Safe public result
+handler --> controller : RaffleSnapshot
+controller --> client : Versioned snapshot
+client --> page : Count, latest winner, previous winners
+page --> actor : Empty message or current pool; no private fields
+@enduml
