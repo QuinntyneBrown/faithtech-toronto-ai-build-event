@@ -1,5 +1,7 @@
 using FaithTechTorontoAiBuildEvent.Application.Access;
+using FaithTechTorontoAiBuildEvent.Application.Operations;
 using MediatR;
+using System.Globalization;
 
 namespace FaithTechTorontoAiBuildEvent.Application.Participants;
 
@@ -11,6 +13,9 @@ public sealed class DeleteAdministratorParticipantHandler(IAdministratorAuthoriz
         {
             throw new UnauthorizedAccessException();
         }
-        await participantStore.DeleteAsync(request.ParticipantId, version, cancellationToken);
+        var inputDigest = OperationInputDigest.Create(
+            request.ParticipantId.ToString("D"),
+            version.ToString(CultureInfo.InvariantCulture));
+        await participantStore.DeleteAsync(request.OperationId, inputDigest, request.ParticipantId, version, cancellationToken);
     }
 }

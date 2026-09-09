@@ -55,8 +55,19 @@ public sealed class SqlAdministratorParticipantStore(CompanionDbContext database
         return result;
     }
 
-    public async Task DeleteAsync(Guid participantId, long expectedVersion, CancellationToken cancellationToken)
+    public async Task DeleteAsync(Guid operationId, byte[] inputDigest, Guid participantId, long expectedVersion, CancellationToken cancellationToken)
     {
+        var operationReceipt = await database.EventOperationReceipts.SingleOrDefaultAsync(candidate => candidate.OperationId == operationId, cancellationToken);
+        if (operationReceipt is not null)
+        {
+            if (operationReceipt.OperationKind != "delete-administrator-participant"
+                || !CryptographicOperations.FixedTimeEquals(operationReceipt.InputDigest, inputDigest))
+            {
+                throw new EntryValidationException("The operation identity was already used with different input.");
+            }
+            return;
+        }
+
         var state = await database.EventStates.SingleAsync(cancellationToken);
         if (state.Version != expectedVersion)
         {
@@ -69,12 +80,25 @@ public sealed class SqlAdministratorParticipantStore(CompanionDbContext database
         foreach (var receipt in receipts) { receipt.Revoked = true; }
         var profileReceipts = await database.ProfileSaveReceipts.Where(receipt => receipt.ParticipantId == participantId).ToListAsync(cancellationToken);
         database.ProfileSaveReceipts.RemoveRange(profileReceipts);
+        var privateOperationReceipts = await database.EventOperationReceipts
+            .Where(receipt => receipt.ResultId == participantId && receipt.ResultJson != null)
+            .ToListAsync(cancellationToken);
+        database.EventOperationReceipts.RemoveRange(privateOperationReceipts);
         var draws = await database.RaffleDraws.Where(draw => draw.WinnerParticipantId == participantId).ToListAsync(cancellationToken);
         foreach (var draw in draws) { draw.WinnerParticipantId = null; draw.WinnerLabel = "Removed participant"; }
         var candidates = await database.RaffleCandidates.Where(candidate => candidate.ParticipantId == participantId).ToListAsync(cancellationToken);
         foreach (var candidate in candidates) { candidate.Label = "Removed participant"; }
         database.Participants.Remove(participant);
         state.Version++;
+        database.EventOperationReceipts.Add(new EventOperationReceipt
+        {
+            OperationId = operationId,
+            OperationKind = "delete-administrator-participant",
+            InputDigest = inputDigest,
+            ResultId = participant.Id,
+            ResultVersion = state.Version,
+            CreatedAtUtc = DateTimeOffset.UtcNow
+        });
         await database.SaveChangesAsync(cancellationToken);
         await updatePublisher.PublishAsync(state.Version, cancellationToken);
     }

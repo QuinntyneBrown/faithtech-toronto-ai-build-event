@@ -22,6 +22,7 @@ public sealed class ParticipantsController(ISender sender) : ControllerBase
     {
         try { await sender.Send(new DeleteAdministratorParticipantCommand(request.OperationId, participantId, request.ExpectedVersion, Request.Cookies["faithtech-admin"]), cancellationToken); return NoContent(); }
         catch (UnauthorizedAccessException) { return Unauthorized(); }
+        catch (EntryValidationException exception) { return BadRequest(new ProblemDetails { Detail = exception.Message, Status = StatusCodes.Status400BadRequest }); }
         catch (InvalidOperationException exception) { return Conflict(new ProblemDetails { Detail = exception.Message, Status = StatusCodes.Status409Conflict }); }
     }
 
