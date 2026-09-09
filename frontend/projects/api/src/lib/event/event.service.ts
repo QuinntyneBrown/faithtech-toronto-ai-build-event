@@ -29,9 +29,7 @@ export class EventService implements IEventService {
       this.connectionError.set("Live updates are reconnecting. Changes are disabled until the event is synchronized.");
     });
     this.connection.onreconnected(() => {
-      this.connected.set(true);
-      this.connectionError.set(null);
-      this.load();
+      this.synchronize();
     });
     this.connection.onclose(() => {
       this.connected.set(false);
@@ -76,6 +74,7 @@ export class EventService implements IEventService {
 
   retryLiveUpdates(): void {
     if (this.connection.state === HubConnectionState.Disconnected) void this.startConnection();
+    else this.synchronize();
   }
 
   private refreshServerTime(): void {
@@ -94,12 +93,32 @@ export class EventService implements IEventService {
   private async startConnection(): Promise<void> {
     try {
       await this.connection.start();
-      this.connected.set(true);
-      this.connectionError.set(null);
-      this.load();
+      this.synchronize();
     } catch {
       this.connected.set(false);
       this.connectionError.set("Live updates are unavailable. Changes are disabled until you reconnect.");
     }
+  }
+
+  private synchronize(): void {
+    this.connected.set(false);
+    this.connectionError.set("Live updates are synchronizing. Changes are disabled until the event is current.");
+    this.http.get<PublicEventState>("/api/event/state").subscribe({
+      next: state => {
+        const current = this.state();
+        if (current === null || BigInt(state.version) >= BigInt(current.version)) {
+          this.state.set(state);
+        }
+        this.refreshServerTime();
+        if (this.connection.state === HubConnectionState.Connected) {
+          this.connected.set(true);
+          this.connectionError.set(null);
+        }
+      },
+      error: () => {
+        this.connected.set(false);
+        this.connectionError.set("Live updates are unavailable. Changes are disabled until you reconnect.");
+      }
+    });
   }
 }
