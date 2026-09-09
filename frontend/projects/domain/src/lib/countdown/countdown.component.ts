@@ -3,10 +3,11 @@ import { CardComponent, CountdownComponent as CsCountdownComponent } from "@quin
 import { EVENT_SERVICE } from "@faithtech/api";
 import { EventHeaderComponent } from "@faithtech/components";
 import { EntryFormComponent } from "../entry/entry-form.component";
+import { AdministratorLoginComponent } from "../access/administrator-login.component";
 
 @Component({
   selector: "event-countdown",
-  imports: [CardComponent, CsCountdownComponent, EventHeaderComponent, EntryFormComponent],
+  imports: [CardComponent, CsCountdownComponent, EventHeaderComponent, EntryFormComponent, AdministratorLoginComponent],
   templateUrl: "./countdown.component.html",
   styleUrl: "./countdown.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush

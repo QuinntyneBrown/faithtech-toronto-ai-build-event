@@ -28,4 +28,11 @@ public sealed class AdministratorSessionController(ISender sender) : ControllerB
         });
         return Ok(new AdministratorSessionResponse(true));
     }
+
+    [HttpGet]
+    public async Task<ActionResult<AdministratorSessionResponse>> Get(CancellationToken cancellationToken)
+    {
+        var active = await sender.Send(new GetAdministratorSessionQuery(Request.Cookies["faithtech-admin"]), cancellationToken);
+        return active ? Ok(new AdministratorSessionResponse(true)) : Unauthorized();
+    }
 }

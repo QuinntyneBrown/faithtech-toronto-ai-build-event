@@ -2,4 +2,4 @@ using MediatR;
 
 namespace FaithTechTorontoAiBuildEvent.Application.Access;
 
-public sealed record GetAdministratorSessionQuery(Guid SessionId) : IRequest<AdministratorSessionState?>;
+public sealed record GetAdministratorSessionQuery(string? Secret) : IRequest<bool>;

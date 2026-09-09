@@ -8,3 +8,6 @@ export * from "./lib/entry/entry.service";
 export * from "./lib/profile/profile-service.contract";
 export * from "./lib/profile/profile-service.token";
 export * from "./lib/profile/profile.service";
+export * from "./lib/session/administrator-session-service.contract";
+export * from "./lib/session/administrator-session-service.token";
+export * from "./lib/session/administrator-session.service";
