@@ -1,1 +1,6 @@
-export interface BoardMember { id: string; name: string; label: string; groupId: string; }
+export interface BoardMember {
+  id: string;
+  name: string;
+  label: string;
+  groupId: string;
+}

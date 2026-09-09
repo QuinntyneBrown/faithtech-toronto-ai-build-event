@@ -1,4 +1,19 @@
 {
-  "compilerOptions": {"target": "ES2022", "module": "preserve", "moduleResolution": "bundler", "strict": true, "experimentalDecorators": true, "skipLibCheck": true, "isolatedModules": true, "lib": ["ES2022", "dom"], "types": ["@webgpu/types"], "baseUrl": ".", "paths": {"@mock/components": ["projects/components/src/public-api.ts"]}},
-  "angularCompilerOptions": {"strictTemplates": true, "strictInjectionParameters": true}
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "experimentalDecorators": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "lib": ["ES2022", "dom"],
+    "types": ["@webgpu/types"],
+    "baseUrl": ".",
+    "paths": { "@mock/components": ["projects/components/src/public-api.ts"] }
+  },
+  "angularCompilerOptions": {
+    "strictTemplates": true,
+    "strictInjectionParameters": true
+  }
 }

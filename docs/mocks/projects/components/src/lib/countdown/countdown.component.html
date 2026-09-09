@@ -1,4 +1,15 @@
 <div class="clock" role="timer" aria-label="Time until welcome" aria-live="off">
-  @for (unit of units(); track unit.label) { <div class="unit"><span class="value">{{ pad(unit.value) }}</span><span class="label">{{ unit.label }}</span></div> }
+  @for (unit of units(); track unit.label) {
+    <div class="unit">
+      <span class="value">{{ pad(unit.value) }}</span
+      ><span class="label">{{ unit.label }}</span>
+    </div>
+  }
 </div>
-<p class="caption">{{ now() >= target() ? 'We’re ready when you are. Waiting for the host to begin.' : 'Until we gather. Make yourself at home.' }}</p>
+<p class="caption">
+  {{
+    now() >= target()
+      ? "We’re ready when you are. Waiting for the host to begin."
+      : "Until we gather. Make yourself at home."
+  }}
+</p>

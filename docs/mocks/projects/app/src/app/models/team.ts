@@ -1,1 +1,5 @@
-export interface Team { id: string; name: string; projectId: string | null; }
+export interface Team {
+  id: string;
+  name: string;
+  projectId: string | null;
+}

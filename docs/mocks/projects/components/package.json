@@ -1,1 +1,12 @@
-{"name": "@faithtech-mock/components", "version": "0.0.0", "private": true, "peerDependencies": {"@angular/core": "^21.0.0", "@angular/common": "^21.0.0", "@angular/cdk": "^21.0.0", "@quinntyne/cornerstone": "0.1.3"}, "sideEffects": false}
+{
+  "name": "@faithtech-mock/components",
+  "version": "0.0.0",
+  "private": true,
+  "peerDependencies": {
+    "@angular/core": "^21.0.0",
+    "@angular/common": "^21.0.0",
+    "@angular/cdk": "^21.0.0",
+    "@quinntyne/cornerstone": "0.1.3"
+  },
+  "sideEffects": false
+}

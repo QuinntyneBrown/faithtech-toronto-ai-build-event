@@ -1,41 +1,151 @@
 <section class="hero">
   <div class="welcome">
     <p class="eyebrow">TORONTO · SEPTEMBER 9, 2026</p>
-    <h1>Good people.<br>Meaningful work.</h1>
-    <p class="lede">An evening to meet, imagine, and build something that serves our neighbours. Bring your curiosity. There’s a place for you here.</p>
-    <div class="countdown-wrap"><p class="eyebrow">WELCOME BEGINS IN</p><mock-countdown [target]="event.state().target" [now]="now()" /></div>
+    <h1>Good people.<br />Meaningful work.</h1>
+    <p class="lede">
+      An evening to meet, imagine, and build something that serves our
+      neighbours. Bring your curiosity. There’s a place for you here.
+    </p>
+    <div class="countdown-wrap">
+      <p class="eyebrow">WELCOME BEGINS IN</p>
+      <mock-countdown [target]="event.state().target" [now]="now()" />
+    </div>
   </div>
   <cs-card class="entry-card">
     @if (event.participant(); as person) {
-      <cs-badge tone="success">YOU’RE IN</cs-badge><h2>Glad you’re here{{ person.name ? ', ' + person.name : '' }}.</h2>
-      <p>You have been entered into the raffle. We’ll draw a name together at the end of the night.</p>
+      <cs-badge tone="success">YOU’RE IN</cs-badge>
+      <h2>Glad you’re here{{ person.name ? ", " + person.name : "" }}.</h2>
+      <p>
+        You have been entered into the raffle. We’ll draw a name together at the
+        end of the night.
+      </p>
       <p class="identity">{{ person.label }}</p>
       @if (!closed() && editing() && !skip()) {
-        <hr><h3>A little about you</h3><p class="muted">All optional. Your name appears with your team; your answers stay between you and the hosts.</p>
-        <form (ngSubmit)="save()" class="form-stack">
-          <cs-field label="Name" forId="profile-name"><input csInput id="profile-name" name="profileName" maxlength="200" [ngModel]="name()" (ngModelChange)="name.set($event)" autocomplete="name"></cs-field>
-          <cs-field label="What you make" forId="profile-makes"><textarea csTextarea id="profile-makes" name="makes" maxlength="2000" rows="2" [ngModel]="makes()" (ngModelChange)="makes.set($event)" placeholder="Code, stories, communities…"></textarea></cs-field>
-          <cs-field label="What's on your heart" forId="profile-heart"><textarea csTextarea id="profile-heart" name="heart" maxlength="2000" rows="2" [ngModel]="heart()" (ngModelChange)="heart.set($event)" placeholder="A need, a hope, a question…"></textarea></cs-field>
-          <div class="actions"><button csButton type="submit" [disabled]="event.busy() || event.offline()">Save my details</button><button csButton="ghost" type="button" (click)="skip.set(true)">Skip for now</button></div>
+        <hr />
+        <h3>A little about you</h3>
+        <p class="muted">
+          All optional. Your name appears with your team; your answers stay
+          between you and the hosts.
+        </p>
+        <form ngNativeValidate (ngSubmit)="save()" class="form-stack">
+          <cs-field label="Name" forId="profile-name"
+            ><input
+              csInput
+              id="profile-name"
+              name="profileName"
+              maxlength="200"
+              [ngModel]="name()"
+              (ngModelChange)="name.set($event)"
+              autocomplete="name"
+          /></cs-field>
+          <cs-field label="What you make" forId="profile-makes">
+            <textarea
+              csTextarea
+              id="profile-makes"
+              name="makes"
+              maxlength="2000"
+              rows="2"
+              [ngModel]="makes()"
+              (ngModelChange)="makes.set($event)"
+              placeholder="Code, stories, communities…"
+            ></textarea>
+          </cs-field>
+          <cs-field label="What's on your heart" forId="profile-heart">
+            <textarea
+              csTextarea
+              id="profile-heart"
+              name="heart"
+              maxlength="2000"
+              rows="2"
+              [ngModel]="heart()"
+              (ngModelChange)="heart.set($event)"
+              placeholder="A need, a hope, a question…"
+            ></textarea>
+          </cs-field>
+          <div class="actions">
+            <button
+              csButton
+              type="submit"
+              [disabled]="event.busy() || event.offline()"
+            >
+              Save my details</button
+            ><button csButton="ghost" type="button" (click)="skip.set(true)">
+              Skip for now
+            </button>
+          </div>
         </form>
-      } @else if (!closed()) { <button csButton="secondary" (click)="edit()">Add or edit my details</button> }
-      <button csButton="ghost" class="session-action" (click)="event.clearEntry(); editing.set(false)">Clear my session</button>
+      } @else if (!closed()) {
+        <button csButton="secondary" (click)="edit()">
+          Add or edit my details
+        </button>
+      }
+      <button
+        csButton="ghost"
+        class="session-action"
+        (click)="event.clearEntry(); editing.set(false)"
+      >
+        Clear my session
+      </button>
     } @else if (closed()) {
-      <cs-badge>ENTRY CLOSED</cs-badge><h2>The evening is underway.</h2><p>Ask a host to add you to the raffle. You can still follow along with the event.</p>
+      <cs-badge>ENTRY CLOSED</cs-badge>
+      <h2>The evening is underway.</h2>
+      <p>
+        Ask a host to add you to the raffle. You can still follow along with the
+        event.
+      </p>
     } @else {
-      <cs-badge>MAKE YOURSELF AT HOME</cs-badge><h2>Start with hello.</h2><p>Leave your email to join tonight’s raffle. That’s all you need to get started.</p>
-      <form (ngSubmit)="enter()" class="form-stack">
-        <cs-field label="Email address" forId="entry-email"><input csInput id="entry-email" name="email" type="email" autocomplete="email" required maxlength="254" [ngModel]="email()" (ngModelChange)="email.set($event)" placeholder="you@example.com"></cs-field>
-        <button csButton type="submit" [disabled]="event.busy() || event.offline()">Count me in <span aria-hidden="true">↗</span></button>
+      <cs-badge>MAKE YOURSELF AT HOME</cs-badge>
+      <h2>Start with hello.</h2>
+      <p>
+        Leave your email to join tonight’s raffle. That’s all you need to get
+        started.
+      </p>
+      <form ngNativeValidate (ngSubmit)="enter()" class="form-stack">
+        <cs-field label="Email address" forId="entry-email"
+          ><input
+            csInput
+            id="entry-email"
+            name="email"
+            type="email"
+            autocomplete="email"
+            required
+            maxlength="254"
+            [ngModel]="email()"
+            (ngModelChange)="email.set($event)"
+            placeholder="you@example.com"
+        /></cs-field>
+        <button
+          csButton
+          type="submit"
+          [disabled]="event.busy() || event.offline()"
+        >
+          Count me in <span aria-hidden="true">↗</span>
+        </button>
       </form>
-      <p class="fine-print">Your email stays with the hosts. Your chosen name or participant number will appear in teams and the raffle. Personal details are optional.</p>
+      <p class="fine-print">
+        Your email stays with the hosts. Your chosen name or participant number
+        will appear in teams and the raffle. Personal details are optional.
+      </p>
     }
   </cs-card>
 </section>
 <section class="event-details" aria-label="Tonight at a glance">
-  <div><p class="eyebrow">THE PLACE</p><h3>Stone Church</h3><p>Davenport Community Campus<br>45 Davenport Rd, Toronto</p></div>
-  <div><p class="eyebrow">THE EVENING</p><h3>5:00–9:00 PM</h3><p>Build together. Share the work.<br>Leave with a new connection.</p></div>
-  <div><p class="eyebrow">THE INVITATION</p><h3>Bring what you make.</h3><p>Developers, designers, dreamers.<br>Every perspective belongs.</p></div>
+  <div>
+    <p class="eyebrow">THE PLACE</p>
+    <h3>Stone Church</h3>
+    <p>Davenport Community Campus<br />45 Davenport Rd, Toronto</p>
+  </div>
+  <div>
+    <p class="eyebrow">THE EVENING</p>
+    <h3>5:00–9:00 PM</h3>
+    <p>Build together. Share the work.<br />Leave with a new connection.</p>
+  </div>
+  <div>
+    <p class="eyebrow">THE INVITATION</p>
+    <h3>Bring what you make.</h3>
+    <p>Developers, designers, dreamers.<br />Every perspective belongs.</p>
+  </div>
 </section>
-@if (event.admin()) { <mock-participant-manager /> }
-
+@if (event.admin()) {
+  <mock-participant-manager />
+}

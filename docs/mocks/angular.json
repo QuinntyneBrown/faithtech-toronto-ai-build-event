@@ -1,12 +1,55 @@
 {
-  "$schema": "./node_modules/@angular/cli/lib/config/schema.json", "version": 1, "newProjectRoot": "projects",
-  "cli": {"analytics": false},
-  "schematics": {"@schematics/angular:component": {"skipTests": true, "style": "scss"}, "@schematics/angular:service": {"skipTests": true}},
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "newProjectRoot": "projects",
+  "cli": { "analytics": false },
+  "schematics": {
+    "@schematics/angular:component": { "skipTests": true, "style": "scss" },
+    "@schematics/angular:service": { "skipTests": true }
+  },
   "projects": {
-    "app": {"projectType": "application", "root": "projects/app", "sourceRoot": "projects/app/src", "architect": {
-      "build": {"builder": "@angular/build:application", "options": {"browser": "projects/app/src/main.ts", "index": "projects/app/src/index.html", "tsConfig": "projects/app/tsconfig.app.json", "styles": ["projects/components/src/lib/proposal-tokens.scss", "projects/app/src/styles.scss"], "outputPath": "dist/app"}, "configurations": {"production": {"outputHashing": "all"}, "development": {"optimization": false, "sourceMap": true}}, "defaultConfiguration": "production"},
-      "serve": {"builder": "@angular/build:dev-server", "options": {"buildTarget": "app:build:development"}}
-    }},
-    "components": {"projectType": "library", "root": "projects/components", "sourceRoot": "projects/components/src", "architect": {"build": {"builder": "@angular/build:ng-packagr", "options": {"project": "projects/components/ng-package.json", "tsConfig": "projects/components/tsconfig.lib.json"}}}}
+    "app": {
+      "projectType": "application",
+      "root": "projects/app",
+      "sourceRoot": "projects/app/src",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "projects/app/src/main.ts",
+            "index": "projects/app/src/index.html",
+            "tsConfig": "projects/app/tsconfig.app.json",
+            "styles": [
+              "projects/components/src/lib/proposal-tokens.scss",
+              "projects/app/src/styles.scss"
+            ],
+            "outputPath": "dist/app"
+          },
+          "configurations": {
+            "production": { "outputHashing": "all" },
+            "development": { "optimization": false, "sourceMap": true }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "options": { "buildTarget": "app:build:development" }
+        }
+      }
+    },
+    "components": {
+      "projectType": "library",
+      "root": "projects/components",
+      "sourceRoot": "projects/components/src",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "options": {
+            "project": "projects/components/ng-package.json",
+            "tsConfig": "projects/components/tsconfig.lib.json"
+          }
+        }
+      }
+    }
   }
 }

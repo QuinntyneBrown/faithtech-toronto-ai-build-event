@@ -1,1 +1,4 @@
-export interface MemberMove { memberId: string; groupId: string; }
+export interface MemberMove {
+  memberId: string;
+  groupId: string;
+}

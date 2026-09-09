@@ -1,11 +1,55 @@
-<section class="stage" [class.celebrating]="celebrating()" aria-label="Raffle draw">
-  <canvas #canvas aria-hidden="true" [hidden]="!celebrating() || fallback()"></canvas>
-  @if (celebrating() && fallback()) { <div class="particles" aria-hidden="true">@for (p of pieces; track p.id) { <span [style.left.%]="p.x" [style.animation-delay.s]="p.delay" [style.--drift]="p.drift + 'vw'" [style.background]="p.color"></span> }</div> }
+<section
+  class="stage"
+  [class.celebrating]="celebrating()"
+  aria-label="Raffle draw"
+>
+  <canvas
+    #canvas
+    aria-hidden="true"
+    [hidden]="!celebrating() || fallback()"
+  ></canvas>
+  @if (celebrating() && fallback()) {
+    <div class="particles" aria-hidden="true">
+      @for (p of pieces; track p.id) {
+        <span
+          [style.left.%]="p.x"
+          [style.animation-delay.s]="p.delay"
+          [style.--drift]="p.drift + 'vw'"
+          [style.background]="p.color"
+        ></span>
+      }
+    </div>
+  }
   <div class="content">
     @if (result(); as draw) {
-      @if (drawing()) { <cs-badge tone="lime">A LITTLE ANTICIPATION…</cs-badge><p class="cycling" aria-hidden="true">{{ cycling() }}</p><p class="live-message" role="status">Drawing a name. The winner will appear shortly.</p> }
-      @else { <cs-badge tone="lime">LET’S CELEBRATE</cs-badge><div role="status"><h2 class="winner">{{ draw.label.split(' · ')[0] }}</h2><p class="identity">{{ draw.label.split(' · ')[1] || '' }}</p><p class="celebration-copy">A little something to say: we’re glad you came.</p></div> }
-      @if ((drawing() || celebrating()) && !stopped() && !reduced()) { <button csButton="ghost" (click)="stopped.set(true)">Stop effects</button> }
-    } @else { <span class="sparkle" aria-hidden="true">✳</span><h2>A little joy,<br>before we go.</h2><p>Every person who entered has a chance.<br>The host will draw a name when we’re ready.</p> }
+      @if (drawing()) {
+        <cs-badge tone="lime">A LITTLE ANTICIPATION…</cs-badge>
+        <p class="cycling" aria-hidden="true">{{ cycling() }}</p>
+        <p class="live-message" role="status">
+          Drawing a name. The winner will appear shortly.
+        </p>
+      } @else {
+        <cs-badge tone="lime">LET’S CELEBRATE</cs-badge>
+        <div role="status">
+          <h2 class="winner">{{ draw.label.split(" · ")[0] }}</h2>
+          <p class="identity">{{ draw.label.split(" · ")[1] || "" }}</p>
+          <p class="celebration-copy">
+            A little something to say: we’re glad you came.
+          </p>
+        </div>
+      }
+      @if ((drawing() || celebrating()) && !stopped() && !reduced()) {
+        <button csButton="ghost" (click)="stopped.set(true)">
+          Stop effects
+        </button>
+      }
+    } @else {
+      <span class="sparkle" aria-hidden="true">✳</span>
+      <h2>A little joy,<br />before we go.</h2>
+      <p>
+        Every person who entered has a chance.<br />The host will draw a name
+        when we’re ready.
+      </p>
+    }
   </div>
 </section>

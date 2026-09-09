@@ -1,1 +1,4 @@
-export interface BoardProject { id: string; title: string; }
+export interface BoardProject {
+  id: string;
+  title: string;
+}

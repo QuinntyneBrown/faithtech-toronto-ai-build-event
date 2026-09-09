@@ -1,1 +1,5 @@
-export interface BoardGroup { id: string; name: string; projectId: string; }
+export interface BoardGroup {
+  id: string;
+  name: string;
+  projectId: string;
+}

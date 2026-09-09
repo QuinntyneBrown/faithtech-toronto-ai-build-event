@@ -1,5 +1,44 @@
-<section class="page-heading"><div><p class="eyebrow">02 / FIND YOUR PEOPLE</p><h1>Better, together.</h1><p class="lede">A few new faces. A shared possibility. Find your team, introduce yourself, and choose one small thing to make.</p></div><cs-badge tone="lime">{{ event.state().teams.length }} TEAMS · {{ event.state().participants.length }} PEOPLE</cs-badge></section>
-@if (ownTeam(); as team) { <cs-card class="your-team"><p class="eyebrow">YOUR PLACE AT THE TABLE</p><h2>{{ team.name }}</h2><p>Look for your teammates below. Your participant number helps you find each other.</p></cs-card> }
-@if (event.admin()) { <p class="board-hint">Drag the dotted handle to move someone, or use their <strong>Move to</strong> menu. Teams can have more or fewer than three people. Assign a project beneath each team.</p> }
-<mock-team-board [groups]="groups()" [members]="members()" [projects]="event.state().projects" [editable]="event.admin()" [disabled]="event.offline() || event.busy()" [currentMember]="event.participant()?.id || ''" (moved)="move($event)" (assigned)="assign($event)" />
-<p class="closing-note">Listen first. Name the need. Make room for every voice.</p>
+<section class="page-heading">
+  <div>
+    <p class="eyebrow">02 / FIND YOUR PEOPLE</p>
+    <h1>Better, together.</h1>
+    <p class="lede">
+      A few new faces. A shared possibility. Find your team, introduce yourself,
+      and choose one small thing to make.
+    </p>
+  </div>
+  <cs-badge tone="lime"
+    >{{ event.state().teams.length }} TEAMS ·
+    {{ event.state().participants.length }} PEOPLE</cs-badge
+  >
+</section>
+@if (ownTeam(); as team) {
+  <cs-card class="your-team"
+    ><p class="eyebrow">YOUR PLACE AT THE TABLE</p>
+    <h2>{{ team.name }}</h2>
+    <p>
+      Look for your teammates below. Your participant number helps you find each
+      other.
+    </p></cs-card
+  >
+}
+@if (event.admin()) {
+  <p class="board-hint">
+    Drag the dotted handle to move someone, or use their
+    <strong>Move to</strong> menu. Teams can have more or fewer than three
+    people. Assign a project beneath each team.
+  </p>
+}
+<mock-team-board
+  [groups]="groups()"
+  [members]="members()"
+  [projects]="event.state().projects"
+  [editable]="event.admin()"
+  [disabled]="event.offline() || event.busy()"
+  [currentMember]="event.participant()?.id || ''"
+  (moved)="move($event)"
+  (assigned)="assign($event)"
+/>
+<p class="closing-note">
+  Listen first. Name the need. Make room for every voice.
+</p>
