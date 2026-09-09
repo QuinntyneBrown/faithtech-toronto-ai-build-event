@@ -1,0 +1,45 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Replace the credential through either database client
+actor "Database operator" as actor
+box "Operator — installed .NET tool" #E0F2FE
+participant "SetAdminPasscodeCommand" as page
+participant "IPasscodeService" as client
+end box
+box "Backend — SQL operation boundary" #D1FADF
+participant "ReplaceAdminPasscodeProcedure" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "SqlPasscodeService" as handler
+participant "AdministratorCredential" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+participant "EventChangePublisher" as push
+end box
+actor -> page : Select explicit target; supply protected four digits
+page -> client : ReplacePasscodeInput
+client -> controller : Parameterized encrypted SQL RPC
+controller -> db : Begin transaction; exclusive credential lock
+controller -> controller : Reject invalid Unicode/length before conversion L2-063
+alt Valid input and grants
+ controller -> entity : Fresh salt, verifier, next revision
+ controller -> db : Replace credential; revoke sessions; insert change; commit
+ db --> controller : Committed revision and UTC time
+ controller --> client : Nonsecret confirmed result
+ client --> page : Success
+ page --> actor : Replacement confirmed; secret omitted
+else Invalid / denied / storage failure
+ controller -> db : Roll back if transaction active
+ controller --> client : Redacted known failure
+ client --> page : Exit 1 or 2 as classified
+ page --> actor : No default or fallback
+end
+push -> push : Detect committed credential revision
+push -> actor : Connected admin view receives content-free invalidation
+@enduml

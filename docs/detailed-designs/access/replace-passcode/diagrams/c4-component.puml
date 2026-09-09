@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Replace the administrator passcode through SQL or CLI — components
+Container(client, "SetAdminPasscodeCommand", "Passcode CLI", "Presents this capability")
+Container_Boundary(api, "Passcode CLI") {
+Component(entry, "ReplaceAdminPasscodeProcedure", "System.CommandLine", "Binds inputs and dispatches")
+Component(handler, "SqlPasscodeService", "Application handler", "Rotate a four-digit verifier and revoke old sessions atomically")
+Component(entity, "AdministratorCredential", "Domain model", "Owns slice state")
+}
+ContainerDb(db, "Companion database", "SQL Server", "Durable state")
+Rel(client, entry, "Calls through IPasscodeService")
+Rel(entry, handler, "Dispatches")
+Rel(handler, entity, "Uses")
+Rel(handler, db, "Commits through application persistence contract")
+@enduml

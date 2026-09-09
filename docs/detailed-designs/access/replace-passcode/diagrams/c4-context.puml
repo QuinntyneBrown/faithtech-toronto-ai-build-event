@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Replace the administrator passcode through SQL or CLI — context
+Person(actor, "Database operator", "Rotate a four-digit verifier and revoke old sessions atomically")
+System(companion, "FaithTech event companion", "Replace the administrator passcode through SQL or CLI")
+Rel(actor, companion, "Uses")
+@enduml

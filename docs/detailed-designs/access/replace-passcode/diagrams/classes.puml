@@ -1,0 +1,44 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+title Replace the administrator passcode through SQL or CLI — structure
+interface IPasscodeService {
++replace(input: ReplacePasscodeInput): Task<PasscodeReplacementResult>
++verifyConnection(): Task<DatabaseIdentity>
+}
+class SetAdminPasscodeCommand
+SetAdminPasscodeCommand ..> IPasscodeService : consumes contract
+class ReplaceAdminPasscodeProcedure
+class SqlPasscodeService {
+  +Handle(request: ReplacePasscodeInput): Task<PasscodeReplacementResult>
+}
+class ReplacePasscodeInput {
++string Passcode
++string ExplicitTarget
+}
+class AdministratorCredential {
++int Id
++byte[] Salt
++byte[] Verifier
++int FormatVersion
++long Revision
++DateTimeOffset ChangedAtUtc
+}
+ReplaceAdminPasscodeProcedure ..> SqlPasscodeService : dispatches
+SqlPasscodeService ..> ReplacePasscodeInput : handles
+SqlPasscodeService --> AdministratorCredential : uses
+class AdministratorSession {
+ +Guid Id
+ +long CredentialRevision
+ +bool Revoked
+}
+AdministratorSession ..> AdministratorCredential : revision check
+class CredentialChange {
+ +long Revision
+ +DateTimeOffset CommittedAtUtc
+}
+AdministratorCredential ..> CredentialChange : atomic invalidation marker
+@enduml

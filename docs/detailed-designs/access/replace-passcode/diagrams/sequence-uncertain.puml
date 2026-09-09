@@ -1,0 +1,48 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Classify uncertain CLI outcomes without replay
+actor "Database operator" as actor
+box "Operator — installed .NET tool" #E0F2FE
+participant "SetAdminPasscodeCommand" as page
+participant "IPasscodeService" as client
+end box
+box "Backend — SQL operation boundary" #D1FADF
+participant "ReplaceAdminPasscodeProcedure" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "SqlPasscodeService" as handler
+participant "AdministratorCredential" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+participant "EventChangePublisher" as push
+end box
+actor -> page : Execute one replacement
+page -> client : Call once after target and input validation
+client -> controller : RPC execution begins
+controller -> db : Attempt atomic replacement
+alt Commit result delivered
+ db --> controller : Confirmed commit
+ controller --> client : Revision/time
+ client --> page : Confirmed success
+ alt Output succeeds
+  page --> actor : Exit 0
+ else Result output fails
+  page --> actor : Exit 3; delivery failed; do not replay
+ end
+else Connection lost after execution starts
+ db --> controller : Outcome not observable
+ controller --> client : Connection failure
+ client --> page : Unconfirmed outcome
+ page --> actor : Exit 3; verify separately; no automatic retry
+else Confirmed permission / validation rejection
+ controller --> client : Known noncommit result
+ client --> page : Classified failure
+ page --> actor : Exit 1 or 2
+end
+@enduml
