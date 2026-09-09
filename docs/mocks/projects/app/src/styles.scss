@@ -4,7 +4,7 @@ html {
   scroll-behavior: smooth;
 }
 body {
-  line-height: var(--cs-event-leading);
+  line-height: 1.6;
 }
 h1,
 h2,
@@ -14,15 +14,15 @@ p {
 }
 h1 {
   font-family: var(--cs-font-display);
-  font-size: var(--cs-event-title-size);
-  line-height: var(--cs-event-title-leading);
-  letter-spacing: var(--cs-event-tight);
+  font-size: var(--cs-text-xl);
+  line-height: var(--cs-heading-leading);
+  letter-spacing: var(--cs-heading-tracking);
   margin: var(--cs-space-4) 0 var(--cs-space-5);
 }
 h2 {
   font-size: var(--cs-text-xl);
-  letter-spacing: var(--cs-event-tight);
-  line-height: var(--cs-event-title-leading);
+  letter-spacing: var(--cs-heading-tracking);
+  line-height: var(--cs-heading-leading);
 }
 h3 {
   font-size: var(--cs-text-lg);
@@ -55,7 +55,7 @@ textarea {
 }
 hr {
   border: 0;
-  border-block-start: var(--cs-event-rule) solid var(--cs-border);
+  border-block-start: var(--cs-border-width) solid var(--cs-border);
   margin-block: var(--cs-space-5);
 }
 cs-card {
@@ -72,14 +72,14 @@ cs-field {
 .eyebrow {
   font-family: var(--cs-font-mono);
   font-size: var(--cs-text-xs);
-  font-weight: var(--cs-event-weight-medium);
-  letter-spacing: var(--cs-event-tracking);
+  font-weight: var(--cs-font-weight-bold);
+  letter-spacing: var(--cs-label-tracking);
   color: var(--cs-ink-muted);
   text-transform: uppercase;
 }
 .lede {
   font-size: var(--cs-text-lg);
-  max-inline-size: var(--cs-event-copy-width);
+  max-inline-size: min(100%, var(--cs-container-narrow));
   color: var(--cs-ink-muted);
 }
 .muted,
@@ -103,7 +103,7 @@ cs-field {
 }
 .hero {
   display: grid;
-  grid-template-columns: var(--cs-event-hero-columns);
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
   gap: var(--cs-space-8);
   align-items: center;
   padding-block: var(--cs-space-8);
@@ -138,14 +138,14 @@ cs-field {
   display: grid;
   grid-template-columns: repeat(
     auto-fit,
-    minmax(min(100%, var(--cs-event-min-card)), 1fr)
+    minmax(min(100%, var(--cs-team-board-column-width)), 1fr)
   );
   gap: var(--cs-space-5);
 }
 .empty-panel {
   padding: var(--cs-space-8);
   text-align: center;
-  border: var(--cs-event-rule) dashed var(--cs-border-strong);
+  border: var(--cs-border-width) dashed var(--cs-border-strong);
   border-radius: var(--cs-radius-md);
   background: var(--cs-surface);
 }
