@@ -7,6 +7,7 @@ using DomainEventState = FaithTechTorontoAiBuildEvent.Domain.EventFlow.EventStat
 using FaithTechTorontoAiBuildEvent.Application.EventState;
 using FaithTechTorontoAiBuildEvent.Domain.Operations;
 using System.Security.Cryptography;
+using FaithTechTorontoAiBuildEvent.Application.Validation;
 
 namespace FaithTechTorontoAiBuildEvent.Infrastructure.Projects;
 
@@ -27,8 +28,8 @@ public sealed class SqlProjectStore(CompanionDbContext database, IEventUpdatePub
         var state = await GetLiveStateAsync(expectedVersion, cancellationToken);
         var project = await database.Projects.SingleOrDefaultAsync(project => project.Id == projectId, cancellationToken)
             ?? throw new KeyNotFoundException("Project not found.");
-        project.Title = input.Title.Trim();
-        project.Description = input.Description.Trim();
+        project.Title = UnicodeText.Normalize(input.Title);
+        project.Description = UnicodeText.Normalize(input.Description);
         project.RepositoryUrl = BlankToNull(input.RepositoryUrl);
         project.DemoUrl = BlankToNull(input.DemoUrl);
         state.Version++;
@@ -98,8 +99,8 @@ public sealed class SqlProjectStore(CompanionDbContext database, IEventUpdatePub
         var project = new Project
         {
             Id = Guid.NewGuid(),
-            Title = input.Title.Trim(),
-            Description = input.Description.Trim(),
+            Title = UnicodeText.Normalize(input.Title),
+            Description = UnicodeText.Normalize(input.Description),
             RepositoryUrl = BlankToNull(input.RepositoryUrl),
             DemoUrl = BlankToNull(input.DemoUrl)
         };
@@ -119,7 +120,7 @@ public sealed class SqlProjectStore(CompanionDbContext database, IEventUpdatePub
         return project.Id;
     }
 
-    private static string? BlankToNull(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    private static string? BlankToNull(string? value) => string.IsNullOrWhiteSpace(value) ? null : UnicodeText.Normalize(value);
 
     private async Task<DomainEventState> GetLiveStateAsync(long expectedVersion, CancellationToken cancellationToken)
     {
