@@ -50,6 +50,25 @@ public sealed class SqlAdministratorParticipantStore(CompanionDbContext database
         await updatePublisher.PublishAsync(state.Version, cancellationToken);
     }
 
+    public async Task<AdministratorParticipant> UpdateAsync(Guid participantId, string email, string normalizedEmail, AdministratorParticipantInput input, long expectedVersion, CancellationToken cancellationToken)
+    {
+        var state = await database.EventStates.SingleAsync(cancellationToken);
+        if (state.Version != expectedVersion) throw new InvalidOperationException("Participant roster changed; reload and try again.");
+        var participant = await database.Participants.SingleOrDefaultAsync(candidate => candidate.Id == participantId, cancellationToken) ?? throw new KeyNotFoundException("Participant not found.");
+        if (await database.Participants.AnyAsync(candidate => candidate.Id != participantId && candidate.NormalizedEmail == normalizedEmail, cancellationToken)) throw new EntryValidationException("This email is already entered.");
+        participant.Email = email;
+        participant.NormalizedEmail = normalizedEmail;
+        participant.Name = BlankToNull(input.Name);
+        participant.WhatYouMake = BlankToNull(input.WhatYouMake);
+        participant.OnYourHeart = BlankToNull(input.OnYourHeart);
+        state.Version++;
+        await database.SaveChangesAsync(cancellationToken);
+        await updatePublisher.PublishAsync(state.Version, cancellationToken);
+        var teamLabel = participant.TeamId is { } teamId ? await database.Teams.Where(team => team.Id == teamId).Select(team => team.Label).SingleOrDefaultAsync(cancellationToken) : null;
+        var hasWon = await database.RaffleDraws.AnyAsync(draw => draw.WinnerParticipantId == participantId, cancellationToken);
+        return new AdministratorParticipant(participant.Id, participant.Email, participant.PublicLabel, participant.Name, participant.WhatYouMake, participant.OnYourHeart, teamLabel, hasWon);
+    }
+
     public async Task<IReadOnlyList<AdministratorParticipant>> ListAsync(CancellationToken cancellationToken)
     {
         var participants = await database.Participants.AsNoTracking().OrderBy(participant => participant.PublicLabel).ToListAsync(cancellationToken);
@@ -57,4 +76,6 @@ public sealed class SqlAdministratorParticipantStore(CompanionDbContext database
         var winners = await database.RaffleDraws.AsNoTracking().Select(draw => draw.WinnerParticipantId).ToListAsync(cancellationToken);
         return participants.Select(participant => new AdministratorParticipant(participant.Id, participant.Email, participant.PublicLabel, participant.Name, participant.WhatYouMake, participant.OnYourHeart, participant.TeamId is { } teamId && teams.TryGetValue(teamId, out var label) ? label : null, winners.Contains(participant.Id))).ToList();
     }
+
+    private static string? BlankToNull(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim().Replace("\r\n", "\n", StringComparison.Ordinal);
 }

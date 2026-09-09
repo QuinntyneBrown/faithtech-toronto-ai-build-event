@@ -8,6 +8,15 @@ namespace FaithTechTorontoAiBuildEvent.Api.Controllers;
 [Route("api/admin/participants")]
 public sealed class ParticipantsController(ISender sender) : ControllerBase
 {
+    [HttpPut("{participantId:guid}")]
+    public async Task<ActionResult<AdministratorParticipant>> Update(Guid participantId, UpdateAdministratorParticipantRequest request, CancellationToken cancellationToken)
+    {
+        try { return Ok(await sender.Send(new UpdateAdministratorParticipantCommand(request.OperationId, participantId, request.ExpectedVersion, request.Input, Request.Cookies["faithtech-admin"]), cancellationToken)); }
+        catch (UnauthorizedAccessException) { return Unauthorized(); }
+        catch (EntryValidationException exception) { return BadRequest(new ProblemDetails { Detail = exception.Message, Status = StatusCodes.Status400BadRequest }); }
+        catch (InvalidOperationException exception) { return Conflict(new ProblemDetails { Detail = exception.Message, Status = StatusCodes.Status409Conflict }); }
+    }
+
     [HttpDelete("{participantId:guid}")]
     public async Task<IActionResult> Delete(Guid participantId, DeleteAdministratorParticipantRequest request, CancellationToken cancellationToken)
     {
