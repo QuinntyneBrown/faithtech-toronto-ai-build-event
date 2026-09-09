@@ -12,7 +12,11 @@
     DRAW</cs-badge
   >
 </section>
-<mock-raffle-stage [result]="latest()" [forceFallback]="fallback()" />
+<cs-raffle-stage
+  [result]="latest()"
+  [now]="now()"
+  [forceFallback]="fallback()"
+/>
 <div class="draw-controls">
   @if (event.admin()) {
     <button

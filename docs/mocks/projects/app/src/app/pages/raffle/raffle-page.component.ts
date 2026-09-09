@@ -1,4 +1,3 @@
-import { NativeControlStateDirective } from "@mock/components";
 import {
   Component,
   ChangeDetectionStrategy,
@@ -11,13 +10,12 @@ import {
   BadgeComponent,
   CardComponent,
   CsButtonDirective,
+  RaffleStageComponent,
 } from "@quinntyne/cornerstone";
-import { RaffleStageComponent } from "@mock/components";
 import { EVENT_SERVICE } from "../../data/event-service.token";
 @Component({
   selector: "mock-raffle-page",
   imports: [
-    NativeControlStateDirective,
     BadgeComponent,
     CardComponent,
     CsButtonDirective,
