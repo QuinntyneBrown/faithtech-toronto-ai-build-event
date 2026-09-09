@@ -1,15 +1,20 @@
 @startuml
 !include <C4/C4_Container>
 LAYOUT_WITH_LEGEND()
-title Operate, measure, and restore the event companion — containers
-Person(actor, "Deployment operator")
-System_Boundary(system, "FaithTech event companion") {
-Container(client, "Companion Angular client", "Angular", "OperatorRunbook")
-Container(api, "Companion API", "ASP.NET Core", "HTTP commands, queries and SignalR")
-ContainerDb(db, "Companion database", "SQL Server", "Authoritative persisted state")
+Person(operator, "Deployment operator")
+System_Ext(tools, "Operator tools", "SQL client, HTTPS diagnostics and protected scheduler")
+System_Boundary(companion, "FaithTech companion") {
+Container(app, "Companion client", "Angular", "Real participant and admin journeys")
+Container(api, "Companion API", "ASP.NET Core", "Readiness, requests and SignalR")
+ContainerDb(db, "Companion database", "SQL Server", "Durable event and access state")
 }
-Rel(actor, client, "Uses")
-Rel(client, api, "JSON / HTTPS")
-Rel(api, client, "Pushes authorized changes", "SignalR / HTTPS")
-Rel(api, db, "Reads / commits", "EF Core / encrypted SQL")
+System_Ext(backup, "Protected backup storage", "Separate restore source")
+Rel(operator, tools, "Follows runbook")
+Rel(tools, api, "Checks readiness and authorized snapshots", "HTTPS")
+Rel(tools, db, "Initializes / backs up / restores isolated target", "Encrypted SQL")
+Rel(db, backup, "Writes scheduled backups")
+Rel(tools, backup, "Selects restore source")
+Rel(app, api, "Measured HTTP / SignalR")
+Rel(api, db, "Reads and commits")
+
 @enduml

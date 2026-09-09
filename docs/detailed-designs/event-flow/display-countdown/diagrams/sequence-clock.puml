@@ -15,12 +15,10 @@ box "Backend — Companion API" #D1FADF
 participant "EventStateController" as controller
 end box
 box "Backend — Application and Domain" #ECFDF3
-participant "GetEventSnapshotHandler" as handler
-participant "EventConfiguration" as entity
+participant "GetServerTimeHandler" as handler
 end box
 box "Backend — Infrastructure" #FFF4E5
 database "Companion SQL database" as db
-participant "EventChangePublisher" as push
 end box
 actor -> page : Open Countdown
 page -> client : Synchronize snapshot and time

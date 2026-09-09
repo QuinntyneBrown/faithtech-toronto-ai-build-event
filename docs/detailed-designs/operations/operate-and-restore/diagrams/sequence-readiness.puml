@@ -7,9 +7,9 @@ skinparam roundcorner 8
 autonumber
 title Check readiness and correlate a failure
 actor "Deployment operator" as actor
-box "Frontend — Companion Angular application" #E0F2FE
-participant "OperatorRunbook" as page
-participant "IReadinessService" as client
+box "Operator — HTTP diagnostics client" #E0F2FE
+participant "Runbook operator actions" as page
+participant "HTTPS diagnostics client" as client
 end box
 box "Backend — Companion API" #D1FADF
 participant "ReadinessController" as controller
@@ -20,7 +20,6 @@ participant "ReadinessState" as entity
 end box
 box "Backend — Infrastructure" #FFF4E5
 database "Companion SQL database" as db
-participant "EventChangePublisher" as push
 end box
 actor -> page : Inspect readiness / reported error reference
 page -> client : Check readiness

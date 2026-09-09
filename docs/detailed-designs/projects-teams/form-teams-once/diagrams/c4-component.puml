@@ -2,7 +2,7 @@
 !include <C4/C4_Component>
 LAYOUT_WITH_LEGEND()
 title Form random teams once on first opening — components
-Container(client, "TeamsPageComponent", "Companion Angular client", "Presents this capability")
+Container(client, "AppComponent", "Companion Angular client", "Presents this capability")
 Container_Boundary(api, "Companion API") {
 Component(entry, "EventFlowController", "ASP.NET Core controller", "Binds inputs and dispatches")
 Component(handler, "AdvanceScreenHandler", "Application handler", "Partition the current roster into random groups of three")

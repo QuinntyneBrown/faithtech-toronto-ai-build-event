@@ -15,12 +15,11 @@ box "Backend — Companion API" #D1FADF
 participant "RaffleController" as controller
 end box
 box "Backend — Application and Domain" #ECFDF3
-participant "DrawWinnerHandler" as handler
+participant "GetRaffleSnapshotHandler" as handler
 participant "RaffleDraw" as entity
 end box
 box "Backend — Infrastructure" #FFF4E5
 database "Companion SQL database" as db
-participant "EventChangePublisher" as push
 end box
 actor -> page : Open or refresh Raffle
 page -> client : Read raffle snapshot

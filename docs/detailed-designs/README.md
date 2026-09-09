@@ -22,13 +22,15 @@ HTTP performs all mutations. SignalR pushes notifications and supplies no arbitr
 
 The transaction checks current authority, looks up the actor-scoped operation receipt, compares its canonical input digest, then checks version and business rules. An exact authorized retry resolves the original durable outcome before checking a now-stale version. Reuse with changed input returns `409 operation-mismatch`. A new stale operation returns `409 stale-version` with an authorized current projection. Successful event mutations increment the version and atomically save state, receipt, audit metadata, and an `EventChange` row. A failed commit exposes no partial success.
 
+Administrator transactions acquire the shared `CompanionCredential` application lock before the event lock and hold it through commit. Direct/CLI credential replacement acquires its exclusive counterpart. Public transactions need only the event lock. Input receipt digests use keyed HMAC rather than unkeyed hashes of potentially private fields. The `IRandomSource` abstraction used by domain shuffle policy belongs in Domain; its cryptographic adapter belongs in Infrastructure.
+
 `CommandResult<T>` contains `operationId`, `committedVersion`, and the authorized result. Receipts retain stable IDs, outcome codes, and version, not copies of personal fields or cookie secrets. Replayed results resolve those IDs through current privacy rules; deleted subjects return a tombstone outcome. This preserves operation identity without reintroducing deleted personal data. Participant entry uses the separate protected receipt flow described in its feature design. Authentication and credential replacement use their own serialization and do not require an event version.
 
 Failures use ProblemDetails with `code`, `correlationId`, optional field errors, and authorized current state for conflicts. Codes distinguish `400 validation`, `401 session-required`, `403 forbidden`, `409 stale-version/entry-closed/draw-active`, `429 throttled` with positive `Retry-After`, and `503 storage-unavailable`. Drafts survive ordinary rejection and require explicit reapply with a new operation ID/version. Session invalidation and Countdown profile closure clear private drafts. No mutation is silently queued or replayed after disconnect.
 
 ### Projections and realtime delivery
 
-`PublicEventSnapshot` contains version, server time, configured target/copy, current screen, projects, public team labels/members, eligible count, and privacy-filtered draw history. It excludes email, introduction answers, internal sessions, and unassigned private roster records. `ParticipantSnapshot` exposes only the authenticated owner's public label and saved optional fields. `AdministratorSnapshot` adds the full roster and permitted editing state. Public member labels pair an optional name with a stable participant label; identifiers alone grant no access.
+`PublicEventSnapshot` contains version, server time, configured target/copy, current screen, projects, public team labels/members, unassigned public member labels, eligible count, and privacy-filtered draw history. It excludes email, introduction answers, internal sessions, and private roster fields. `ParticipantSnapshot` exposes only the authenticated owner's public label and saved optional fields. `AdministratorSnapshot` adds the full roster and permitted editing state. Public member labels pair an optional name with a stable participant label; identifiers alone grant no access.
 
 `EventChange` contains version, change kind, affected stable IDs, and commit time, never serialized personal payloads. Every API instance runs `EventChangePublisher`, reading committed changes at a proposed 250 ms interval with an independent cursor and pushing to its own connected clients using SignalR. Instances do not compete for or globally mark records delivered. This avoids a new broker at this scale and does not substitute browser polling for SignalR. Session watchers use the same interval for credential revision, revocation, and expiry. Durable records recover a crash after commit but before notification.
 
@@ -63,3 +65,69 @@ The run sheet supplies “RTR — Reconciliation Through Relationships” and it
 This documentation work changes no application behavior and adds no tests. Future implementation uses ATDD: real API/SQL/SignalR integration, installed CLI and direct SQL verification, and Playwright with injected mock contracts and one page object per screen. Diagram rendering and document review validate these artifacts, not the proposed runtime.
 
 Each feature includes C4, typed structure, and behavior diagrams, with rendered PNGs adjacent to PlantUML sources. Exact requirement quotations retain the specs' original wording. New design prose uses the software-design-document house style.
+
+## Feature designs
+
+- [Enter by email and restore the private session](participants/enter-by-email/README.md)
+- [Maintain optional introduction information](participants/maintain-profile/README.md)
+- [Administer participants on Countdown](participants/administer-participants/README.md)
+- [Display countdown, welcome, and event information](event-flow/display-countdown/README.md)
+- [Advance the four screens under presenter control](event-flow/advance-screens/README.md)
+- [Maintain and display RTR project cards](projects-teams/maintain-projects/README.md)
+- [Form random teams once on first opening](projects-teams/form-teams-once/README.md)
+- [Move team members and assign projects](projects-teams/move-members-and-assign-projects/README.md)
+- [Draw and persist one raffle winner](raffle/draw-winner/README.md)
+- [Present synchronized name cycling and celebration](raffle/present-draw/README.md)
+- [Authenticate administrators within the companion](access/authenticate-administrators/README.md)
+- [Protect requests, private data, and abuse budgets](access/protect-requests-and-private-data/README.md)
+- [Replace the administrator passcode through SQL or CLI](access/replace-passcode/README.md)
+- [Adopt completed Cornerstone components and tokens](experience/adopt-cornerstone/README.md)
+- [Support responsive and accessible interaction](experience/support-accessible-interaction/README.md)
+- [Synchronize and recover authoritative event state](operations/synchronize-and-recover-state/README.md)
+- [Install and target the passcode-management CLI](operations/install-passcode-cli/README.md)
+- [Operate, measure, and restore the event companion](operations/operate-and-restore/README.md)
+
+## Requirement coverage
+
+All 34 active L2 requirements have a primary design below. Related features also quote applicable cross-cutting requirements. L2-011 project assignment is detailed further in the team-move design. Accessibility and request protection apply to every feature.
+
+| L2 | Parent L1 | Primary feature |
+|---|---|---|
+| L2-002 | L1-001 | [Administer participants on Countdown](participants/administer-participants/README.md) |
+| L2-003 | L1-002 | [Enter by email and restore the private session](participants/enter-by-email/README.md) |
+| L2-004 | L1-002 | [Enter by email and restore the private session](participants/enter-by-email/README.md) |
+| L2-005 | L1-003 | [Display countdown, welcome, and event information](event-flow/display-countdown/README.md) |
+| L2-007 | L1-004 | [Advance the four screens under presenter control](event-flow/advance-screens/README.md) |
+| L2-009 | L1-005 | [Move team members and assign projects](projects-teams/move-members-and-assign-projects/README.md) |
+| L2-010 | L1-005 | [Form random teams once on first opening](projects-teams/form-teams-once/README.md) |
+| L2-011 | L1-005 | [Maintain and display RTR project cards](projects-teams/maintain-projects/README.md) |
+| L2-012 | L1-005 | [Maintain and display RTR project cards](projects-teams/maintain-projects/README.md) |
+| L2-013 | L1-006 | [Maintain optional introduction information](participants/maintain-profile/README.md) |
+| L2-020 | L1-008 | [Draw and persist one raffle winner](raffle/draw-winner/README.md) |
+| L2-021 | L1-008 | [Draw and persist one raffle winner](raffle/draw-winner/README.md) |
+| L2-022 | L1-008 | [Present synchronized name cycling and celebration](raffle/present-draw/README.md) |
+| L2-029 | L1-011 | [Adopt completed Cornerstone components and tokens](experience/adopt-cornerstone/README.md) |
+| L2-030 | L1-011 | [Adopt completed Cornerstone components and tokens](experience/adopt-cornerstone/README.md) |
+| L2-032 | L1-011 | [Adopt completed Cornerstone components and tokens](experience/adopt-cornerstone/README.md) |
+| L2-033 | L1-011 | [Adopt completed Cornerstone components and tokens](experience/adopt-cornerstone/README.md) |
+| L2-034 | L1-012 | [Support responsive and accessible interaction](experience/support-accessible-interaction/README.md) |
+| L2-035 | L1-012 | [Support responsive and accessible interaction](experience/support-accessible-interaction/README.md) |
+| L2-036 | L1-012 | [Support responsive and accessible interaction](experience/support-accessible-interaction/README.md) |
+| L2-037 | L1-012 | [Support responsive and accessible interaction](experience/support-accessible-interaction/README.md) |
+| L2-038 | L1-013 | [Authenticate administrators within the companion](access/authenticate-administrators/README.md) |
+| L2-039 | L1-013 | [Protect requests, private data, and abuse budgets](access/protect-requests-and-private-data/README.md) |
+| L2-040 | L1-013 | [Protect requests, private data, and abuse budgets](access/protect-requests-and-private-data/README.md) |
+| L2-041 | L1-013 | [Protect requests, private data, and abuse budgets](access/protect-requests-and-private-data/README.md) |
+| L2-042 | L1-013 | [Protect requests, private data, and abuse budgets](access/protect-requests-and-private-data/README.md) |
+| L2-043 | L1-014 | [Operate, measure, and restore the event companion](operations/operate-and-restore/README.md) |
+| L2-044 | L1-014 | [Synchronize and recover authoritative event state](operations/synchronize-and-recover-state/README.md) |
+| L2-045 | L1-014 | [Operate, measure, and restore the event companion](operations/operate-and-restore/README.md) |
+| L2-049 | L1-015 | [Install and target the passcode-management CLI](operations/install-passcode-cli/README.md) |
+| L2-050 | L1-015 | [Install and target the passcode-management CLI](operations/install-passcode-cli/README.md) |
+| L2-051 | L1-013 | [Replace the administrator passcode through SQL or CLI](access/replace-passcode/README.md) |
+| L2-063 | L1-016 | [Replace the administrator passcode through SQL or CLI](access/replace-passcode/README.md) |
+| L2-064 | L1-016 | [Replace the administrator passcode through SQL or CLI](access/replace-passcode/README.md) |
+
+## Artifact verification
+
+See [the review record](REVIEW.md) for diagram rendering, link and requirement review, and the boundary between completed documentation and future implementation acceptance.

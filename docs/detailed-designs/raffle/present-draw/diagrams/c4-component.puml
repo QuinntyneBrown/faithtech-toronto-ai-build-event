@@ -12,5 +12,5 @@ ContainerDb(db, "Companion database", "SQL Server", "Durable state")
 Rel(client, entry, "Calls through IRaffleService")
 Rel(entry, handler, "Dispatches")
 Rel(handler, entity, "Uses")
-Rel(handler, db, "Commits through application persistence contract")
+Rel(handler, db, "Reads through application persistence contract")
 @enduml

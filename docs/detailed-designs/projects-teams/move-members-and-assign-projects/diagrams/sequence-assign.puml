@@ -15,12 +15,11 @@ box "Backend — Companion API" #D1FADF
 participant "TeamsController" as controller
 end box
 box "Backend — Application and Domain" #ECFDF3
-participant "MoveTeamMemberHandler" as handler
+participant "AssignTeamProjectHandler" as handler
 participant "Team" as entity
 end box
 box "Backend — Infrastructure" #FFF4E5
 database "Companion SQL database" as db
-participant "EventChangePublisher" as push
 end box
 actor -> page : Choose project or No project assigned
 page -> client : ProjectAssignment + envelope

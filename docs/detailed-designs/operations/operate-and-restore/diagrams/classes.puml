@@ -2,30 +2,25 @@
 skinparam backgroundColor #FFFFFF
 skinparam shadowing false
 skinparam defaultFontName Arial
-skinparam ArrowColor #344054
-skinparam roundcorner 8
-title Operate, measure, and restore the event companion — structure
-interface IReadinessService {
-+check(): Task<ReadinessState>
+class ReadinessController {
+ +Get(): Task<ActionResult<ReadinessState>>
 }
-class OperatorRunbook
-OperatorRunbook ..> IReadinessService : consumes contract
-class ReadinessController
 class GetReadinessHandler {
-  +Handle(request: GetReadinessQuery): Task<ReadinessState>
+ +Handle(query: GetReadinessQuery): Task<ReadinessState>
 }
-class GetReadinessQuery {
-+DateTimeOffset RequestedAtUtc
+class GetReadinessQuery
+interface IReadinessStore {
+ +Check(): Task<ReadinessState>
+}
+class SqlReadinessStore {
+ +Check(): Task<ReadinessState>
 }
 class ReadinessState {
-+bool Ready
-+bool DatabaseAvailable
-+bool SchemaCompatible
-+string CorrelationId
+ +bool Ready
+ +bool DatabaseAvailable
+ +bool SchemaCompatible
+ +string CorrelationId
 }
-ReadinessController ..> GetReadinessHandler : dispatches
-GetReadinessHandler ..> GetReadinessQuery : handles
-GetReadinessHandler --> ReadinessState : uses
 class AuditRecord {
  +Guid Id
  +string Action
@@ -34,11 +29,17 @@ class AuditRecord {
  +DateTimeOffset OccurredAtUtc
  +string Outcome
 }
-class RecoveryVerification {
+class RecoveryVerification <<evidence record>> {
  +string IsolatedDatabase
  +DateTimeOffset BackupAtUtc
  +bool SessionsRevoked
  +bool StateCoherent
 }
-GetReadinessHandler ..> AuditRecord : redacted diagnostic reference
+ReadinessController ..> GetReadinessHandler
+GetReadinessHandler ..> GetReadinessQuery
+GetReadinessHandler ..> IReadinessStore
+SqlReadinessStore ..|> IReadinessStore
+IReadinessStore ..> ReadinessState
+RecoveryVerification ..> ReadinessState : records check
+
 @enduml

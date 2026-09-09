@@ -2,44 +2,45 @@
 skinparam backgroundColor #FFFFFF
 skinparam shadowing false
 skinparam defaultFontName Arial
-skinparam ArrowColor #344054
-skinparam roundcorner 8
 autonumber
-title Replace the credential through either database client
 actor "Database operator" as actor
-box "Operator — installed .NET tool" #E0F2FE
-participant "SetAdminPasscodeCommand" as page
-participant "IPasscodeService" as client
+box "Operator — SQL client or installed CLI" #E0F2FE
+participant "Protected input / SetAdminPasscodeCommand" as input
+participant "Parameterized SQL client" as client
 end box
-box "Backend — SQL operation boundary" #D1FADF
-participant "ReplaceAdminPasscodeProcedure" as controller
+box "Backend — Companion SQL database" #FFF4E5
+participant "dbo.ReplaceAdminPasscode" as procedure
+database "Credential / sessions / change marker" as db
 end box
-box "Backend — Application and Domain" #ECFDF3
-participant "SqlPasscodeService" as handler
-participant "AdministratorCredential" as entity
+box "Backend — Companion API Infrastructure" #ECFDF3
+participant "SessionInvalidationWatcher" as watcher
 end box
-box "Backend — Infrastructure" #FFF4E5
-database "Companion SQL database" as db
-participant "EventChangePublisher" as push
+box "Frontend — Companion Angular app" #E0F2FE
+participant "Administrator view" as view
 end box
-actor -> page : Select explicit target; supply protected four digits
-page -> client : ReplacePasscodeInput
-client -> controller : Parameterized encrypted SQL RPC
-controller -> db : Begin transaction; exclusive credential lock
-controller -> controller : Reject invalid Unicode/length before conversion L2-063
+title Replace the credential through either database client
+actor -> input : Select explicit target and protected four digits
+input -> client : Bind NVarChar(MAX) parameter; no saved literal
+client -> procedure : One encrypted RPC under database grants
+procedure -> db : Begin transaction; exclusive credential lock
+procedure -> procedure : Validate exact ASCII format L2-063
 alt Valid input and grants
- controller -> entity : Fresh salt, verifier, next revision
- controller -> db : Replace credential; revoke sessions; insert change; commit
- db --> controller : Committed revision and UTC time
- controller --> client : Nonsecret confirmed result
- client --> page : Success
- page --> actor : Replacement confirmed; secret omitted
+ procedure -> db : New salt/verifier and revision; revoke sessions
+ procedure -> db : Insert change marker and commit
+ db --> procedure : Confirmed revision and time
+ procedure --> client : Nonsecret result
+ client --> input : Confirmed success
+ input --> actor : Replacement confirmed without secret
 else Invalid / denied / storage failure
- controller -> db : Roll back if transaction active
- controller --> client : Redacted known failure
- client --> page : Exit 1 or 2 as classified
- page --> actor : No default or fallback
+ procedure -> db : Roll back active transaction
+ procedure --> client : Known failure without parameter
+ client --> input : Classified noncommit
+ input --> actor : No fallback or default
 end
-push -> push : Detect committed credential revision
-push -> actor : Connected admin view receives content-free invalidation
+watcher -> db : Read current revision and connected sessions
+db --> watcher : Current authority
+opt Old sessions invalid
+ watcher -> view : Content-free SessionInvalidated within 2 seconds
+ view -> view : Clear private state and close private connection
+end
 @enduml

@@ -1,14 +1,16 @@
 @startuml
 !include <C4/C4_Container>
 LAYOUT_WITH_LEGEND()
-title Replace the administrator passcode through SQL or CLI — containers
-Person(actor, "Database operator")
-System_Boundary(system, "FaithTech event companion") {
-Container(client, "Passcode CLI", ".NET tool", "SetAdminPasscodeCommand")
-Container(api, "Companion API", "ASP.NET Core", "HTTP commands, queries and SignalR")
-ContainerDb(db, "Companion database", "SQL Server", "Authoritative persisted state")
+Person(operator, "Database operator")
+System_Ext(sqlClient, "Normal SQL client", "Protected parameterized RPC")
+System_Boundary(system, "FaithTech companion") {
+Container(cli, "Passcode CLI", ".NET / System.CommandLine", "Validates input and target")
+Container(api, "Companion API", "ASP.NET Core", "Validates sessions and publishes invalidation")
+ContainerDb(db, "Companion database", "SQL Server", "Replacement procedure, credential and sessions")
 }
-Rel(actor, client, "Uses")
-Rel(client, db, "Encrypted SQL")
-Rel(api, db, "Reads / commits", "EF Core / encrypted SQL")
+Rel(operator, sqlClient, "Uses direct operation")
+Rel(operator, cli, "Uses masked prompt or stdin")
+Rel(sqlClient, db, "Executes ReplaceAdminPasscode", "Encrypted SQL")
+Rel(cli, db, "Executes same operation", "Encrypted SQL")
+Rel(api, db, "Checks current revision and sessions")
 @enduml

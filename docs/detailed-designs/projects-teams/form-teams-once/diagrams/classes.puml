@@ -8,8 +8,8 @@ title Form random teams once on first opening — structure
 interface IEventService {
 +advance(input: AdvanceInput): Promise<AdvanceResult>
 }
-class TeamsPageComponent
-TeamsPageComponent ..> IEventService : consumes contract
+class AppComponent
+AppComponent ..> IEventService : consumes contract
 class EventFlowController
 class AdvanceScreenHandler {
   +Handle(request: AdvanceScreenCommand): Task<AdvanceResult>

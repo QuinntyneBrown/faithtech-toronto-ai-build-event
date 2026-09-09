@@ -7,16 +7,15 @@ skinparam roundcorner 8
 autonumber
 title Measure real API and connected render latency
 actor "Deployment operator" as actor
-box "Frontend — Companion Angular application" #E0F2FE
-participant "OperatorRunbook" as page
-participant "IReadinessService" as client
+box "Frontend — Instrumented companion clients" #E0F2FE
+participant "Load driver / render observations" as page
+participant "HTTP / SignalR service adapters" as client
 end box
 box "Backend — Companion API" #D1FADF
-participant "ReadinessController" as controller
+participant "Feature controllers" as controller
 end box
 box "Backend — Application and Domain" #ECFDF3
-participant "GetReadinessHandler" as handler
-participant "ReadinessState" as entity
+participant "Feature command / query handlers" as handler
 end box
 box "Backend — Infrastructure" #FFF4E5
 database "Companion SQL database" as db

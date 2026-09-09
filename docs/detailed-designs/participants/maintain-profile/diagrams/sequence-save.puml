@@ -20,7 +20,6 @@ participant "ParticipantProfile" as entity
 end box
 box "Backend — Infrastructure" #FFF4E5
 database "Companion SQL database" as db
-participant "EventChangePublisher" as push
 end box
 actor -> page : Save optional fields or Skip
 alt Skip

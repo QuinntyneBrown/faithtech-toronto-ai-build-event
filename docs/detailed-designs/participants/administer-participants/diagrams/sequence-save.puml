@@ -20,7 +20,6 @@ participant "Participant" as entity
 end box
 box "Backend — Infrastructure" #FFF4E5
 database "Companion SQL database" as db
-participant "EventChangePublisher" as push
 end box
 actor -> page : Add / edit participant
 page -> client : Submit fields and version

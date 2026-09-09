@@ -16,7 +16,6 @@ participant "EventStateController" as controller
 end box
 box "Backend — Application and Domain" #ECFDF3
 participant "GetEventSnapshotHandler" as handler
-participant "PresentationState" as entity
 end box
 box "Backend — Infrastructure" #FFF4E5
 database "Companion SQL database" as db

@@ -15,12 +15,10 @@ box "Backend — Companion API" #D1FADF
 participant "EventEntryController" as controller
 end box
 box "Backend — Application and Domain" #ECFDF3
-participant "EnterParticipantHandler" as handler
-participant "Participant" as entity
+participant "GetParticipantSessionHandler / SignOutParticipantHandler" as handler
 end box
 box "Backend — Infrastructure" #FFF4E5
 database "Companion SQL database" as db
-participant "EventChangePublisher" as push
 end box
 actor -> page : Refresh or clear session
 page -> client : Restore / clear

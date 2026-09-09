@@ -4,7 +4,7 @@ LAYOUT_WITH_LEGEND()
 title Form random teams once on first opening — containers
 Person(actor, "Administrator")
 System_Boundary(system, "FaithTech event companion") {
-Container(client, "Companion Angular client", "Angular", "TeamsPageComponent")
+Container(client, "Companion Angular client", "Angular", "AppComponent")
 Container(api, "Companion API", "ASP.NET Core", "HTTP commands, queries and SignalR")
 ContainerDb(db, "Companion database", "SQL Server", "Authoritative persisted state")
 }

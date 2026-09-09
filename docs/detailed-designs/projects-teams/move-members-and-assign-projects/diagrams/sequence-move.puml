@@ -20,7 +20,6 @@ participant "Team" as entity
 end box
 box "Backend — Infrastructure" #FFF4E5
 database "Companion SQL database" as db
-participant "EventChangePublisher" as push
 end box
 actor -> page : Drop member / choose Move to
 page -> client : MemberMove + operation ID/version

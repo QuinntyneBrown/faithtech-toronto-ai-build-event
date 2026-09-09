@@ -9,18 +9,6 @@ title Stop or recover visual effects
 actor "Raffle viewer" as actor
 box "Frontend — Companion Angular application" #E0F2FE
 participant "RafflePageComponent" as page
-participant "IRaffleService" as client
-end box
-box "Backend — Companion API" #D1FADF
-participant "RaffleController" as controller
-end box
-box "Backend — Application and Domain" #ECFDF3
-participant "GetRaffleSnapshotHandler" as handler
-participant "RaffleResult" as entity
-end box
-box "Backend — Infrastructure" #FFF4E5
-database "Companion SQL database" as db
-participant "EventChangePublisher" as push
 end box
 actor -> page : Stop effects or change reduced-motion preference
 alt Reduced motion or explicit stop

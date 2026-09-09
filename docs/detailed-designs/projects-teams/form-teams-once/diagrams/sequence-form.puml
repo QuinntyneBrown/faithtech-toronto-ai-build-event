@@ -8,7 +8,7 @@ autonumber
 title Form and persist the first grouping
 actor "Administrator" as actor
 box "Frontend — Companion Angular application" #E0F2FE
-participant "TeamsPageComponent" as page
+participant "AppComponent" as page
 participant "IEventService" as client
 end box
 box "Backend — Companion API" #D1FADF
@@ -20,7 +20,6 @@ participant "FormTeamsPolicy" as entity
 end box
 box "Backend — Infrastructure" #FFF4E5
 database "Companion SQL database" as db
-participant "EventChangePublisher" as push
 end box
 actor -> page : Open Team selection from Projects
 page -> client : Advance with original operation ID/version

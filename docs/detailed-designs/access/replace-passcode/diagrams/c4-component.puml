@@ -1,16 +1,19 @@
 @startuml
 !include <C4/C4_Component>
 LAYOUT_WITH_LEGEND()
-title Replace the administrator passcode through SQL or CLI — components
-Container(client, "SetAdminPasscodeCommand", "Passcode CLI", "Presents this capability")
-Container_Boundary(api, "Passcode CLI") {
-Component(entry, "ReplaceAdminPasscodeProcedure", "System.CommandLine", "Binds inputs and dispatches")
-Component(handler, "SqlPasscodeService", "Application handler", "Rotate a four-digit verifier and revoke old sessions atomically")
-Component(entity, "AdministratorCredential", "Domain model", "Owns slice state")
+System_Ext(direct, "Normal SQL client", "Works without API or companion CLI")
+Container_Boundary(cli, "Passcode CLI") {
+Component(command, "SetAdminPasscodeCommand", "System.CommandLine", "Validates mode, target and secret input")
+Component(adapter, "SqlPasscodeService", "Infrastructure adapter", "Implements IPasscodeService; executes one RPC")
 }
-ContainerDb(db, "Companion database", "SQL Server", "Durable state")
-Rel(client, entry, "Calls through IPasscodeService")
-Rel(entry, handler, "Dispatches")
-Rel(handler, entity, "Uses")
-Rel(handler, db, "Commits through application persistence contract")
+Container_Boundary(sql, "SQL Server database") {
+Component(procedure, "dbo.ReplaceAdminPasscode", "T-SQL stored procedure", "Validates, converts verifier and commits revision")
+ComponentDb(state, "Credential and session rows", "SQL tables", "Salt/verifier, revision, revocation and change marker")
+}
+Container(api, "Companion API", "ASP.NET Core", "Checks authority; invalidates connected views")
+Rel(command, adapter, "Calls through IPasscodeService")
+Rel(adapter, procedure, "Parameterized encrypted RPC")
+Rel(direct, procedure, "Same RPC")
+Rel(procedure, state, "Updates atomically")
+Rel(api, state, "Reads current authority")
 @enduml

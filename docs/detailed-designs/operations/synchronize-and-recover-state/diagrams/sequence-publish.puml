@@ -15,8 +15,7 @@ box "Backend — Companion API" #D1FADF
 participant "EventStateController" as controller
 end box
 box "Backend — Application and Domain" #ECFDF3
-participant "GetEventSnapshotHandler" as handler
-participant "EventChange" as entity
+participant "Mutation handler / GetEventSnapshotHandler" as handler
 end box
 box "Backend — Infrastructure" #FFF4E5
 database "Companion SQL database" as db

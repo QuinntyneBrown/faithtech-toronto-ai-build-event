@@ -20,7 +20,6 @@ participant "Project" as entity
 end box
 box "Backend — Infrastructure" #FFF4E5
 database "Companion SQL database" as db
-participant "EventChangePublisher" as push
 end box
 actor -> page : View cards / submit project edit
 page -> client : Save typed project input

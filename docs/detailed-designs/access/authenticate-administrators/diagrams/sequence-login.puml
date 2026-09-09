@@ -20,7 +20,6 @@ participant "AdministratorSession" as entity
 end box
 box "Backend — Infrastructure" #FFF4E5
 database "Companion SQL database" as db
-participant "EventChangePublisher" as push
 end box
 actor -> page : Enter four-digit passcode
 page -> client : login(passcode)

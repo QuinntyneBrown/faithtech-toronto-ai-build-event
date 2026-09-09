@@ -12,15 +12,13 @@ participant "AppComponent" as page
 participant "IEventService" as client
 end box
 box "Backend — Companion API" #D1FADF
-participant "EventFlowController" as controller
+participant "EventStateController / session endpoints" as controller
 end box
 box "Backend — Application and Domain" #ECFDF3
-participant "AdvanceScreenHandler" as handler
-participant "EventState" as entity
+participant "GetEventSnapshotHandler / session query handlers" as handler
 end box
 box "Backend — Infrastructure" #FFF4E5
 database "Companion SQL database" as db
-participant "EventChangePublisher" as push
 end box
 actor -> page : Deep link / back / choose earlier stage
 page -> client : Read synchronized role and current state

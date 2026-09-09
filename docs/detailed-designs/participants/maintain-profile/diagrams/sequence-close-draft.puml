@@ -9,14 +9,13 @@ title Discard a private draft on public closure
 actor "Entered participant" as actor
 box "Frontend — Companion Angular application" #E0F2FE
 participant "CountdownPageComponent" as page
-participant "IProfileService" as client
+participant "IEventService" as client
 end box
 box "Backend — Companion API" #D1FADF
-participant "ParticipantProfileController" as controller
+participant "EventStateController" as controller
 end box
 box "Backend — Application and Domain" #ECFDF3
-participant "SaveParticipantProfileHandler" as handler
-participant "ParticipantProfile" as entity
+participant "GetEventSnapshotHandler" as handler
 end box
 box "Backend — Infrastructure" #FFF4E5
 database "Companion SQL database" as db

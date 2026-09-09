@@ -26,7 +26,7 @@ class PresentationState {
 }
 EventStateController ..> GetEventSnapshotHandler : dispatches
 GetEventSnapshotHandler ..> GetEventSnapshotQuery : handles
-GetEventSnapshotHandler --> PresentationState : uses
+AppComponent --> PresentationState : owns local UI state
 class LiveScreenCoordinator {
  +Apply(snapshot: PublicEventSnapshot): void
  +RestoreFocus(previous: HTMLElement?): void

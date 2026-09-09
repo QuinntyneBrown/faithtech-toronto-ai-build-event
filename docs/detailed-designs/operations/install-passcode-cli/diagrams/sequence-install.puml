@@ -8,19 +8,8 @@ autonumber
 title Package and install or update local source
 actor "Database operator" as actor
 box "Operator — installed .NET tool" #E0F2FE
-participant "OperatorRootCommand" as page
-participant "IOperatorTargetService" as client
-end box
-box "Backend — SQL operation boundary" #D1FADF
-participant "VerifyConnectionCommand" as controller
-end box
-box "Backend — Application and Domain" #ECFDF3
-participant "VerifyConnectionHandler" as handler
-participant "OperatorTargetProfile" as entity
-end box
-box "Backend — Infrastructure" #FFF4E5
-database "Companion SQL database" as db
-participant "EventChangePublisher" as push
+participant "Install-OperatorTool.ps1" as page
+participant "dotnet SDK / tool manager" as client
 end box
 actor -> page : Run Install-OperatorTool.ps1
 page -> page : Resolve source, SDK and unique local version

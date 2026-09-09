@@ -7,20 +7,18 @@ skinparam roundcorner 8
 autonumber
 title Restore isolated state and revoke previous access
 actor "Deployment operator" as actor
-box "Frontend — Companion Angular application" #E0F2FE
-participant "OperatorRunbook" as page
-participant "IReadinessService" as client
+box "Operator — Isolated recovery tools" #E0F2FE
+participant "Runbook operator actions" as page
+participant "SQL restore client / private verification client" as client
 end box
 box "Backend — Companion API" #D1FADF
-participant "ReadinessController" as controller
+participant "Readiness / authorized projection endpoints" as controller
 end box
 box "Backend — Application and Domain" #ECFDF3
-participant "GetReadinessHandler" as handler
-participant "ReadinessState" as entity
+participant "Readiness / snapshot / session query handlers" as handler
 end box
 box "Backend — Infrastructure" #FFF4E5
 database "Companion SQL database" as db
-participant "EventChangePublisher" as push
 end box
 actor -> page : Choose backup and distinct isolated target
 page -> client : Verify explicit target and disabled traffic

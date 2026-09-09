@@ -1,16 +1,21 @@
 @startuml
 !include <C4/C4_Component>
 LAYOUT_WITH_LEGEND()
-title Operate, measure, and restore the event companion — components
-Container(client, "OperatorRunbook", "Companion Angular client", "Presents this capability")
+System_Ext(operator, "Operator diagnostics and SQL tools", "No monitoring application screen")
 Container_Boundary(api, "Companion API") {
-Component(entry, "ReadinessController", "ASP.NET Core controller", "Binds inputs and dispatches")
-Component(handler, "GetReadinessHandler", "Application handler", "Initialize and recover coherent event state with redacted evidence")
-Component(entity, "ReadinessState", "Domain model", "Owns slice state")
+Component(controller, "ReadinessController", "ASP.NET Core", "Dispatches readiness query")
+Component(handler, "GetReadinessHandler", "Application", "Assesses durable readiness")
+Component(store, "SqlReadinessStore", "Infrastructure", "Implements IReadinessStore")
+Component(logs, "Structured logging", "Microsoft.Extensions.Logging", "Redacted correlation and session attribution")
 }
-ContainerDb(db, "Companion database", "SQL Server", "Durable state")
-Rel(client, entry, "Calls through IReadinessService")
-Rel(entry, handler, "Dispatches")
-Rel(handler, entity, "Uses")
-Rel(handler, db, "Commits through application persistence contract")
+ContainerDb(db, "Companion database", "SQL Server", "Coherent event state and audit records")
+System_Ext(backup, "Protected backups", "Scheduled full backups and isolated restore")
+Rel(operator, controller, "GET health ready")
+Rel(controller, handler, "Dispatches")
+Rel(handler, store, "Uses IReadinessStore")
+Rel(store, db, "Checks schema / storage")
+Rel(handler, logs, "Records redacted failures")
+Rel(operator, db, "Performs isolated recovery")
+Rel(db, backup, "Backs up")
+
 @enduml

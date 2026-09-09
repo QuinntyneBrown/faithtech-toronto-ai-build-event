@@ -15,7 +15,7 @@ box "Backend — Companion API" #D1FADF
 participant "RosterController" as controller
 end box
 box "Backend — Application and Domain" #ECFDF3
-participant "SaveParticipantHandler" as handler
+participant "DeleteParticipantHandler" as handler
 participant "Participant" as entity
 end box
 box "Backend — Infrastructure" #FFF4E5

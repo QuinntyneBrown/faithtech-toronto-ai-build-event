@@ -12,15 +12,14 @@ participant "AppComponent" as page
 participant "IEventService" as client
 end box
 box "Backend — Companion API" #D1FADF
-participant "EventStateController" as controller
+participant "Target feature controller" as controller
 end box
 box "Backend — Application and Domain" #ECFDF3
-participant "GetEventSnapshotHandler" as handler
-participant "EventChange" as entity
+participant "Target mutation handler" as handler
+participant "Receipt result projection" as entity
 end box
 box "Backend — Infrastructure" #FFF4E5
 database "Companion SQL database" as db
-participant "EventChangePublisher" as push
 end box
 actor -> page : Retry an uncertain save explicitly
 page -> client : Original operation ID and unchanged input

@@ -20,7 +20,6 @@ participant "Participant" as entity
 end box
 box "Backend — Infrastructure" #FFF4E5
 database "Companion SQL database" as db
-participant "EventChangePublisher" as push
 end box
 actor -> page : Submit email after privacy notice
 page -> client : Ensure receipt; enter
