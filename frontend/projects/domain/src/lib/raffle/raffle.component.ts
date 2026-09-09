@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from "@angular/core";
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, signal } from "@angular/core";
 import { CardComponent, CsButtonDirective, RaffleResult as CornerstoneRaffleResult, RaffleStageComponent } from "@quinntyne/cornerstone";
 import { ADMINISTRATOR_SESSION_SERVICE, EVENT_SERVICE, RAFFLE_SERVICE } from "@faithtech/api";
 
@@ -13,7 +13,7 @@ export class RaffleComponent {
   readonly raffle = inject(RAFFLE_SERVICE);
   readonly event = inject(EVENT_SERVICE);
   readonly administrator = inject(ADMINISTRATOR_SESSION_SERVICE);
-  readonly now = signal(Date.now());
+  readonly now = signal(this.event.serverNow());
   readonly stageResult = computed<CornerstoneRaffleResult | null>(() => {
     const result = this.raffle.state()?.latestResult;
     return result ? {
@@ -30,6 +30,8 @@ export class RaffleComponent {
     this.raffle.load();
     this.event.load();
     this.administrator.load();
+    const timer = window.setInterval(() => this.now.set(this.event.serverNow()), 250);
+    inject(DestroyRef).onDestroy(() => window.clearInterval(timer));
   }
 
   draw(): void {
