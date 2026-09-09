@@ -45,10 +45,8 @@ public sealed class AddPasscodeProcedure : Migration
                 END
                 ELSE
                 BEGIN
-                    SET IDENTITY_INSERT dbo.CompanionCredentials ON;
-                    INSERT dbo.CompanionCredentials (Id, Salt, Verifier, Revision, ChangedAtUtc)
-                    VALUES (1, @salt, @verifier, 1, @changedAtUtc);
-                    SET IDENTITY_INSERT dbo.CompanionCredentials OFF;
+                    INSERT dbo.CompanionCredentials (Salt, Verifier, Revision, ChangedAtUtc)
+                    VALUES (@salt, @verifier, 1, @changedAtUtc);
                 END
 
                 UPDATE dbo.AdministratorSessions SET Revoked = 1 WHERE Revoked = 0;
