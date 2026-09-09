@@ -9,4 +9,5 @@ public sealed class Participant
     public string? Name { get; set; }
     public string? WhatYouMake { get; set; }
     public string? OnYourHeart { get; set; }
+    public Guid? TeamId { get; set; }
 }

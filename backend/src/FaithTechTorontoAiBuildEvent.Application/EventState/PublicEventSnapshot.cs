@@ -9,4 +9,5 @@ public sealed record PublicEventSnapshot(
     string Venue,
     string EventTime,
     DateTimeOffset CountdownTargetUtc,
-    IReadOnlyList<ProjectCard> Projects);
+    IReadOnlyList<ProjectCard> Projects,
+    IReadOnlyList<PublicTeam> Teams);

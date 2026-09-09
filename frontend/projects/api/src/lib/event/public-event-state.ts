@@ -8,6 +8,7 @@ export interface PublicEventState {
   eventTime: string;
   countdownTargetUtc: string;
   projects: ProjectCard[];
+  teams: PublicTeam[];
 }
 
 export interface ProjectCard {
@@ -16,4 +17,9 @@ export interface ProjectCard {
   description: string;
   repositoryUrl: string | null;
   demoUrl: string | null;
+}
+
+export interface PublicTeam {
+  label: string;
+  members: string[];
 }

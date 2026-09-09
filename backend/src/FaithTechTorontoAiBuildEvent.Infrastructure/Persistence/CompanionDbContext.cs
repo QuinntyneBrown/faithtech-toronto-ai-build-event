@@ -1,6 +1,7 @@
 using FaithTechTorontoAiBuildEvent.Domain.Projects;
 using FaithTechTorontoAiBuildEvent.Domain.Participants;
 using FaithTechTorontoAiBuildEvent.Domain.Access;
+using FaithTechTorontoAiBuildEvent.Domain.Teams;
 using Microsoft.EntityFrameworkCore;
 using DomainEventState = FaithTechTorontoAiBuildEvent.Domain.EventFlow.EventState;
 
@@ -15,6 +16,7 @@ public sealed class CompanionDbContext(DbContextOptions<CompanionDbContext> opti
     public DbSet<ParticipantSession> ParticipantSessions => Set<ParticipantSession>();
     public DbSet<CompanionCredential> CompanionCredentials => Set<CompanionCredential>();
     public DbSet<AdministratorSession> AdministratorSessions => Set<AdministratorSession>();
+    public DbSet<Team> Teams => Set<Team>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -48,6 +50,12 @@ public sealed class CompanionDbContext(DbContextOptions<CompanionDbContext> opti
             builder.Property(participant => participant.NormalizedEmail).HasMaxLength(508).IsRequired();
             builder.Property(participant => participant.PublicLabel).HasMaxLength(64).IsRequired();
             builder.HasIndex(participant => participant.NormalizedEmail).IsUnique();
+        });
+
+        modelBuilder.Entity<Team>(builder =>
+        {
+            builder.HasKey(team => team.Id);
+            builder.Property(team => team.Label).HasMaxLength(64).IsRequired();
         });
 
         modelBuilder.Entity<ParticipantSession>(builder =>

@@ -14,6 +14,12 @@ public sealed class SqlEventStateStore(CompanionDbContext database, IOptions<Eve
             .OrderBy(project => project.Title)
             .Select(project => new ProjectCard(project.Id, project.Title, project.Description, project.RepositoryUrl, project.DemoUrl))
             .ToListAsync(cancellationToken);
+        var teams = await database.Teams.AsNoTracking().OrderBy(team => team.Label).ToListAsync(cancellationToken);
+        var participants = await database.Participants.AsNoTracking().ToListAsync(cancellationToken);
+        var publicTeams = teams.Select(team => new PublicTeam(
+            team.Label,
+            participants.Where(participant => participant.TeamId == team.Id).OrderBy(participant => participant.PublicLabel).Select(participant => participant.Name ?? participant.PublicLabel).ToList()))
+            .ToList();
         var eventOptions = options.Value;
 
         return new PublicEventSnapshot(
@@ -25,7 +31,8 @@ public sealed class SqlEventStateStore(CompanionDbContext database, IOptions<Eve
             eventOptions.Venue,
             eventOptions.EventTime,
             eventOptions.CountdownTargetUtc,
-            projects);
+            projects,
+            publicTeams);
     }
 
     public Task<DateTimeOffset> GetServerTimeAsync(CancellationToken cancellationToken)

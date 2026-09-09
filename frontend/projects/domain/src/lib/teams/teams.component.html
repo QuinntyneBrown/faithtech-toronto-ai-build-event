@@ -1,0 +1,15 @@
+@if (event.loading()) {
+  <cs-card><p>Forming teams…</p></cs-card>
+} @else if (event.state(); as state) {
+  <h1>Team selection</h1>
+  @if (state.teams.length) {
+    @for (team of state.teams; track team.label) {
+      <cs-card>
+        <h2>{{ team.label }}</h2>
+        <ul>@for (member of team.members; track member) { <li>{{ member }}</li> }</ul>
+      </cs-card>
+    }
+  } @else {
+    <cs-empty-state title="No teams have formed yet" />
+  }
+}
