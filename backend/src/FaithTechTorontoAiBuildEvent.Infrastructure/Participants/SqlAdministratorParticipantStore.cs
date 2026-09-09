@@ -79,8 +79,21 @@ public sealed class SqlAdministratorParticipantStore(CompanionDbContext database
         await updatePublisher.PublishAsync(state.Version, cancellationToken);
     }
 
-    public async Task<AdministratorParticipant> UpdateAsync(Guid participantId, string email, string normalizedEmail, AdministratorParticipantInput input, long expectedVersion, CancellationToken cancellationToken)
+    public async Task<AdministratorParticipant> UpdateAsync(Guid operationId, byte[] inputDigest, Guid participantId, string email, string normalizedEmail, AdministratorParticipantInput input, long expectedVersion, CancellationToken cancellationToken)
     {
+        var receipt = await database.EventOperationReceipts.SingleOrDefaultAsync(candidate => candidate.OperationId == operationId, cancellationToken);
+        if (receipt is not null)
+        {
+            if (receipt.OperationKind != "update-administrator-participant"
+                || !CryptographicOperations.FixedTimeEquals(receipt.InputDigest, inputDigest)
+                || receipt.ResultJson is null)
+            {
+                throw new EntryValidationException("The operation identity was already used with different input.");
+            }
+            return JsonSerializer.Deserialize<AdministratorParticipant>(receipt.ResultJson)
+                ?? throw new InvalidOperationException("The saved operation result is unavailable.");
+        }
+
         var state = await database.EventStates.SingleAsync(cancellationToken);
         if (state.Version != expectedVersion) throw new InvalidOperationException("Participant roster changed; reload and try again.");
         var participant = await database.Participants.SingleOrDefaultAsync(candidate => candidate.Id == participantId, cancellationToken) ?? throw new KeyNotFoundException("Participant not found.");
@@ -91,11 +104,22 @@ public sealed class SqlAdministratorParticipantStore(CompanionDbContext database
         participant.WhatYouMake = BlankToNull(input.WhatYouMake);
         participant.OnYourHeart = BlankToNull(input.OnYourHeart);
         state.Version++;
-        await database.SaveChangesAsync(cancellationToken);
-        await updatePublisher.PublishAsync(state.Version, cancellationToken);
         var teamLabel = participant.TeamId is { } teamId ? await database.Teams.Where(team => team.Id == teamId).Select(team => team.Label).SingleOrDefaultAsync(cancellationToken) : null;
         var hasWon = await database.RaffleDraws.AnyAsync(draw => draw.WinnerParticipantId == participantId, cancellationToken);
-        return new AdministratorParticipant(participant.Id, participant.Email, participant.PublicLabel, participant.Name, participant.WhatYouMake, participant.OnYourHeart, teamLabel, hasWon);
+        var result = new AdministratorParticipant(participant.Id, participant.Email, participant.PublicLabel, participant.Name, participant.WhatYouMake, participant.OnYourHeart, teamLabel, hasWon);
+        database.EventOperationReceipts.Add(new EventOperationReceipt
+        {
+            OperationId = operationId,
+            OperationKind = "update-administrator-participant",
+            InputDigest = inputDigest,
+            ResultId = participant.Id,
+            ResultJson = JsonSerializer.Serialize(result),
+            ResultVersion = state.Version,
+            CreatedAtUtc = DateTimeOffset.UtcNow
+        });
+        await database.SaveChangesAsync(cancellationToken);
+        await updatePublisher.PublishAsync(state.Version, cancellationToken);
+        return result;
     }
 
     public async Task<IReadOnlyList<AdministratorParticipant>> ListAsync(CancellationToken cancellationToken)
