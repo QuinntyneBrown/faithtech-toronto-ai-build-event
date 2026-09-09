@@ -1,0 +1,13 @@
+@if (event.loading()) {
+  <cs-card><p>Preparing the evening…</p></cs-card>
+} @else if (event.error(); as error) {
+  <cs-card><p role="alert">{{ error }}</p></cs-card>
+} @else if (event.state(); as state) {
+  <event-header [title]="state.title" [eventTime]="state.eventTime" />
+  <cs-card>
+    <h2>{{ state.welcome }}</h2>
+    <p>{{ state.purpose }}</p>
+    <p>{{ state.venue }}</p>
+    <cs-countdown [target]="+state.countdownTargetUtc" [now]="now()" ariaLabel="Time until welcome" />
+  </cs-card>
+}

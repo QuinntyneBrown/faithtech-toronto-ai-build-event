@@ -1,1 +1,1 @@
-export * from './lib/stub-page';
+export * from "./lib/event-header/event-header.component";

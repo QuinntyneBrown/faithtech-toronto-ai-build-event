@@ -1,17 +1,20 @@
 using FaithTechTorontoAiBuildEvent.Application.Operations;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Data.SqlClient;
+
 namespace FaithTechTorontoAiBuildEvent.Infrastructure.Operations;
-public sealed class SqlReadinessStore(EventDbContext database) : IReadinessStore
+
+public sealed class SqlReadinessStore(CompanionDbContext database) : IReadinessStore
 {
-    public async Task<bool> IsReady(CancellationToken cancellationToken)
+    public async Task<bool> IsReadyAsync(CancellationToken cancellationToken)
     {
         try
         {
-            return await database.Database.CanConnectAsync(cancellationToken) &&
-                !(await database.Database.GetPendingMigrationsAsync(cancellationToken)).Any();
+            return await database.EventStates.AnyAsync(cancellationToken);
         }
-        catch (SqlException) { return false; }
+        catch (InvalidOperationException)
+        {
+            return false;
+        }
     }
 }

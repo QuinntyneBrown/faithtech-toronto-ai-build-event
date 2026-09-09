@@ -1,42 +1,22 @@
 {
-  "compileOnSave": false,
   "compilerOptions": {
-    "strict": true,
-    "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "skipLibCheck": true,
-    "isolatedModules": true,
-    "experimentalDecorators": true,
-    "importHelpers": true,
     "target": "ES2022",
     "module": "preserve",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "experimentalDecorators": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "lib": ["ES2022", "dom"],
+    "baseUrl": ".",
     "paths": {
-      "@faithtech/api": [
-        "./dist/api"
-      ],
-      "@faithtech/components": [
-        "./dist/components"
-      ],
-      "@faithtech/domain": [
-        "./dist/domain"
-      ]
+      "@faithtech/api": ["projects/api/src/public-api.ts"],
+      "@faithtech/components": ["projects/components/src/public-api.ts"],
+      "@faithtech/domain": ["projects/domain/src/public-api.ts"]
     }
   },
   "angularCompilerOptions": {
-    "enableI18nLegacyMessageIdFormat": false,
-    "strictInjectionParameters": true,
-    "strictInputAccessModifiers": true,
-    "strictTemplates": true
-  },
-  "files": [],
-  "references": [
-    {
-      "path": "./projects/admin/tsconfig.app.json"
-    },
-    {
-      "path": "./projects/client/tsconfig.app.json"
-    }
-  ]
+    "strictTemplates": true,
+    "strictInjectionParameters": true
+  }
 }

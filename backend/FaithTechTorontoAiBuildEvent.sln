@@ -1,0 +1,32 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FaithTechTorontoAiBuildEvent.Domain", "src\FaithTechTorontoAiBuildEvent.Domain\FaithTechTorontoAiBuildEvent.Domain.csproj", "{0792E74A-A7ED-4EA0-B4CA-D0FE8D2EE5A0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FaithTechTorontoAiBuildEvent.Application", "src\FaithTechTorontoAiBuildEvent.Application\FaithTechTorontoAiBuildEvent.Application.csproj", "{1BD612F1-85A6-4C26-9D4A-9807946E9C90}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FaithTechTorontoAiBuildEvent.Infrastructure", "src\FaithTechTorontoAiBuildEvent.Infrastructure\FaithTechTorontoAiBuildEvent.Infrastructure.csproj", "{2AC8BEB5-3FC4-4989-B32D-3B947A679F5A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FaithTechTorontoAiBuildEvent.Api", "src\FaithTechTorontoAiBuildEvent.Api\FaithTechTorontoAiBuildEvent.Api.csproj", "{3671DA76-11EC-40D6-8A6B-954538A1E7BF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FaithTechTorontoAiBuildEvent.AcceptanceTests", "tests\FaithTechTorontoAiBuildEvent.AcceptanceTests\FaithTechTorontoAiBuildEvent.AcceptanceTests.csproj", "{46F00B31-B902-490B-9F17-2B49B847598C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0792E74A-A7ED-4EA0-B4CA-D0FE8D2EE5A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0792E74A-A7ED-4EA0-B4CA-D0FE8D2EE5A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1BD612F1-85A6-4C26-9D4A-9807946E9C90}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1BD612F1-85A6-4C26-9D4A-9807946E9C90}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2AC8BEB5-3FC4-4989-B32D-3B947A679F5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2AC8BEB5-3FC4-4989-B32D-3B947A679F5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3671DA76-11EC-40D6-8A6B-954538A1E7BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3671DA76-11EC-40D6-8A6B-954538A1E7BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46F00B31-B902-490B-9F17-2B49B847598C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46F00B31-B902-490B-9F17-2B49B847598C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+	EndGlobalSection
+EndGlobal
