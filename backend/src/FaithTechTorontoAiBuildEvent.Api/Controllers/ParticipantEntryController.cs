@@ -48,4 +48,13 @@ public sealed class ParticipantEntryController(ISender sender) : ControllerBase
             return BadRequest(new ProblemDetails { Detail = exception.Message, Status = StatusCodes.Status400BadRequest });
         }
     }
+
+    [HttpGet("session")]
+    public async Task<ActionResult<ParticipantSessionResponse>> GetSession(CancellationToken cancellationToken)
+    {
+        var session = await sender.Send(new GetParticipantSessionQuery(Request.Cookies["faithtech-participant"]), cancellationToken);
+        return session is null
+            ? Unauthorized()
+            : Ok(new ParticipantSessionResponse(session.ParticipantId, session.PublicLabel));
+    }
 }

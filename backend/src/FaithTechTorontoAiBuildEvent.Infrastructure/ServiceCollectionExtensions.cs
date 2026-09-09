@@ -23,6 +23,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IReadinessStore, SqlReadinessStore>();
         services.AddScoped<IEntryReceiptStore, SqlEntryReceiptStore>();
         services.AddScoped<IEntryStore, SqlEntryStore>();
+        services.AddScoped<IParticipantSessionStore, SqlParticipantSessionStore>();
         services.AddSingleton<IEntryReceiptSecretService, EntryReceiptSecretService>();
         services.AddHostedService<EventStateInitializer>();
         return services;
