@@ -1,11 +1,11 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from "@angular/core";
+import { ChangeDetectionStrategy, Component, effect, inject, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { CardComponent, CsButtonDirective, CsInputDirective, EmptyStateComponent, FieldComponent } from "@quinntyne/cornerstone";
-import { ADMINISTRATOR_SESSION_SERVICE, EVENT_SERVICE, ROSTER_SERVICE } from "@faithtech/api";
+import { CardComponent, ConfirmDialogComponent, CsButtonDirective, CsInputDirective, CsTextareaDirective, DialogService, EmptyStateComponent, FieldComponent } from "@quinntyne/cornerstone";
+import { ADMINISTRATOR_SESSION_SERVICE, AdministratorParticipant, AdministratorParticipantInput, EVENT_SERVICE, ROSTER_SERVICE } from "@faithtech/api";
 
 @Component({
   selector: "event-participant-roster",
-  imports: [CardComponent, CsButtonDirective, CsInputDirective, EmptyStateComponent, FieldComponent, FormsModule],
+  imports: [CardComponent, CsButtonDirective, CsInputDirective, CsTextareaDirective, EmptyStateComponent, FieldComponent, FormsModule],
   templateUrl: "./participant-roster.component.html",
   styleUrl: "./participant-roster.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -15,11 +15,48 @@ export class ParticipantRosterComponent {
   readonly administrator = inject(ADMINISTRATOR_SESSION_SERVICE);
   readonly event = inject(EVENT_SERVICE);
   readonly email = signal("");
+  readonly drafts = signal<Record<string, AdministratorParticipantInput>>({});
+  private readonly dialogs = inject(DialogService);
+
+  constructor() {
+    effect(() => {
+      if (this.administrator.active()) this.roster.load();
+    });
+  }
 
   refresh(): void { this.roster.load(); }
 
   add(): void {
     const version = this.event.state()?.version;
     if (version) this.roster.add(this.email(), version);
+  }
+
+  draftFor(participant: AdministratorParticipant): AdministratorParticipantInput {
+    return this.drafts()[participant.id] ?? {
+      email: participant.email,
+      name: participant.name,
+      whatYouMake: participant.whatYouMake,
+      onYourHeart: participant.onYourHeart
+    };
+  }
+
+  updateDraft(participant: AdministratorParticipant, field: keyof AdministratorParticipantInput, value: string): void {
+    this.drafts.update(drafts => ({ ...drafts, [participant.id]: { ...this.draftFor(participant), [field]: value || null } }));
+  }
+
+  save(participant: AdministratorParticipant): void {
+    const version = this.event.state()?.version;
+    if (version) this.roster.update(participant.id, this.draftFor(participant), version);
+  }
+
+  remove(participant: AdministratorParticipant): void {
+    const version = this.event.state()?.version;
+    if (!version) return;
+    const dialog = this.dialogs.open(ConfirmDialogComponent, {
+      data: { title: "Remove participant?", message: `${participant.publicLabel} will lose their entry, profile, and team membership. This cannot be undone.`, confirmLabel: "Remove", cancelLabel: "Keep participant", tone: "danger" }
+    });
+    dialog.closed.subscribe(result => {
+      if (result === "confirm") this.roster.remove(participant.id, version);
+    });
   }
 }

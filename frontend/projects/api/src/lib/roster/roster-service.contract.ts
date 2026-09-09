@@ -1,4 +1,5 @@
 import { Signal } from "@angular/core";
+import { AdministratorParticipantInput } from "./administrator-participant-input";
 
 export interface AdministratorParticipant {
   id: string;
@@ -17,4 +18,6 @@ export interface IRosterService {
   readonly error: Signal<string | null>;
   load(): void;
   add(email: string, expectedVersion: string): void;
+  update(participantId: string, input: AdministratorParticipantInput, expectedVersion: string): void;
+  remove(participantId: string, expectedVersion: string): void;
 }
