@@ -5,6 +5,7 @@ export interface IAdministratorSessionService {
   readonly loading: Signal<boolean>;
   readonly error: Signal<string | null>;
   load(): void;
+  recordInteraction(): void;
   signIn(passcode: string): void;
   signOut(): void;
 }

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, effect, inject } from "@angular/core";
+import { ChangeDetectionStrategy, Component, HostListener, effect, inject } from "@angular/core";
 import { Router, RouterOutlet } from "@angular/router";
 import { CardComponent, CsButtonDirective } from "@quinntyne/cornerstone";
 import { ADMINISTRATOR_SESSION_SERVICE, EVENT_SERVICE } from "@faithtech/api";
@@ -24,5 +24,15 @@ export class AppComponent {
         void this.router.navigateByUrl(`/${screen}`);
       }
     });
+  }
+
+  @HostListener("document:pointerdown", ["$event"])
+  protected onPointerInteraction(event: PointerEvent): void {
+    if (event.isTrusted) this.administrator.recordInteraction();
+  }
+
+  @HostListener("document:keydown", ["$event"])
+  protected onKeyboardInteraction(event: KeyboardEvent): void {
+    if (event.isTrusted) this.administrator.recordInteraction();
   }
 }

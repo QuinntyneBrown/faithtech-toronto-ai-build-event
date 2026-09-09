@@ -7,6 +7,8 @@ export class AdministratorSessionService implements IAdministratorSessionService
   readonly active = signal(false);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
+  private lastInteractionReportAt = Number.NEGATIVE_INFINITY;
+  private interactionReportPending = false;
 
   constructor(private readonly http: HttpClient) {}
 
@@ -17,12 +19,29 @@ export class AdministratorSessionService implements IAdministratorSessionService
     });
   }
 
+  recordInteraction(): void {
+    const now = performance.now();
+    if (!this.active() || this.interactionReportPending || now - this.lastInteractionReportAt < 30_000) return;
+
+    this.interactionReportPending = true;
+    this.lastInteractionReportAt = now;
+    this.http.post<void>("/api/admin/session/interaction", null).subscribe({
+      next: () => this.interactionReportPending = false,
+      error: () => {
+        this.interactionReportPending = false;
+        this.active.set(false);
+        this.error.set("Your administrator session has ended.");
+      }
+    });
+  }
+
   signIn(passcode: string): void {
     this.loading.set(true);
     this.error.set(null);
     this.http.post<{ authenticated: boolean }>("/api/admin/session", { passcode }).subscribe({
       next: state => {
         this.active.set(state.authenticated);
+        this.lastInteractionReportAt = performance.now();
         this.loading.set(false);
       },
       error: (response: HttpErrorResponse) => {
