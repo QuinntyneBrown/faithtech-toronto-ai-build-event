@@ -8,6 +8,8 @@ builder.Services.AddControllers();
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<IEventUpdatePublisher, SignalREventUpdatePublisher>();
 builder.Services.AddHostedService<EventChangePublisher>();
+builder.Services.AddSingleton<IPrivateConnectionRegistry, PrivateConnectionRegistry>();
+builder.Services.AddHostedService<PrivateSessionInvalidationWatcher>();
 builder.Services.AddMediatR(configuration => configuration.RegisterServicesFromAssemblyContaining<GetPublicEventSnapshotQuery>());
 builder.Services.AddCompanionInfrastructure(builder.Configuration);
 
@@ -15,8 +17,8 @@ var application = builder.Build();
 application.UseMiddleware<SameOriginMutationMiddleware>();
 application.MapControllers();
 application.MapHub<EventUpdatesHub>("/hubs/event-updates");
-application.MapHub<AdministratorUpdatesHub>("/hubs/administrator-updates");
-application.MapHub<ParticipantUpdatesHub>("/hubs/participant-updates");
+application.MapHub<AdministratorUpdatesHub>("/api/admin/updates");
+application.MapHub<ParticipantUpdatesHub>("/api/participant/updates");
 application.Run();
 
 public partial class Program;

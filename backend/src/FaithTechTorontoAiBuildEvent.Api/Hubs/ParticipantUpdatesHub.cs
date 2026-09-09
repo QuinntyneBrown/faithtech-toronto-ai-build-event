@@ -3,7 +3,10 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace FaithTechTorontoAiBuildEvent.Api.Hubs;
 
-public sealed class ParticipantUpdatesHub(IParticipantSessionStore sessions, IEntryReceiptSecretService secretService) : Hub
+public sealed class ParticipantUpdatesHub(
+    IParticipantSessionStore sessions,
+    IEntryReceiptSecretService secretService,
+    IPrivateConnectionRegistry connections) : Hub
 {
     public override async Task OnConnectedAsync()
     {
@@ -13,6 +16,13 @@ public sealed class ParticipantUpdatesHub(IParticipantSessionStore sessions, IEn
             Context.Abort();
             return;
         }
+        connections.Add(new PrivateConnectionRegistration(Context.ConnectionId, PrivateSessionKind.Participant, secretService.Digest(secret)));
         await base.OnConnectedAsync();
+    }
+
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        connections.Remove(Context.ConnectionId);
+        await base.OnDisconnectedAsync(exception);
     }
 }
