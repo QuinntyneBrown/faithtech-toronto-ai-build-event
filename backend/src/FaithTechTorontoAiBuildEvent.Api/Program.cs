@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<IEventUpdatePublisher, SignalREventUpdatePublisher>();
+builder.Services.AddHostedService<EventChangePublisher>();
 builder.Services.AddMediatR(configuration => configuration.RegisterServicesFromAssemblyContaining<GetPublicEventSnapshotQuery>());
 builder.Services.AddCompanionInfrastructure(builder.Configuration);
 

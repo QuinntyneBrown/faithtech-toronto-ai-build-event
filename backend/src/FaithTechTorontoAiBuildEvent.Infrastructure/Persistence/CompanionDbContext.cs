@@ -5,12 +5,14 @@ using FaithTechTorontoAiBuildEvent.Domain.Teams;
 using FaithTechTorontoAiBuildEvent.Domain.Raffle;
 using Microsoft.EntityFrameworkCore;
 using DomainEventState = FaithTechTorontoAiBuildEvent.Domain.EventFlow.EventState;
+using DomainEventChange = FaithTechTorontoAiBuildEvent.Domain.EventFlow.EventChange;
 
 namespace FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
 
 public sealed class CompanionDbContext(DbContextOptions<CompanionDbContext> options) : DbContext(options)
 {
     public DbSet<DomainEventState> EventStates => Set<DomainEventState>();
+    public DbSet<DomainEventChange> EventChanges => Set<DomainEventChange>();
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<EntryReceipt> EntryReceipts => Set<EntryReceipt>();
     public DbSet<Participant> Participants => Set<Participant>();
@@ -30,6 +32,11 @@ public sealed class CompanionDbContext(DbContextOptions<CompanionDbContext> opti
             builder.HasKey(state => state.Id);
             builder.Property(state => state.Version).IsRequired();
             builder.Property(state => state.CurrentScreen).HasConversion<string>().HasMaxLength(16);
+        });
+
+        modelBuilder.Entity<DomainEventChange>(builder =>
+        {
+            builder.HasKey(change => change.Version);
         });
 
         modelBuilder.Entity<Project>(builder =>
@@ -111,5 +118,18 @@ public sealed class CompanionDbContext(DbContextOptions<CompanionDbContext> opti
             builder.HasKey(candidate => new { candidate.DrawId, candidate.ParticipantId });
             builder.Property(candidate => candidate.Label).HasMaxLength(64).IsRequired();
         });
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        var versions = ChangeTracker.Entries<DomainEventState>()
+            .Where(entry => entry.State == EntityState.Modified && entry.Property(state => state.Version).IsModified)
+            .Select(entry => entry.Entity.Version)
+            .ToList();
+        foreach (var version in versions)
+        {
+            EventChanges.Add(new DomainEventChange { Version = version, OccurredAtUtc = DateTimeOffset.UtcNow });
+        }
+        return base.SaveChangesAsync(cancellationToken);
     }
 }
