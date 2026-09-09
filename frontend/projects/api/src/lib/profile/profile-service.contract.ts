@@ -12,4 +12,5 @@ export interface IProfileService {
   readonly error: Signal<string | null>;
   load(): void;
   save(input: ParticipantProfile, expectedVersion: string): void;
+  clear(): void;
 }

@@ -35,4 +35,9 @@ export class ProfileService implements IProfileService {
       }
     });
   }
+
+  clear(): void {
+    this.profile.set(null);
+    this.error.set(null);
+  }
 }

@@ -1,7 +1,8 @@
 import { HttpClient } from "@angular/common/http";
-import { Injectable, signal } from "@angular/core";
+import { Injectable, inject, signal } from "@angular/core";
 import { switchMap } from "rxjs";
 import { EntryConfirmation, IEntryService } from "./entry-service.contract";
+import { PROFILE_SERVICE } from "../profile/profile-service.token";
 
 interface EntryReceiptResponse {
   operationId: string;
@@ -12,6 +13,7 @@ export class EntryService implements IEntryService {
   readonly confirmation = signal<EntryConfirmation | null>(null);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
+  private readonly profile = inject(PROFILE_SERVICE);
 
   constructor(private readonly http: HttpClient) {}
 
@@ -39,13 +41,13 @@ export class EntryService implements IEntryService {
   load(): void {
     this.http.get<EntryConfirmation>("/api/participant/session").subscribe({
       next: confirmation => this.confirmation.set(confirmation),
-      error: () => this.confirmation.set(null)
+      error: () => { this.confirmation.set(null); this.profile.clear(); }
     });
   }
 
   leave(): void {
     this.http.delete<void>("/api/participant/session").subscribe({
-      next: () => { this.confirmation.set(null); this.error.set(null); },
+      next: () => { this.confirmation.set(null); this.error.set(null); this.profile.clear(); },
       error: () => this.error.set("We could not clear this browser session. Try again.")
     });
   }
