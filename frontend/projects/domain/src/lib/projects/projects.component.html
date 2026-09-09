@@ -15,6 +15,10 @@
     </cs-card>
   }
   @if (projects.error(); as error) { <p role="alert">{{ error }}</p> }
+  @if (administrator.active()) {
+    @if (flow.error(); as error) { <p role="alert">{{ error }}</p> }
+    <button csButton type="button" (click)="advance()" [disabled]="!event.connected() || flow.loading()">Form teams</button>
+  }
   @if (state.projects.length) {
     @for (project of state.projects; track project.id) {
       <cs-card>
