@@ -31,7 +31,11 @@ export class ProjectsComponent {
   remove(project: ProjectCard): void {
     const version = this.event.state()?.version;
     if (!version) return;
-    const dialog = this.dialogs.open(ConfirmDialogComponent, { data: { title: "Remove project?", message: `${project.title} will no longer be available for team assignment.`, confirmLabel: "Remove", cancelLabel: "Keep project", tone: "danger" } });
+    const assignedTeams = this.event.state()?.teams.filter(team => team.projectId === project.id).map(team => team.label) ?? [];
+    const assignmentNotice = assignedTeams.length
+      ? ` Assigned teams that will be cleared: ${assignedTeams.join(", ")}.`
+      : " No teams are currently assigned.";
+    const dialog = this.dialogs.open(ConfirmDialogComponent, { data: { title: "Remove project?", message: `${project.title} will no longer be available for team assignment.${assignmentNotice}`, confirmLabel: "Remove", cancelLabel: "Keep project", tone: "danger" } });
     dialog.closed.subscribe(result => { if (result === "confirm") this.projects.remove(project.id, version); });
   }
   advance(): void { const state = this.event.state(); if (state) this.flow.advance("projects", "teams", state.version); }
