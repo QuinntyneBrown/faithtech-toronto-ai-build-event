@@ -4,10 +4,11 @@ using FaithTechTorontoAiBuildEvent.Domain.Teams;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using DomainEventState = FaithTechTorontoAiBuildEvent.Domain.EventFlow.EventState;
+using FaithTechTorontoAiBuildEvent.Application.EventState;
 
 namespace FaithTechTorontoAiBuildEvent.Infrastructure.Teams;
 
-public sealed class SqlTeamStore(CompanionDbContext database) : ITeamStore
+public sealed class SqlTeamStore(CompanionDbContext database, IEventUpdatePublisher updatePublisher) : ITeamStore
 {
     public async Task AssignProjectAsync(Guid teamId, Guid? projectId, long expectedVersion, CancellationToken cancellationToken)
     {
@@ -20,6 +21,7 @@ public sealed class SqlTeamStore(CompanionDbContext database) : ITeamStore
         team.ProjectId = projectId;
         state.Version++;
         await database.SaveChangesAsync(cancellationToken);
+        await updatePublisher.PublishAsync(state.Version, cancellationToken);
     }
 
     public async Task MoveAsync(Guid participantId, string destination, Guid? teamId, long expectedVersion, CancellationToken cancellationToken)
@@ -48,6 +50,7 @@ public sealed class SqlTeamStore(CompanionDbContext database) : ITeamStore
 
         state.Version++;
         await database.SaveChangesAsync(cancellationToken);
+        await updatePublisher.PublishAsync(state.Version, cancellationToken);
     }
 
     private async Task<DomainEventState> GetTeamsStateAsync(long expectedVersion, CancellationToken cancellationToken)
