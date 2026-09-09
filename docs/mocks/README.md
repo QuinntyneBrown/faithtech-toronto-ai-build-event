@@ -1,6 +1,6 @@
 # FaithTech Toronto event companion — Angular mock
 
-A complete, interactive **design and planning artifact** for the four-screen event companion. This workspace is independent of the production frontend and backend. It uses Angular 21 and the published `@quinntyne/cornerstone@0.1.3` package.
+A complete, interactive **design and planning artifact** for the four-screen event companion. This workspace is independent of the production frontend and backend. It uses Angular 21 and the published `@quinntyne/cornerstone@0.2.0` package.
 
 ## Run
 
@@ -17,7 +17,7 @@ Open **http://localhost:4300** in Chrome. The mock administrator passcode is **0
 npm run build
 ```
 
-The build command packages the components library, then compiles the application. Application output is `dist/app/browser`; library output is `dist/components`. A static server needs an index fallback for Angular routes. The development server provides this automatically. There are no tests, test scripts, test targets, or testing dependencies. Verification for this artifact consists of compilation/build checks only; no browser-testing pass was performed.
+The build command compiles the application to `dist/app/browser`. A static server needs an index fallback for Angular routes. The development server provides this automatically. This design artifact has no automated test suite; verification consists of compilation and manual browser checks.
 
 ## Workspace
 
@@ -27,10 +27,9 @@ docs/mocks/
   package.json
   projects/
     app/           # Four routed screens, event state, mock adapter, host tools
-    components/    # Reusable proposed Cornerstone additions
 ```
 
-`app` consumes `components` through the workspace alias `@mock/components`. Both consume the real npm Cornerstone package; neither requires a local Cornerstone checkout. Components have separate class, template, and style files. The application's mock service is consumed through `IEventService` and `EVENT_SERVICE`; state lives in Angular signals. Presentation components accept inputs and emit outputs and never import the application or its service.
+The app consumes published Cornerstone components directly: `cs-countdown`, `cs-team-board`, `cs-raffle-stage`, and `cs-review-dialog`. Its mock service is consumed through `IEventService` and `EVENT_SERVICE`; state lives in Angular signals.
 
 ## Rehearse the evening
 
@@ -55,18 +54,9 @@ BroadcastChannel notifies same-origin tabs; localStorage holds the shared synthe
 
 Use localhost or HTTPS in Chrome with storage enabled. If stored fixture data becomes incompatible, reset it through Mock controls. The UI explains unavailable storage and synchronization. Do not enter real personal information: browser persistence and the public demo passcode are presentation conveniences, not production authorization or privacy controls.
 
-## Proposed Cornerstone additions
+## Published Cornerstone composition
 
-| Addition                      | Responsibility and upstream handoff                                                                                                                                                                                                                          |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `CountdownComponent`          | Token-based countdown presentation; receives target/current time and makes no scheduling decisions.                                                                                                                                                          |
-| `TeamBoardComponent`          | Group/member presentation, Angular CDK cross-group dragging, accessible move menus, and project selection. Emits move/assignment intents; owns no event data. The published drag-list wrapper alone does not expose the complete required board interaction. |
-| `RaffleStageComponent`        | Receives a saved draw timeline/result; cycles labels, reveals text, honors reduced motion and stop-effects, and manages WebGPU/fallback particles. It never selects a winner.                                                                                |
-| `ReviewDialogComponent`       | Cornerstone dialog-shell composition using native modal focus containment, unique accessible headings, and dismissal events.                                                                                                                                 |
-| `NativeControlStateDirective` | Proposed correction for native button disabled state and select value/disabled synchronization. It supplements the published Cornerstone directives without modifying the installed package.                                                                 |
-| `proposal-tokens.scss`        | Only missing event-composition roles, under `--cs-event-*`; existing Cornerstone tokens are consumed directly, never copied.                                                                                                                                 |
-
-Buttons, inputs, fields, textareas, selects, cards, badges, alerts, roster-table styling, and dialog content use published Cornerstone primitives. Layout, tokens, and additional interactions proposed here remain local **only because this is a mock artifact**. Production adoption requires upstream implementation/review and a published Cornerstone release.
+Buttons, inputs, fields, textareas, selects, cards, badges, alerts, countdown, team board, raffle stage, and review dialog use the published Cornerstone package. The app supplies event state and commands: it owns the relative clock, saved raffle selection and synchronized reveal time, and mock persistence; Cornerstone owns presentation, control state, focus containment, drag-and-drop, and effects.
 
 ## Deliberate boundaries
 
