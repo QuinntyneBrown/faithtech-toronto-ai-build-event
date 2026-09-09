@@ -16,7 +16,7 @@
       @if (entry.error(); as error) {
         <p role="alert">{{ error }}</p>
       }
-      <button csButton type="submit" [disabled]="entry.loading()">Count me in</button>
+      <button csButton type="submit" [disabled]="entry.loading() || !event.connected()">Count me in</button>
     </form>
   }
 </cs-card>

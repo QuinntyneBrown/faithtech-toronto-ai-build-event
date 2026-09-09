@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, effect, inject, input, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { CsButtonDirective, CsInputDirective, CsTextareaDirective, FieldComponent } from "@quinntyne/cornerstone";
-import { PROFILE_SERVICE } from "@faithtech/api";
+import { EVENT_SERVICE, PROFILE_SERVICE } from "@faithtech/api";
 
 @Component({
   selector: "event-profile-form",
@@ -12,6 +12,7 @@ import { PROFILE_SERVICE } from "@faithtech/api";
 })
 export class ProfileFormComponent {
   readonly profileService = inject(PROFILE_SERVICE);
+  readonly event = inject(EVENT_SERVICE);
   readonly eventVersion = input.required<string>();
   readonly name = signal("");
   readonly whatYouMake = signal("");

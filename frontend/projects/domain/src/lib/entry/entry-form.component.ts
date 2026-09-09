@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, input, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { BadgeComponent, CardComponent, CsButtonDirective, CsInputDirective, FieldComponent } from "@quinntyne/cornerstone";
-import { ENTRY_SERVICE } from "@faithtech/api";
+import { ENTRY_SERVICE, EVENT_SERVICE } from "@faithtech/api";
 import { ProfileFormComponent } from "../profile/profile-form.component";
 
 @Component({
@@ -13,6 +13,7 @@ import { ProfileFormComponent } from "../profile/profile-form.component";
 })
 export class EntryFormComponent {
   readonly entry = inject(ENTRY_SERVICE);
+  readonly event = inject(EVENT_SERVICE);
   readonly email = signal("");
   readonly eventVersion = input.required<string>();
 
