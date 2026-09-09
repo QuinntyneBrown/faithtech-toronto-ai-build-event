@@ -29,7 +29,7 @@
     people. Assign a project beneath each team.
   </p>
 }
-<mock-team-board
+<cs-team-board
   [groups]="groups()"
   [members]="members()"
   [projects]="event.state().projects"
@@ -38,6 +38,7 @@
   [currentMember]="event.participant()?.id || ''"
   (moved)="move($event)"
   (assigned)="assign($event)"
+  (newTeamRequested)="createTeam($event)"
 />
 <p class="closing-note">
   Listen first. Name the need. Make room for every voice.

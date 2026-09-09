@@ -4,12 +4,14 @@ import {
   computed,
   inject,
 } from "@angular/core";
-import { BadgeComponent, CardComponent } from "@quinntyne/cornerstone";
 import {
+  BadgeComponent,
+  CardComponent,
   TeamBoardComponent,
-  MemberMove,
-  ProjectAssignment,
-} from "@mock/components";
+  type MemberMove,
+  type NewTeamRequest,
+  type ProjectAssignment,
+} from "@quinntyne/cornerstone";
 import { EVENT_SERVICE } from "../../data/event-service.token";
 @Component({
   selector: "mock-teams-page",
@@ -50,6 +52,13 @@ export class TeamsPageComponent {
       type: "move",
       participantId: event.memberId,
       teamId: event.groupId || null,
+    });
+  }
+  createTeam(event: NewTeamRequest): void {
+    void this.event.dispatch({
+      type: "move",
+      participantId: event.memberId,
+      teamId: "new",
     });
   }
   assign(event: ProjectAssignment): void {
