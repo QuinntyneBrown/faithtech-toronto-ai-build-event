@@ -3,7 +3,9 @@
 A disposable local dashboard for the September 9 event companion, visually
 inspired by [Open MCT](https://nasa.github.io/openmct/). Plain HTML, CSS and browser
 JavaScript; a small Node built-in HTTP server. No install, build or database.
-The user approved standalone code and a dark theme for this dashboard only.
+The user approved standalone code and a dark theme for this dashboard only. Its
+audit counts only MVP requirements; requirements explicitly marked NON-MVP in
+`docs/specs/L2.md` are excluded from all dashboard totals and estimates.
 
 From the repository root:
 

@@ -1,8 +1,9 @@
 # Throwaway project dashboard
 
 This developer aid is separate from the event companion and is not a fifth event
-screen. Its scope is the 34 active requirements in L2.md; legacy features and the
-dashboard itself do not count toward event completion.
+screen. Its scope is the 30 MVP requirements in L2.md; legacy features, the four
+wholly NON-MVP requirements (L2-039, L2-041, L2-042, and L2-051), and the dashboard
+itself do not count toward event completion.
 
 ## DB-L1-001: Understand remaining work and track completion
 
@@ -55,7 +56,8 @@ Traces to: DB-L1-001.
 
 1. Given audited statuses, when the dashboard opens, then one dominant number shows
    estimated development completion, with equal requirement weights: not started
-   0%, in progress 50%, needs verification 90%, accepted 100%. The baseline is 66%.
+   0%, in progress 50%, needs verification 90%, accepted 100%. Wholly NON-MVP
+   requirements are excluded before calculating the baseline, which is 64%.
 2. Given a status changes or saved reviews are restored, when rendered, then the
    estimate updates from the whole scope regardless of search or workstream filters.
 3. Given no requirements or none started, when estimated, then display 0%; show 100%

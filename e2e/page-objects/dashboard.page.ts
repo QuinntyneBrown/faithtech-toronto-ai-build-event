@@ -3,7 +3,7 @@ import { expect, Page } from '@playwright/test';
 export class DashboardPage {
   constructor(readonly page: Page) {}
   async open() { await this.page.goto('/'); await expect(this.page.getByRole('heading', { name: 'Project completion' })).toBeVisible(); }
-  async expectBaseline() { await expect(this.page.getByTestId('remaining')).toHaveText('34'); await expect(this.page.getByRole('button', { name: /L2-009/ })).toBeVisible(); }
+  async expectBaseline() { await expect(this.page.getByTestId('remaining')).toHaveText('30'); await expect(this.page.getByRole('button', { name: /L2-009/ })).toBeVisible(); }
   async search(text: string) { await this.page.getByRole('searchbox', { name: 'Search requirements' }).fill(text); }
   async expectNoMatches() { await expect(this.page.getByText('No requirements match these filters.')).toBeVisible(); }
   async inspect(id: string) { await this.page.getByRole('button', { name: new RegExp(id) }).click(); }
