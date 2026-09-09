@@ -1,4 +1,5 @@
 using FaithTechTorontoAiBuildEvent.Domain.Projects;
+using FaithTechTorontoAiBuildEvent.Domain.Participants;
 using Microsoft.EntityFrameworkCore;
 using DomainEventState = FaithTechTorontoAiBuildEvent.Domain.EventFlow.EventState;
 
@@ -8,6 +9,7 @@ public sealed class CompanionDbContext(DbContextOptions<CompanionDbContext> opti
 {
     public DbSet<DomainEventState> EventStates => Set<DomainEventState>();
     public DbSet<Project> Projects => Set<Project>();
+    public DbSet<EntryReceipt> EntryReceipts => Set<EntryReceipt>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -25,6 +27,13 @@ public sealed class CompanionDbContext(DbContextOptions<CompanionDbContext> opti
             builder.Property(project => project.Description).HasMaxLength(4000).IsRequired();
             builder.Property(project => project.RepositoryUrl).HasMaxLength(4096);
             builder.Property(project => project.DemoUrl).HasMaxLength(4096);
+        });
+
+        modelBuilder.Entity<EntryReceipt>(builder =>
+        {
+            builder.HasKey(receipt => receipt.Id);
+            builder.Property(receipt => receipt.SecretDigest).HasMaxLength(32).IsRequired();
+            builder.HasIndex(receipt => receipt.ExpiresAtUtc);
         });
     }
 }

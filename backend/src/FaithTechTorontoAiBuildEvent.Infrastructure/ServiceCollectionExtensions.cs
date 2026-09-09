@@ -1,8 +1,10 @@
 using FaithTechTorontoAiBuildEvent.Application.EventState;
 using FaithTechTorontoAiBuildEvent.Application.Operations;
+using FaithTechTorontoAiBuildEvent.Application.Participants;
 using FaithTechTorontoAiBuildEvent.Infrastructure.EventState;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Operations;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
+using FaithTechTorontoAiBuildEvent.Infrastructure.Participants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +21,8 @@ public static class ServiceCollectionExtensions
         services.AddDbContext<CompanionDbContext>(options => options.UseSqlServer(connectionString));
         services.AddScoped<IEventStateStore, SqlEventStateStore>();
         services.AddScoped<IReadinessStore, SqlReadinessStore>();
+        services.AddScoped<IEntryReceiptStore, SqlEntryReceiptStore>();
+        services.AddSingleton<IEntryReceiptSecretService, EntryReceiptSecretService>();
         services.AddHostedService<EventStateInitializer>();
         return services;
     }
