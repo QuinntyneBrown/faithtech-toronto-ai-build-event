@@ -38,10 +38,16 @@ public sealed class TeamMoveTests : IClassFixture<CountdownApiFactory>
         await administrator.PostAsJsonAsync("/api/admin/event/advance", new { operationId = Guid.NewGuid(), expectedVersion = "3", fromScreen = "projects", toScreen = "teams" });
 
         var moved = await administrator.PostAsJsonAsync("/api/admin/teams/moves", new { operationId = Guid.NewGuid(), expectedVersion = "4", participantId, destination = "unassigned", teamId = (Guid?)null });
+        var state = await administrator.GetFromJsonAsync<PublicState>("/api/event/state");
 
         Assert.Equal(HttpStatusCode.NoContent, moved.StatusCode);
+        Assert.Contains(state!.UnassignedMembers, member => member.Id == participantId);
+        Assert.DoesNotContain(state.Teams.SelectMany(team => team.Members), member => member.Id == participantId);
     }
 
     private sealed record ReceiptResponse(Guid OperationId);
     private sealed record EntryResponse(Guid ParticipantId);
+    private sealed record PublicState(IReadOnlyList<Team> Teams, IReadOnlyList<Member> UnassignedMembers);
+    private sealed record Team(IReadOnlyList<Member> Members);
+    private sealed record Member(Guid Id, string Label);
 }

@@ -13,4 +13,5 @@ public sealed record PublicEventSnapshot(
     DateTimeOffset CountdownTargetUtc,
     IReadOnlyList<ProjectCard> Projects,
     IReadOnlyList<PublicTeam> Teams,
+    IReadOnlyList<PublicTeamMember> UnassignedMembers,
     RaffleSnapshot Raffle);

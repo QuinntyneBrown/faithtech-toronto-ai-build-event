@@ -1,3 +1,3 @@
 namespace FaithTechTorontoAiBuildEvent.Application.EventState;
 
-public sealed record PublicTeam(Guid Id, string Label, Guid? ProjectId, IReadOnlyList<string> Members);
+public sealed record PublicTeam(Guid Id, string Label, Guid? ProjectId, IReadOnlyList<PublicTeamMember> Members);

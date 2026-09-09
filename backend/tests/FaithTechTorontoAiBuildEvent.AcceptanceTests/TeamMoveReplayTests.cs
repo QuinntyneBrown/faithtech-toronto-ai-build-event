@@ -45,12 +45,13 @@ public sealed class TeamMoveReplayTests : IClassFixture<CountdownApiFactory>
         Assert.Equal(HttpStatusCode.NoContent, replay.StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, changed.StatusCode);
         Assert.Equal(2, state!.Teams.Count);
-        Assert.Equal(1, state.Teams.Sum(team => team.Members.Count(member => member == participant.PublicLabel)));
+        Assert.Equal(1, state.Teams.Sum(team => team.Members.Count(member => member.Label == participant.PublicLabel)));
         Assert.Equal("4", state.Version);
     }
 
     private sealed record ReceiptResponse(Guid OperationId);
     private sealed record EntryResponse(Guid ParticipantId, string PublicLabel);
     private sealed record PublicState(string Version, IReadOnlyList<PublicTeam> Teams);
-    private sealed record PublicTeam(IReadOnlyList<string> Members);
+    private sealed record PublicTeam(IReadOnlyList<Member> Members);
+    private sealed record Member(Guid Id, string Label);
 }

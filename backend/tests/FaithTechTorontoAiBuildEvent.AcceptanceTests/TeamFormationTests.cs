@@ -43,5 +43,6 @@ public sealed class TeamFormationTests : IClassFixture<CountdownApiFactory>
 
     private sealed record ReceiptResponse(Guid OperationId);
     private sealed record PublicState(string CurrentScreen, IReadOnlyList<Team> Teams);
-    private sealed record Team(IReadOnlyList<string> Members);
+    private sealed record Team(IReadOnlyList<Member> Members);
+    private sealed record Member(Guid Id, string Label);
 }
