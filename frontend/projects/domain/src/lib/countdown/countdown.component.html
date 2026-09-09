@@ -8,6 +8,6 @@
     <h2>{{ state.welcome }}</h2>
     <p>{{ state.purpose }}</p>
     <p>{{ state.venue }}</p>
-    <cs-countdown [target]="+state.countdownTargetUtc" [now]="now()" ariaLabel="Time until welcome" />
+    <cs-countdown [target]="Date.parse(state.countdownTargetUtc)" [now]="now()" ariaLabel="Time until welcome" />
   </cs-card>
 }

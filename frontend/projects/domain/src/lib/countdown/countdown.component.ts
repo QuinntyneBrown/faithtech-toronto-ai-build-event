@@ -13,6 +13,7 @@ import { EventHeaderComponent } from "@faithtech/components";
 export class CountdownComponent {
   readonly event = inject(EVENT_SERVICE);
   readonly now = signal(Date.now());
+  readonly Date = Date;
 
   constructor() {
     this.event.load();
