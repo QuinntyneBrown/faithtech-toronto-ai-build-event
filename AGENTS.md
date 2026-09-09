@@ -11,8 +11,9 @@ countdown, and move automatically through scheduled stages for team and project
 selection, building, networking and private messaging, quizzes, raffles, and demos.
 Project showcases and recaps retain repository and demo links after the event.
 
-The solution includes an independent, accessible, responsive, light-theme design
-system matching Cornerstone. Optional per-event Liturgy project links support
+The solution uses Cornerstone's published components and design system for every
+frontend UI, with an independent, accessible, responsive, light-theme gallery.
+Optional per-event Liturgy project links support
 continued work after events; this connection is disabled by default and for the
 September 9 event. Core event features work independently of Liturgy, which owns
 ongoing project management. Product scope and acceptance criteria live in
@@ -76,14 +77,44 @@ say what it cost rather than quietly narrowing scope.
   genuine streams and events.
 - No single-file components. Template, styles, and class each live in their own file.
 
+### Cornerstone is mandatory for every UI
+
+All frontend UI applications, including admin, client, galleries, prototypes, and
+any future UI, must compose all interfaces from `@quinnntyne/cornerstone`
+components and `@quinntynne/cornerstone-design-system` foundations. This applies
+to every screen, state, dialog, and shared component, without exceptions for small
+changes, one-off designs, or temporary implementations.
+
+- Use Cornerstone for all foundational UI: cards, buttons, inputs, controls,
+  navigation, dialogs, tables, feedback, and every other reusable visual primitive.
+- Use its design system for all spacing, layout foundations, colours, typography,
+  sizing, radii, borders, shadows, motion, and other design tokens.
+- This repository owns event-specific composition and behavior. Do not implement
+  local foundational components, copy Cornerstone source or styles, introduce
+  substitute UI libraries, or recreate primitives with custom HTML/CSS.
+  Use native elements through Cornerstone's supported component/directive APIs.
+- The authoritative source is
+  [QuinntyneBrown/Cornerstone](https://github.com/QuinntyneBrown/Cornerstone).
+  If any needed card, button, variant, token, layout primitive, or other UI
+  foundation is missing, first implement and test it in that repository, publish
+  the updated package to npm, then update this repository's dependency and
+  lockfile to consume the published version. Only then compose the dependent UI.
+- Local copies, workspace links, unpublished builds, and temporary fallbacks do
+  not satisfy this requirement. If the upstream release is unavailable, the
+  dependent UI work remains blocked; do not bypass the upstream-first workflow.
+- Existing local foundations are migration debt, not precedent or an exemption.
+  When changing a UI, migrate its affected foundations to the published packages.
+
 ### Where a component belongs
 
 Placement follows what a component knows, and it is not negotiable.
 
-- `components`: presentational only - buttons, cards, pills. Takes an input, emits
-  an output, injects no application service, imports no other project. An Angular
-  primitive like `Router` is fine; an `api` contract is not. That leaf position is
-  what lets the library publish to npm.
+- `components`: presentational compositions of published Cornerstone components,
+  never local implementations of buttons, cards, pills, or other foundations.
+  Takes an input, emits an output, injects no application service, and imports no
+  other workspace project. Published Cornerstone packages and Angular primitives
+  like `Router` are allowed; an `api` contract is not. That leaf position is what
+  lets the library publish to npm.
 - `domain`: components that inject an `api` contract through its token and render
   what it returns.
 - The application project: routed page components, composing the other two and
@@ -109,16 +140,20 @@ Every service an application consumes is reached through an interface and an
 
 ## Design System
 
-The design system is a deliverable in its own right, not a folder inside the front
-end. It sits at `design-system/`, beside `backend/` and `frontend/`, with its own
+The local design-system gallery is a deliverable in its own right, not a folder
+inside the front end. It sits at `design-system/`, beside `backend/` and `frontend/`, with its own
 `package.json`, its own tests, and its own build, deploys as its own static site,
 and carries no runtime dependency on the application.
 
-It owns the design tokens - colour, spacing, type scale, radius - as CSS
-custom properties under one prefix, and that copy is authoritative. The front end
-mirrors them, and every component stylesheet reads them as `var(--<prefix>-<role>)`.
-A hard-coded hex, dimension, or font stack in a component stylesheet is a defect:
-add the missing token to the design system first.
+Cornerstone owns all foundational components and design tokens. The local gallery
+and every frontend application consume the published
+`@quinnntyne/cornerstone` and `@quinntynne/cornerstone-design-system` packages;
+this repository must not maintain authoritative or manually mirrored copies.
+Every component stylesheet uses the published CSS custom properties for design
+values. A hard-coded colour, spacing, dimension, or font stack is a defect.
+Add missing foundations in Cornerstone and publish them to npm before consuming
+them here, following the mandatory workflow above. Keep the event UI light-theme,
+accessible, and responsive using those published foundations.
 
 ## Implementation
 
