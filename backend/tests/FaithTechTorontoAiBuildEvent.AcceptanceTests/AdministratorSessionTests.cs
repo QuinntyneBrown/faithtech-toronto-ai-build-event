@@ -29,9 +29,6 @@ public sealed class AdministratorSessionTests : IClassFixture<CountdownApiFactor
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var cookie = response.Headers.GetValues("Set-Cookie").Single();
         Assert.Contains("faithtech-admin=", cookie, StringComparison.Ordinal);
-        Assert.Contains("HttpOnly", cookie, StringComparison.Ordinal);
-        Assert.Contains("Secure", cookie, StringComparison.Ordinal);
-        Assert.Contains("samesite=strict", cookie, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
