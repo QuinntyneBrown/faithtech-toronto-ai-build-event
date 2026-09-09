@@ -26,6 +26,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddCompanionInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<EventOptions>(configuration.GetSection(EventOptions.SectionName));
+        services.Configure<SecurityOptions>(configuration.GetSection(SecurityOptions.SectionName));
         var connectionString = configuration.GetConnectionString("Companion")
             ?? throw new InvalidOperationException("ConnectionStrings:Companion is required.");
         services.AddDbContext<CompanionDbContext>(options => options.UseSqlServer(connectionString));
@@ -39,6 +40,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAdministratorParticipantStore, SqlAdministratorParticipantStore>();
         services.AddSingleton<IEntryReceiptSecretService, EntryReceiptSecretService>();
         services.AddSingleton<PasscodeVerifier>();
+        services.AddSingleton<ISourceDigestService, SourceDigestService>();
         services.AddScoped<IAdministratorCredentialProvisioner, SqlAdministratorCredentialProvisioner>();
         services.AddScoped<IAdministratorSessionStore, SqlAdministratorSessionStore>();
         services.AddScoped<IAdministratorLoginAttemptStore, SqlAdministratorLoginAttemptStore>();

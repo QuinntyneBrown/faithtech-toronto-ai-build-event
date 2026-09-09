@@ -1,16 +1,18 @@
 using MediatR;
+using FaithTechTorontoAiBuildEvent.Application.Access;
 
 namespace FaithTechTorontoAiBuildEvent.Application.Participants;
 
-public sealed class EnterParticipantHandler(IEntryStore entryStore, IEntryReceiptSecretService secretService, IPublicEntryAttemptStore attempts)
+public sealed class EnterParticipantHandler(IEntryStore entryStore, IEntryReceiptSecretService secretService, IPublicEntryAttemptStore attempts, ISourceDigestService sourceDigestService)
     : IRequestHandler<EnterParticipantCommand, EntryResult>
 {
     public async Task<EntryResult> Handle(EnterParticipantCommand request, CancellationToken cancellationToken)
     {
         var nowUtc = DateTimeOffset.UtcNow;
-        var retryAfter = await attempts.GetRetryAfterAsync(request.Source, nowUtc, cancellationToken);
+        var source = sourceDigestService.Digest(request.Source);
+        var retryAfter = await attempts.GetRetryAfterAsync(source, nowUtc, cancellationToken);
         if (retryAfter is not null) throw new PublicEntryThrottledException(retryAfter.Value);
-        await attempts.RecordAsync(request.Source, nowUtc, cancellationToken);
+        await attempts.RecordAsync(source, nowUtc, cancellationToken);
         if (string.IsNullOrWhiteSpace(request.ReceiptSecret) || !long.TryParse(request.ExpectedVersion, out var expectedVersion))
         {
             throw new EntryValidationException("Entry receipt or event version is invalid.");

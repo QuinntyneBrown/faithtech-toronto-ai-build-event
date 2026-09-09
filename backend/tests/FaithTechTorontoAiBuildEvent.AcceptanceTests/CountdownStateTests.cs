@@ -57,7 +57,8 @@ public sealed class CountdownApiFactory : WebApplicationFactory<Program>
         builder.UseEnvironment("Testing");
         builder.ConfigureAppConfiguration(configuration => configuration.AddInMemoryCollection(new Dictionary<string, string?>
         {
-            ["ConnectionStrings:Companion"] = "Server=unused;Database=unused;Encrypt=true;TrustServerCertificate=false"
+            ["ConnectionStrings:Companion"] = "Server=unused;Database=unused;Encrypt=true;TrustServerCertificate=false",
+            ["Security:DigestKey"] = "MDEyMzQ1Njc4OUFCQ0RFRjAxMjM0NTY3ODlBQkNERUY="
         }));
         builder.ConfigureServices(services =>
         {
@@ -97,6 +98,13 @@ public sealed class CountdownApiFactory : WebApplicationFactory<Program>
         var session = await database.AdministratorSessions.SingleAsync(session => !session.Revoked);
         session.LastInteractionAtUtc = interactionAtUtc;
         await database.SaveChangesAsync();
+    }
+
+    public async Task<string> GetLastPublicEntrySourceAsync()
+    {
+        using var scope = Services.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<CompanionDbContext>();
+        return await database.PublicEntryAttempts.OrderByDescending(attempt => attempt.AttemptedAtUtc).Select(attempt => attempt.Source).FirstAsync();
     }
 
     public async Task<DateTimeOffset> GetAdministratorLastInteractionAsync()
