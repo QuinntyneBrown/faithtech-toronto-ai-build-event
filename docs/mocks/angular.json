@@ -19,10 +19,7 @@
             "browser": "projects/app/src/main.ts",
             "index": "projects/app/src/index.html",
             "tsConfig": "projects/app/tsconfig.app.json",
-            "styles": [
-              "projects/components/src/lib/proposal-tokens.scss",
-              "projects/app/src/styles.scss"
-            ],
+            "styles": ["projects/app/src/styles.scss"],
             "outputPath": "dist/app"
           },
           "configurations": {
@@ -34,20 +31,6 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "options": { "buildTarget": "app:build:development" }
-        }
-      }
-    },
-    "components": {
-      "projectType": "library",
-      "root": "projects/components",
-      "sourceRoot": "projects/components/src",
-      "architect": {
-        "build": {
-          "builder": "@angular/build:ng-packagr",
-          "options": {
-            "project": "projects/components/ng-package.json",
-            "tsConfig": "projects/components/tsconfig.lib.json"
-          }
         }
       }
     }

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "ng serve app --port 4300",
-    "build": "ng build components && ng build app"
+    "build": "ng build app"
   },
   "dependencies": {
     "@angular/cdk": "21.2.14",
@@ -22,8 +22,6 @@
     "@angular/build": "21.2.23",
     "@angular/cli": "21.2.23",
     "@angular/compiler-cli": "21.2.22",
-    "@webgpu/types": "0.1.69",
-    "ng-packagr": "21.2.7",
     "typescript": "5.9.3"
   }
 }

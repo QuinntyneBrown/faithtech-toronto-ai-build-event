@@ -8,9 +8,7 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "lib": ["ES2022", "dom"],
-    "types": ["@webgpu/types"],
-    "baseUrl": ".",
-    "paths": { "@mock/components": ["projects/components/src/public-api.ts"] }
+    "baseUrl": "."
   },
   "angularCompilerOptions": {
     "strictTemplates": true,
