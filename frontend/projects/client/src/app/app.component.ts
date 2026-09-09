@@ -2,10 +2,11 @@ import { ChangeDetectionStrategy, Component, HostListener, effect, inject } from
 import { Router, RouterOutlet } from "@angular/router";
 import { CardComponent, CsButtonDirective } from "@quinntyne/cornerstone";
 import { ADMINISTRATOR_SESSION_SERVICE, EVENT_SERVICE } from "@faithtech/api";
+import { AdministratorLoginComponent } from "@faithtech/domain";
 
 @Component({
   selector: "event-companion",
-  imports: [CardComponent, CsButtonDirective, RouterOutlet],
+  imports: [AdministratorLoginComponent, CardComponent, CsButtonDirective, RouterOutlet],
   templateUrl: "./app.component.html",
   styleUrl: "./app.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush
