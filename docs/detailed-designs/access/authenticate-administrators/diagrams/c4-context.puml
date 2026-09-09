@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Authenticate administrators within the companion — context
+Person(actor, "Administrator", "Enable same-screen controls through a bounded shared-code session")
+System(companion, "FaithTech event companion", "Authenticate administrators within the companion")
+Rel(actor, companion, "Uses")
+@enduml
