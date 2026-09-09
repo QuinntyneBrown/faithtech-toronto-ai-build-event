@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, effect, inject, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { CardComponent, ConfirmDialogComponent, CsButtonDirective, CsInputDirective, CsSelectDirective, CsTextareaDirective, DialogService, EmptyStateComponent, FieldComponent } from "@quinntyne/cornerstone";
+import { CardComponent, CsButtonDirective, CsInputDirective, CsSelectDirective, CsTextareaDirective, DialogService, EmptyStateComponent, FieldComponent } from "@quinntyne/cornerstone";
 import { ADMINISTRATOR_SESSION_SERVICE, AdministratorParticipant, AdministratorParticipantInput, EVENT_SERVICE, ROSTER_SERVICE, TEAM_SERVICE } from "@faithtech/api";
+import { ConfirmationDialogComponent } from "@faithtech/components";
 
 @Component({
   selector: "event-participant-roster",
@@ -53,7 +54,7 @@ export class ParticipantRosterComponent {
   remove(participant: AdministratorParticipant): void {
     const version = this.event.state()?.version;
     if (!version) return;
-    const dialog = this.dialogs.open(ConfirmDialogComponent, {
+    const dialog = this.dialogs.open(ConfirmationDialogComponent, {
       data: { title: "Remove participant?", message: `${participant.publicLabel} will lose their entry, profile, and team membership. This cannot be undone.`, confirmLabel: "Remove", cancelLabel: "Keep participant", tone: "danger" }
     });
     dialog.closed.subscribe(result => {

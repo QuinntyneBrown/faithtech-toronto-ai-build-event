@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from "@angular/core";
 import { FormsModule } from "@angular/forms";
-import { CardComponent, ConfirmDialogComponent, CsButtonDirective, CsInputDirective, CsTextareaDirective, DialogService, EmptyStateComponent, FieldComponent } from "@quinntyne/cornerstone";
+import { CardComponent, CsButtonDirective, CsInputDirective, CsTextareaDirective, DialogService, EmptyStateComponent, FieldComponent } from "@quinntyne/cornerstone";
 import { ADMINISTRATOR_SESSION_SERVICE, EVENT_FLOW_SERVICE, EVENT_SERVICE, ProjectCard, ProjectInput, PROJECT_SERVICE } from "@faithtech/api";
+import { ConfirmationDialogComponent } from "@faithtech/components";
 
 @Component({
   selector: "event-projects",
@@ -35,7 +36,7 @@ export class ProjectsComponent {
     const assignmentNotice = assignedTeams.length
       ? ` Assigned teams that will be cleared: ${assignedTeams.join(", ")}.`
       : " No teams are currently assigned.";
-    const dialog = this.dialogs.open(ConfirmDialogComponent, { data: { title: "Remove project?", message: `${project.title} will no longer be available for team assignment.${assignmentNotice}`, confirmLabel: "Remove", cancelLabel: "Keep project", tone: "danger" } });
+    const dialog = this.dialogs.open(ConfirmationDialogComponent, { data: { title: "Remove project?", message: `${project.title} will no longer be available for team assignment.${assignmentNotice}`, confirmLabel: "Remove", cancelLabel: "Keep project", tone: "danger" } });
     dialog.closed.subscribe(result => { if (result === "confirm") this.projects.remove(project.id, version); });
   }
   advance(): void { const state = this.event.state(); if (state) this.flow.advance("projects", "teams", state.version); }
