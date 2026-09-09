@@ -2,10 +2,11 @@ using FaithTechTorontoAiBuildEvent.Application.Participants;
 using FaithTechTorontoAiBuildEvent.Domain.EventFlow;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using FaithTechTorontoAiBuildEvent.Application.EventState;
 
 namespace FaithTechTorontoAiBuildEvent.Infrastructure.Participants;
 
-public sealed class SqlProfileStore(CompanionDbContext database) : IProfileStore
+public sealed class SqlProfileStore(CompanionDbContext database, IEventUpdatePublisher updatePublisher) : IProfileStore
 {
     public async Task<ParticipantProfile?> GetAsync(byte[] secretDigest, DateTimeOffset nowUtc, CancellationToken cancellationToken)
     {
@@ -32,6 +33,7 @@ public sealed class SqlProfileStore(CompanionDbContext database) : IProfileStore
         participant.OnYourHeart = BlankToNull(request.Input.OnYourHeart);
         state.Version++;
         await database.SaveChangesAsync(cancellationToken);
+        await updatePublisher.PublishAsync(state.Version, cancellationToken);
         return Map(participant);
     }
 
