@@ -1,0 +1,37 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+title Authenticate administrators within the companion — structure
+interface ISessionService {
++login(passcode: string): Promise<SessionResult>
++logout(): Promise<void>
++recordInteraction(): Promise<void>
++readonly session: Signal<SessionState>
+}
+class AppComponent
+AppComponent ..> ISessionService : consumes contract
+class AdministratorSessionController
+class AuthenticateAdministratorHandler {
+  +Handle(request: AuthenticateAdministratorCommand): Task<AdministratorSessionState>
+}
+class AuthenticateAdministratorCommand {
++string Passcode
++string SourceKey
+}
+class AdministratorSession {
++Guid Id
++byte[] SecretDigest
++long CredentialRevision
++DateTimeOffset AuthenticatedAtUtc
++DateTimeOffset LastInteractionAtUtc
++bool Revoked
++IsValid(now: DateTimeOffset, revision: long): bool
+}
+AdministratorSessionController ..> AuthenticateAdministratorHandler : dispatches
+AuthenticateAdministratorHandler ..> AuthenticateAdministratorCommand : handles
+AuthenticateAdministratorHandler --> AdministratorSession : uses
+
+@enduml

@@ -1,0 +1,36 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Assign or clear a team's project
+actor "Administrator" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "TeamsPageComponent" as page
+participant "ITeamService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "TeamsController" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "AssignTeamProjectHandler" as handler
+participant "Team" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+end box
+actor -> page : Choose project or No project assigned
+page -> client : ProjectAssignment + envelope
+client -> controller : PUT team project
+controller -> handler : Dispatch AssignTeamProjectCommand
+handler -> db : Lock event; authorize and validate IDs/version
+handler -> entity : AssignProject(projectId or null) L2-011
+handler -> db : Commit assignment, receipt and change
+ db --> handler : Saved result or rollback
+handler --> controller : Typed outcome
+controller --> client : Result
+client --> page : Saved assignment or retained intention
+page --> actor : Team project status
+@enduml

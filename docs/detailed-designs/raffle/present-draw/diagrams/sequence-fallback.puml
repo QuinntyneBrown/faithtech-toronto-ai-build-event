@@ -1,0 +1,26 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Stop or recover visual effects
+actor "Raffle viewer" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "RafflePageComponent" as page
+end box
+actor -> page : Stop effects or change reduced-motion preference
+alt Reduced motion or explicit stop
+ page -> page : Cancel cycling/particles; keep reveal timer
+else GPU unavailable / init failure / device loss
+ page -> page : Dispose GPU resources; use Cornerstone fallback
+else All effect rendering fails
+ page -> page : Keep independent Cornerstone text/status output
+end
+page -> page : At server reveal expose persisted WinnerLabel L2-037
+page --> actor : Same winner; no new request to draw
+opt Route change or effect end
+ page -> page : Cancel RAF and dispose all effect resources
+end
+@enduml

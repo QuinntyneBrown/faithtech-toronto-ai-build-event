@@ -1,0 +1,32 @@
+:host {
+  display: block;
+}
+.project-card {
+  display: flex;
+  flex-direction: column;
+  min-block-size: var(--cs-raffle-stage-height);
+}
+.project-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--cs-space-4);
+}
+.project-number {
+  font: var(--cs-text-xl) var(--cs-font-mono);
+  color: var(--cs-border-strong);
+}
+.description {
+  white-space: pre-line;
+  max-inline-size: var(--cs-container-narrow);
+}
+.project-bottom {
+  margin-block-start: auto;
+  padding-block-start: var(--cs-space-5);
+}
+.invitation {
+  padding: var(--cs-space-6);
+  background: var(--cs-surface);
+  border-radius: var(--cs-radius-md);
+  margin-block-start: var(--cs-space-6);
+}

@@ -1,0 +1,19 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+System_Ext(direct, "Normal SQL client", "Works without API or companion CLI")
+Container_Boundary(cli, "Passcode CLI") {
+Component(command, "SetAdminPasscodeCommand", "System.CommandLine", "Validates mode, target and secret input")
+Component(adapter, "SqlPasscodeService", "Infrastructure adapter", "Implements IPasscodeService; executes one RPC")
+}
+Container_Boundary(sql, "SQL Server database") {
+Component(procedure, "dbo.ReplaceAdminPasscode", "T-SQL stored procedure", "Validates, converts verifier and commits revision")
+ComponentDb(state, "Credential and session rows", "SQL tables", "Salt/verifier, revision, revocation and change marker")
+}
+Container(api, "Companion API", "ASP.NET Core", "Checks authority; invalidates connected views")
+Rel(command, adapter, "Calls through IPasscodeService")
+Rel(adapter, procedure, "Parameterized encrypted RPC")
+Rel(direct, procedure, "Same RPC")
+Rel(procedure, state, "Updates atomically")
+Rel(api, state, "Reads current authority")
+@enduml

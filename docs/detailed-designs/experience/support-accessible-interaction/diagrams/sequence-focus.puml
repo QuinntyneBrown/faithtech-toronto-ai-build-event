@@ -1,0 +1,39 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Apply a stage update without disruptive focus
+actor "Viewer or administrator using keyboard, touch, or assistive technology" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "AppComponent" as page
+participant "IEventService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "EventStateController" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "GetEventSnapshotHandler" as handler
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+participant "EventChangePublisher" as push
+end box
+push -> client : Committed stage invalidation
+client -> controller : GET event snapshot
+controller -> handler : Dispatch query
+handler -> db : Read coherent live state
+ db --> handler : Stage and version
+handler --> controller : PublicEventSnapshot
+controller --> client : Saved state
+client -> page : Apply current stage L2-036
+page -> page : Capture old focus; render new composition
+alt Old focused element removed
+ page -> page : Focus new heading
+else Focus target survives
+ page -> page : Preserve focus
+end
+page --> actor : Announce stage once; ticks remain silent
+@enduml

@@ -1,9 +1,0 @@
-@startuml
-!include <C4/C4_Context>
-LAYOUT_WITH_LEGEND()
-title Context - Block, report and resolve conversation abuse
-Person(actor, "Participant and administrator", "moderate conversations")
-System(system, "FaithTech event platform", "Prevent new pair messages and preserve minimal report evidence")
-Rel(actor, system, "Moderate conversations", "HTTPS")
-
-@enduml

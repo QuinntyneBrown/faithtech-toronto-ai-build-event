@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Form random teams once on first opening — components
+Container(client, "AppComponent", "Companion Angular client", "Presents this capability")
+Container_Boundary(api, "Companion API") {
+Component(entry, "EventFlowController", "ASP.NET Core controller", "Binds inputs and dispatches")
+Component(handler, "AdvanceScreenHandler", "Application handler", "Partition the current roster into random groups of three")
+Component(entity, "FormTeamsPolicy", "Domain model", "Owns slice state")
+}
+ContainerDb(db, "Companion database", "SQL Server", "Durable state")
+Rel(client, entry, "Calls through IEventService")
+Rel(entry, handler, "Dispatches")
+Rel(handler, entity, "Uses")
+Rel(handler, db, "Commits through application persistence contract")
+@enduml

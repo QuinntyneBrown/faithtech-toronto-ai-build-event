@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Administer participants on Countdown — context
+Person(actor, "Administrator", "Correct roster records and remove private data coherently")
+System(companion, "FaithTech event companion", "Administer participants on Countdown")
+Rel(actor, companion, "Uses")
+@enduml

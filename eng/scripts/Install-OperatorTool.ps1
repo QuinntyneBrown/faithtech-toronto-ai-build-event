@@ -1,33 +1,27 @@
-[CmdletBinding()]
 param()
 
 $ErrorActionPreference = 'Stop'
-$repositoryRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
-$dotnet = Join-Path $env:LOCALAPPDATA 'FaithTech/dotnet/dotnet.exe'
-if (-not (Test-Path -LiteralPath $dotnet)) { $dotnet = 'dotnet' }
-else { $env:DOTNET_ROOT = Split-Path $dotnet }
-$project = Join-Path $repositoryRoot 'backend/src/FaithTechTorontoAiBuildEvent.Provisioning/FaithTechTorontoAiBuildEvent.Provisioning.csproj'
-$packageDirectory = Join-Path $repositoryRoot '.local/packages/operator'
-$version = "1.0.0-local.$(Get-Date -Format 'yyyyMMddHHmmss')"
+$root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$project = Join-Path $root 'backend/src/FaithTechTorontoAiBuildEvent.Provisioning/FaithTechTorontoAiBuildEvent.Provisioning.csproj'
+$packages = Join-Path ([System.IO.Path]::GetTempPath()) ('faithtech-tool-' + [Guid]::NewGuid())
+$timestamp = Get-Date -Format 'yyyyMMddHHmmss'
+$commit = (git -C $root rev-parse --short HEAD 2>$null)
+if ([string]::IsNullOrWhiteSpace($commit)) { $commit = 'local' }
+$packageVersion = "0.1.0-local.$timestamp.$commit"
+New-Item -ItemType Directory -Force -Path $packages | Out-Null
 
-New-Item -ItemType Directory -Force -Path $packageDirectory | Out-Null
-& $dotnet restore $project --locked-mode
-if ($LASTEXITCODE -ne 0) { throw 'Restore failed; the installed tool was not changed.' }
-& $dotnet build $project --configuration Release --no-restore
-if ($LASTEXITCODE -ne 0) { throw 'Build failed; the installed tool was not changed.' }
-& $dotnet pack $project --configuration Release --no-build --output $packageDirectory "/p:Version=$version"
-if ($LASTEXITCODE -ne 0) { throw 'Packaging failed; the installed tool was not changed.' }
-
-$installed = & $dotnet tool list --global | Select-String '^faithtechtorontoaibuildevent\.provisioning\s'
-if ($LASTEXITCODE -ne 0) { throw 'Unable to inspect installed tools.' }
-if ($installed) {
-    & $dotnet tool update --global FaithTechTorontoAiBuildEvent.Provisioning --version $version --add-source $packageDirectory --ignore-failed-sources
+try {
+    dotnet pack $project --configuration Release --output $packages "-p:PackageVersion=$packageVersion"
+    $package = Get-ChildItem -LiteralPath $packages -Filter 'FaithTechTorontoAiBuildEvent.Provisioning.*.nupkg' | Select-Object -First 1
+    if ($null -eq $package) { throw 'The operator package was not created.' }
+    $version = ($package.BaseName -replace '^FaithTechTorontoAiBuildEvent.Provisioning\.', '')
+    $installed = dotnet tool list --global | Select-String -SimpleMatch 'faithtech-admin'
+    if ($null -eq $installed) {
+        dotnet tool install --global FaithTechTorontoAiBuildEvent.Provisioning --version $version --add-source $packages
+    } else {
+        dotnet tool update --global FaithTechTorontoAiBuildEvent.Provisioning --version $version --add-source $packages --allow-downgrade
+    }
+    faithtech-admin --help
+} finally {
+    Remove-Item -LiteralPath $packages -Recurse -Force -ErrorAction SilentlyContinue
 }
-else {
-    & $dotnet tool install --global FaithTechTorontoAiBuildEvent.Provisioning --version $version --add-source $packageDirectory --ignore-failed-sources
-}
-if ($LASTEXITCODE -ne 0) { throw 'Tool installation/update failed.' }
-
-$tool = Join-Path $env:USERPROFILE '.dotnet/tools/faithtech-admin.exe'
-& $tool --version
-if ($LASTEXITCODE -ne 0) { throw 'Installed tool verification failed.' }

@@ -1,0 +1,45 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+title Form random teams once on first opening — structure
+interface IEventService {
++advance(input: AdvanceInput): Promise<AdvanceResult>
+}
+class AppComponent
+AppComponent ..> IEventService : consumes contract
+class EventFlowController
+class AdvanceScreenHandler {
+  +Handle(request: AdvanceScreenCommand): Task<AdvanceResult>
+}
+class AdvanceScreenCommand {
++Screen FromScreen
++Screen ToScreen
++long ExpectedVersion
++Guid OperationId
+}
+class FormTeamsPolicy {
++Form(ids: List<Guid>, random: IRandomSource): List<Team>
+-Shuffle(ids: List<Guid>): void
+}
+EventFlowController ..> AdvanceScreenHandler : dispatches
+AdvanceScreenHandler ..> AdvanceScreenCommand : handles
+AdvanceScreenHandler --> FormTeamsPolicy : uses
+interface IRandomSource {
+ +NextInt(exclusiveUpperBound: int): int
+}
+class Team {
+ +Guid Id
+ +long PublicNumber
+ +Guid? ProjectId
+}
+class Participant {
+ +Guid Id
+ +Guid? TeamId
+}
+FormTeamsPolicy ..> IRandomSource
+FormTeamsPolicy ..> Team : creates
+Participant "*" --> "0..1" Team
+@enduml

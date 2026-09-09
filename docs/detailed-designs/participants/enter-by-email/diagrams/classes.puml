@@ -1,0 +1,50 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+title Enter by email and restore the private session — structure
+interface IEntryService {
++enter(email: string, operationId: string, expectedVersion: string): Promise<EntryResult>
++restore(): Promise<ParticipantSnapshot>
++clearSession(): Promise<void>
+}
+class CountdownPageComponent
+CountdownPageComponent ..> IEntryService : consumes contract
+class EventEntryController
+class EnterParticipantHandler {
+  +Handle(request: EnterParticipantCommand): Task<EntryResult>
+}
+class EnterParticipantCommand {
++string Email
++Guid OperationId
++long ExpectedVersion
++ReceiptPrincipal CreatingBrowser
+}
+class Participant {
++Guid Id
++string NormalizedEmail
++string Email
++long PublicNumber
++Guid? TeamId
++string PublicLabel()
+}
+EventEntryController ..> EnterParticipantHandler : dispatches
+EnterParticipantHandler ..> EnterParticipantCommand : handles
+EnterParticipantHandler --> Participant : uses
+class EntryReceipt {
+ +Guid Id
+ +byte[] SecretDigest
+ +Guid? ParticipantId
+ +DateTimeOffset ExpiresAtUtc
+}
+class ParticipantSession {
+ +Guid Id
+ +byte[] SecretDigest
+ +Guid ParticipantId
+ +DateTimeOffset ExpiresAtUtc
+}
+EntryReceipt --> Participant : creation result
+ParticipantSession --> Participant : authorizes owner
+@enduml

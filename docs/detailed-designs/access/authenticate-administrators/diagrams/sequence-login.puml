@@ -1,0 +1,43 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Establish bounded administrator authority
+actor "Administrator" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "AppComponent" as page
+participant "ISessionService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "AdministratorSessionController" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "AuthenticateAdministratorHandler" as handler
+participant "AdministratorSession" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+end box
+actor -> page : Enter four-digit passcode
+page -> client : login(passcode)
+client -> controller : POST session over HTTPS + CSRF
+controller -> handler : Dispatch authentication
+handler -> db : Lock global/source budgets and credential
+alt Budget exhausted
+ handler --> controller : 429 with positive Retry-After L2-042
+else Invalid format or verifier mismatch
+ handler -> db : Record failure; commit budget
+ handler --> controller : Invalid login
+else Valid provisioned credential
+ handler -> entity : Create 8h absolute / 30m idle session L2-038
+ handler -> db : Commit secret digest and credential revision
+ db --> handler : Durable session
+ handler --> controller : Cookie material in private server result
+end
+controller --> client : HttpOnly cookie / safe session state / error
+client -> page : Clear passcode field; enable only authorized controls
+page --> actor : Same screen with admin tools or feedback
+@enduml

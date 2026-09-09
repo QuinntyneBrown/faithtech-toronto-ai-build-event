@@ -1,6 +1,0 @@
-main { padding-block: var(--cs-space-8); }
-h1 { font-size: var(--cs-text-xl); }
-.eyebrow { font-size: var(--cs-text-xs); letter-spacing: var(--cs-label-tracking); font-weight: var(--cs-weight-bold); }
-dialog { max-width: min(var(--cs-dialog-width), calc(var(--cs-full) - var(--cs-space-6))); border: var(--cs-line) solid var(--cs-border); border-radius: var(--cs-radius-md); padding: var(--cs-space-6); background: var(--cs-paper); color: var(--cs-ink); }
-dialog::backdrop { background: var(--cs-scrim); }
-.actions { display: flex; flex-wrap: wrap; gap: var(--cs-space-3); }

@@ -1,6 +1,0 @@
-<main id="main"><ft-administrator-session-panel [showDetails]="false" (signedOut)="signedOut()">
-  <p><a routerLink="/session">Your session</a></p><div class="heading"><h1>Events</h1><button #createButton (click)="creating.set(true)">Create event</button></div>
-  <ft-event-list-panel (requestCopy)="openCopy($event)" />
-  @if (creating()) { <ft-create-event-dialog (closed)="close()" (saved)="saved()" /> }
-  @if (copySource(); as source) { <ft-copy-event-dialog [sourceId]="source.id" (closed)="closeCopy()" (copied)="copied($event)" /> }
-</ft-administrator-session-panel></main>

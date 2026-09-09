@@ -1,0 +1,22 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+Container_Boundary(app, "Companion Angular application") {
+Component(shell, "AppComponent / routed pages", "Angular", "Four responsive compositions")
+Component(coordinator, "LiveScreenCoordinator", "Application", "Role-aware route and focus preservation")
+Component(state, "PresentationState", "Client memory", "Motion preference, focus and status")
+}
+Container_Boundary(package, "Cornerstone npm package") {
+Component(dialog, "ReviewDialogComponent", "Angular", "Modal semantics and focus restoration")
+Component(board, "TeamBoardComponent", "Angular", "Drag plus keyboard/touch move controls")
+Component(raffle, "RaffleStageComponent", "Angular / WebGPU", "Reduced motion, text and fallback")
+}
+Container(api, "Companion API", "ASP.NET Core", "Authorized versioned event state")
+Rel(shell, coordinator, "Applies screen updates")
+Rel(coordinator, state, "Maintains local presentation state")
+Rel(shell, dialog, "Composes edit overlays")
+Rel(shell, board, "Supplies state and handles intents")
+Rel(shell, raffle, "Supplies saved timeline")
+Rel(shell, api, "Uses injected service contracts")
+
+@enduml

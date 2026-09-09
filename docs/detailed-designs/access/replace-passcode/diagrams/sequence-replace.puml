@@ -1,0 +1,46 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+autonumber
+actor "Database operator" as actor
+box "Operator — SQL client or installed CLI" #E0F2FE
+participant "Protected input / SetAdminPasscodeCommand" as input
+participant "Parameterized SQL client" as client
+end box
+box "Backend — Companion SQL database" #FFF4E5
+participant "dbo.ReplaceAdminPasscode" as procedure
+database "Credential / sessions / change marker" as db
+end box
+box "Backend — Companion API Infrastructure" #ECFDF3
+participant "SessionInvalidationWatcher" as watcher
+end box
+box "Frontend — Companion Angular app" #E0F2FE
+participant "Administrator view" as view
+end box
+title Replace the credential through either database client
+actor -> input : Select explicit target and protected four digits
+input -> client : Bind NVarChar(MAX) parameter; no saved literal
+client -> procedure : One encrypted RPC under database grants
+procedure -> db : Begin transaction; exclusive credential lock
+procedure -> procedure : Validate exact ASCII format L2-063
+alt Valid input and grants
+ procedure -> db : New salt/verifier and revision; revoke sessions
+ procedure -> db : Insert change marker and commit
+ db --> procedure : Confirmed revision and time
+ procedure --> client : Nonsecret result
+ client --> input : Confirmed success
+ input --> actor : Replacement confirmed without secret
+else Invalid / denied / storage failure
+ procedure -> db : Roll back active transaction
+ procedure --> client : Known failure without parameter
+ client --> input : Classified noncommit
+ input --> actor : No fallback or default
+end
+watcher -> db : Read current revision and connected sessions
+db --> watcher : Current authority
+opt Old sessions invalid
+ watcher -> view : Content-free SessionInvalidated within 2 seconds
+ view -> view : Clear private state and close private connection
+end
+@enduml

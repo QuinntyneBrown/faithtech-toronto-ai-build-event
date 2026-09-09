@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Enter by email and restore the private session — components
+Container(client, "CountdownPageComponent", "Companion Angular client", "Presents this capability")
+Container_Boundary(api, "Companion API") {
+Component(entry, "EventEntryController", "ASP.NET Core controller", "Binds inputs and dispatches")
+Component(handler, "EnterParticipantHandler", "Application handler", "Create one raffle identity without granting ownership by email")
+Component(entity, "Participant", "Domain model", "Owns slice state")
+}
+ContainerDb(db, "Companion database", "SQL Server", "Durable state")
+Rel(client, entry, "Calls through IEntryService")
+Rel(entry, handler, "Dispatches")
+Rel(handler, entity, "Uses")
+Rel(handler, db, "Commits through application persistence contract")
+@enduml

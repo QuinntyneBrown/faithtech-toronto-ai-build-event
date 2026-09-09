@@ -1,0 +1,38 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+autonumber
+actor "Database operator" as actor
+box "Operator — SQL client or installed CLI" #E0F2FE
+participant "Protected input / SetAdminPasscodeCommand" as input
+participant "Parameterized SQL client" as client
+end box
+box "Backend — Companion SQL database" #FFF4E5
+participant "dbo.ReplaceAdminPasscode" as procedure
+database "Credential / sessions / change marker" as db
+end box
+title Classify CLI outcome without automatic replay
+actor -> input : Execute one valid replacement
+input -> client : Protected input after target validation
+client -> procedure : RPC execution begins
+procedure -> db : Atomic replacement
+alt Commit result delivered
+ db --> procedure : Confirmed commit
+ procedure --> client : Revision and UTC time
+ client --> input : Confirmed success
+ alt Output succeeds
+  input --> actor : Exit 0
+ else Result output fails
+  input --> actor : Exit 3; commit known, delivery failed
+ end
+else Connection lost after execution begins
+ client --> input : Outcome not observable
+ input --> actor : Exit 3; verify separately; no replay
+else Confirmed permission or input rejection
+ procedure --> client : Known noncommit
+ client --> input : Classified failure
+ input --> actor : Exit 1 or 2
+end
+note over input : Cancellation before execution exits 2 without RPC
+@enduml

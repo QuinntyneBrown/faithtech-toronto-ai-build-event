@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+Container(app, "Companion pages", "Angular", "Supply state and handle intents")
+Container_Boundary(package, "Cornerstone npm package") {
+Component(countdown, "CountdownComponent", "Angular", "Time presentation")
+Component(board, "TeamBoardComponent", "Angular / CDK", "Drag and equivalent move controls")
+Component(raffle, "RaffleStageComponent", "Angular / WebGPU", "Saved-result presentation")
+Component(dialog, "ReviewDialogComponent", "Angular / native dialog", "Accessible modal behavior")
+Component(tokens, "Package tokens and primitives", "CSS / Angular", "Authoritative UI roles and native states")
+}
+Rel(app, countdown, "Supplies time")
+Rel(app, board, "Supplies groups; handles intents")
+Rel(app, raffle, "Supplies persisted result")
+Rel(app, dialog, "Composes overlays")
+Rel(countdown, tokens, "Uses")
+Rel(board, tokens, "Uses")
+Rel(raffle, tokens, "Uses")
+Rel(dialog, tokens, "Uses")
+@enduml

@@ -1,0 +1,42 @@
+@if (administrator.active()) {
+  <cs-card>
+    <h2>Participant roster</h2>
+    <form (ngSubmit)="add()" aria-label="Add participant">
+      <cs-field label="Participant email" forId="roster-email">
+        <input csInput id="roster-email" name="email" type="email" required [ngModel]="email()" (ngModelChange)="email.set($event)">
+      </cs-field>
+      <button csButton type="submit" [disabled]="!event.connected() || roster.loading()">Add participant</button>
+    </form>
+    <button csButton="secondary" type="button" (click)="refresh()" [disabled]="roster.loading()">Refresh roster</button>
+    @if (roster.error(); as error) { <p role="alert">{{ error }}</p> }
+    @if (teams.error(); as error) { <p role="alert">{{ error }}</p> }
+    @if (roster.participants().length) {
+      <ul>
+        @for (participant of roster.participants(); track participant.id) {
+          <li>
+            <form (ngSubmit)="save(participant)" [attr.aria-label]="'Edit ' + participant.publicLabel">
+              <h3>{{ participant.publicLabel }}</h3>
+              <cs-field label="Email" [forId]="'email-' + participant.id"><input csInput [id]="'email-' + participant.id" name="email" type="email" required [ngModel]="draftFor(participant).email" (ngModelChange)="updateDraft(participant, 'email', $event)"></cs-field>
+              <cs-field label="Name" [forId]="'name-' + participant.id"><input csInput [id]="'name-' + participant.id" name="name" [ngModel]="draftFor(participant).name" (ngModelChange)="updateDraft(participant, 'name', $event)"></cs-field>
+              <cs-field label="What you make" [forId]="'make-' + participant.id"><textarea csTextarea [id]="'make-' + participant.id" name="whatYouMake" [ngModel]="draftFor(participant).whatYouMake" (ngModelChange)="updateDraft(participant, 'whatYouMake', $event)"></textarea></cs-field>
+              <cs-field label="On your heart" [forId]="'heart-' + participant.id"><textarea csTextarea [id]="'heart-' + participant.id" name="onYourHeart" [ngModel]="draftFor(participant).onYourHeart" (ngModelChange)="updateDraft(participant, 'onYourHeart', $event)"></textarea></cs-field>
+              @if (event.state(); as state) {
+                <cs-field label="Team" [forId]="'team-' + participant.id">
+                  <select csSelect [id]="'team-' + participant.id" [ngModel]="teamSelection(participant)" (ngModelChange)="move(participant, $event)" [disabled]="!event.connected() || roster.loading() || teams.loading()">
+                    <option value="unassigned">Unassigned</option><option value="new">New team</option>
+                    @for (team of state.teams; track team.id) { <option [value]="team.id">{{ team.label }}</option> }
+                  </select>
+                </cs-field>
+              }
+              <p>{{ participant.teamLabel ?? "Unassigned" }}; {{ participant.hasWonRaffle ? "Winner" : "Eligible" }}</p>
+              <button csButton type="submit" [disabled]="!event.connected() || roster.loading()">Save participant</button>
+              <button csButton="secondary" type="button" (click)="remove(participant)" [disabled]="!event.connected() || roster.loading()">Remove participant</button>
+            </form>
+          </li>
+        }
+      </ul>
+    } @else if (!roster.loading()) {
+      <cs-empty-state title="No participants yet" />
+    }
+  </cs-card>
+}

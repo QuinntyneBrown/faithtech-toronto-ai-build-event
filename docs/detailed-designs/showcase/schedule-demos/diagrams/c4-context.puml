@@ -1,9 +1,0 @@
-@startuml
-!include <C4/C4_Context>
-LAYOUT_WITH_LEGEND()
-title Context - Schedule team demonstrations
-Person(actor, "Administrator", "schedule demos")
-System(system, "FaithTech event platform", "Validate demo intervals and preview a packed reorder before saving")
-Rel(actor, system, "Schedule demos", "HTTPS")
-
-@enduml

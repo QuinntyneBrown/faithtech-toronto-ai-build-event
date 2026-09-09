@@ -1,0 +1,46 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Delete and redact a participant
+actor "Administrator" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "ParticipantManagerComponent" as page
+participant "IRosterService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "RosterController" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "DeleteParticipantHandler" as handler
+participant "Participant" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+participant "EventChangePublisher" as push
+end box
+actor -> page : Confirm named participant deletion
+page -> client : Delete ID and observed version
+client -> controller : DELETE admin participant + envelope
+controller -> handler : Dispatch DeleteParticipantCommand
+handler -> db : Lock event and validate authority / receipt / version
+handler -> entity : Mark identity for removal L2-002
+handler -> db : Remove profile/membership; revoke sessions/receipts
+handler -> db : Null winner IDs; redact all label snapshots; commit
+alt Commit succeeds
+ db --> handler : Tombstone outcome and new version
+ handler --> controller : Deleted
+ controller --> client : Confirmed result
+ push -> client : Authorized content-free change notification
+ client -> page : Reload roster; clear removed private data
+ page --> actor : Participant removed; draw history retained
+else Storage failure
+ db --> handler : Rollback
+ handler --> controller : Correlated failure
+ controller --> client : No deletion confirmed
+ client -> page : Keep correction context
+end
+@enduml

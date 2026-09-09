@@ -1,0 +1,24 @@
+@if (event.loading()) {
+  <cs-card><p>Preparing the evening…</p></cs-card>
+} @else if (event.error(); as error) {
+  <cs-card><p role="alert">{{ error }}</p></cs-card>
+} @else if (event.state(); as state) {
+  <event-header [title]="state.title" [eventTime]="state.eventTime" />
+  <cs-card>
+    <h2>{{ state.welcome }}</h2>
+    <p>{{ state.purpose }}</p>
+    <p>{{ state.venue }}</p>
+    @if (event.clockSynchronized()) {
+      <cs-countdown [target]="Date.parse(state.countdownTargetUtc)" [now]="now()" ariaLabel="Time until welcome" />
+    } @else {
+      <p>{{ Date.parse(state.countdownTargetUtc) | date:"MMMM d, y, h:mm a 'UTC'":"UTC" }}</p>
+      <p role="status">{{ event.clockError() ?? "Synchronizing current time…" }}</p>
+    }
+  </cs-card>
+  <event-entry-form [eventVersion]="state.version" />
+  @if (administrator.active()) {
+    @if (flow.error(); as error) { <p role="alert">{{ error }}</p> }
+    <button csButton type="button" (click)="advance()" [disabled]="!event.connected() || flow.loading()">Open projects</button>
+  }
+  <event-participant-roster />
+}

@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Maintain optional introduction information — context
+Person(actor, "Entered participant", "Save optional details while public entry remains open")
+System(companion, "FaithTech event companion", "Maintain optional introduction information")
+Rel(actor, companion, "Uses")
+@enduml

@@ -1,0 +1,49 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+title Administer participants on Countdown — structure
+interface IRosterService {
++readonly roster: Signal<AdministratorSnapshot>
++add(input: ParticipantInput): Promise<RosterResult>
++update(id: string, input: ParticipantInput): Promise<RosterResult>
++remove(id: string): Promise<RosterResult>
+}
+class ParticipantManagerComponent
+ParticipantManagerComponent ..> IRosterService : consumes contract
+class RosterController
+class SaveParticipantHandler {
+  +Handle(request: SaveParticipantCommand): Task<RosterResult>
+}
+class SaveParticipantCommand {
++Guid? ParticipantId
++ParticipantInput Input
++Guid OperationId
++long ExpectedVersion
+}
+class Participant {
++Guid Id
++string Email
++string NormalizedEmail
++long PublicNumber
++ParticipantProfile Profile
++Guid? TeamId
+}
+RosterController ..> SaveParticipantHandler : dispatches
+SaveParticipantHandler ..> SaveParticipantCommand : handles
+SaveParticipantHandler --> Participant : uses
+class Team {
+ +Guid Id
+ +Guid? ProjectId
+}
+class RaffleDraw {
+ +Guid Id
+ +Guid? WinnerParticipantId
+ +string WinnerLabel
+ +Redact(participantId: Guid): void
+}
+Participant "*" --> "0..1" Team
+RaffleDraw --> Participant : nullable winner reference
+@enduml

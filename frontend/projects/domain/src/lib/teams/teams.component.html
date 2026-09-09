@@ -1,0 +1,72 @@
+@if (event.loading()) {
+  <cs-card><p>Forming teams…</p></cs-card>
+} @else if (event.state(); as state) {
+  <h1>Team selection</h1>
+  @if (administrator.active()) {
+    @if (flow.error(); as error) { <p role="alert">{{ error }}</p> }
+    <button csButton type="button" (click)="advance()" [disabled]="!event.connected() || flow.loading()">Open raffle</button>
+  }
+  @if (state.teams.length) {
+    @if (teams.error(); as error) { <p role="alert">{{ error }}</p> }
+    @for (team of state.teams; track team.id) {
+      <cs-card>
+        <h2>{{ team.label }}</h2>
+        @if (projectTitle(team.projectId); as projectTitle) { <p>Project: {{ projectTitle }}</p> }
+        @if (administrator.active()) {
+          <cs-field label="Assigned project" [forId]="'project-' + team.id">
+            <select csSelect [id]="'project-' + team.id" [ngModel]="team.projectId ?? ''" (ngModelChange)="assignProject(team, $event)" [disabled]="!event.connected() || teams.loading()">
+              <option value="">No project assigned</option>
+              @for (project of state.projects; track project.id) { <option [value]="project.id">{{ project.title }}</option> }
+            </select>
+          </cs-field>
+        }
+        @if (team.members.length) {
+          <ul>
+            @for (member of team.members; track memberId(member)) {
+              <li>{{ memberLabel(member) }}</li>
+            }
+          </ul>
+          @if (administrator.active()) {
+            @for (member of team.members; track memberId(member)) {
+              <cs-field [label]="'Move ' + memberLabel(member) + ' to team'" [forId]="'move-' + memberId(member)">
+                <select csSelect [id]="'move-' + memberId(member)" [ngModel]="''" (ngModelChange)="move(memberId(member), $event)" [disabled]="!event.connected() || teams.loading()">
+                  <option value="">Choose destination</option>
+                  <option value="unassigned">Unassigned</option>
+                  <option value="new">New team</option>
+                  @for (destination of state.teams; track destination.id) {
+                    @if (destination.id !== team.id) { <option [value]="destination.id">{{ destination.label }}</option> }
+                  }
+                </select>
+              </cs-field>
+            }
+          }
+        } @else {
+          <cs-empty-state title="No members in this team" />
+        }
+      </cs-card>
+    }
+  } @else {
+    <cs-empty-state title="No teams have formed yet" />
+  }
+  @if ((state.unassignedMembers ?? []).length) {
+    <cs-card>
+      <h2>Unassigned</h2>
+      <ul>
+        @for (member of state.unassignedMembers ?? []; track memberId(member)) {
+          <li>{{ memberLabel(member) }}</li>
+        }
+      </ul>
+      @if (administrator.active()) {
+        @for (member of state.unassignedMembers ?? []; track memberId(member)) {
+          <cs-field [label]="'Move ' + memberLabel(member) + ' to team'" [forId]="'move-' + memberId(member)">
+            <select csSelect [id]="'move-' + memberId(member)" [ngModel]="''" (ngModelChange)="move(memberId(member), $event)" [disabled]="!event.connected() || teams.loading()">
+              <option value="">Choose destination</option>
+              <option value="new">New team</option>
+              @for (destination of state.teams; track destination.id) { <option [value]="destination.id">{{ destination.label }}</option> }
+            </select>
+          </cs-field>
+        }
+      }
+    </cs-card>
+  }
+}

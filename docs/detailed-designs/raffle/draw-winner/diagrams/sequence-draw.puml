@@ -1,0 +1,50 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Commit one uniform raffle result
+actor "Administrator" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "RafflePageComponent" as page
+participant "IRaffleService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "RaffleController" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "DrawWinnerHandler" as handler
+participant "RaffleDraw" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+participant "EventChangePublisher" as push
+end box
+actor -> page : Press DRAW NAME
+page -> client : Draw with current version and fresh operation ID
+client -> controller : POST raffle draws
+controller -> handler : Dispatch authorized command
+handler -> db : Lock event; recheck session; read receipt and version
+alt Exact prior operation
+ db --> handler : Original saved draw
+else Live Raffle, current version, no active draw
+ handler -> db : Read eligible stable IDs and SQL UTC
+ db --> handler : Pool, labels and start time
+ alt Pool nonempty
+  handler -> handler : Unbiased secure index L2-021
+  handler -> entity : Create winner and 5s + 5s timeline
+  handler -> db : Commit draw, unique winner, receipt and change
+  db --> handler : Durable result
+ else Pool empty
+  handler --> controller : No eligible participants; no draw
+ end
+else Stale, unauthorized, wrong stage or active
+ handler --> controller : Reject; no extra award
+end
+handler --> controller : DrawResult or rejection
+controller --> client : Persisted outcome
+push -> client : EventChanged after commit
+client -> page : Present committed timeline only
+@enduml

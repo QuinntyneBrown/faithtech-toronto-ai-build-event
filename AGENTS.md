@@ -2,20 +2,20 @@
 
 ## Project Overview
 
-Build a reusable web platform for live FaithTech build events, beginning with the
-September 9, 2026 Toronto AI Build Event. A participant-facing Angular client and
-an admin-only Angular application share a .NET API. Administrators configure
-events, participant access, schedules, content, venue branding, and activities.
-Participants enter with an email address and individual entry code, see a venue
-countdown, and move automatically through scheduled stages for team and project
-selection, building, networking and private messaging, quizzes, raffles, and demos.
-Project showcases and recaps retain repository and demo links after the event.
+Build a dedicated companion to the September 9, 2026 Toronto AI Build Event and
+its PowerPoint. One Angular application shares a .NET API with SignalR realtime
+updates. Exactly four screens exist: Countdown, Projects, Team selection, Raffle.
+Participants enter with email only and join the raffle; personal details are
+optional. A shared four-digit passcode enables administrator controls within
+those same screens. Administrators advance the event, manage participants and
+projects, rearrange random teams, assign projects, and draw raffle winners.
+The passcode is changeable directly in the database and through a packaged CLI.
 
-The solution includes an independent, accessible, responsive, light-theme design
-system matching Cornerstone. Optional per-event Liturgy project links support
-continued work after events; this connection is disabled by default and for the
-September 9 event. Core event features work independently of Liturgy, which owns
-ongoing project management. Product scope and acceptance criteria live in
+All UI comes from `@quinntyne/cornerstone` on npm. Missing UI capabilities must
+be implemented in Cornerstone, released, and consumed through the new version.
+There is no separate admin app, local design system, or Liturgy integration.
+This September 9 direction supersedes the earlier reusable platform. Event
+context is in `docs/run-sheet.html`. Product scope and acceptance criteria live in
 [docs/prompt.md](docs/prompt.md) and [docs/specs/](docs/specs/).
 
 ## Speed Is Not the Goal
@@ -80,7 +80,7 @@ say what it cost rather than quietly narrowing scope.
 
 Placement follows what a component knows, and it is not negotiable.
 
-- `components`: presentational only - buttons, cards, pills. Takes an input, emits
+- `components`: presentation composition of Cornerstone UI only. Takes an input, emits
   an output, injects no application service, imports no other project. An Angular
   primitive like `Router` is fine; an `api` contract is not. That leaf position is
   what lets the library publish to npm.
@@ -109,40 +109,38 @@ Every service an application consumes is reached through an interface and an
 
 ## Design System
 
-The design system is a deliverable in its own right, not a folder inside the front
-end. It sits at `design-system/`, beside `backend/` and `frontend/`, with its own
-`package.json`, its own tests, and its own build, deploys as its own static site,
-and carries no runtime dependency on the application.
-
-It owns the design tokens - colour, spacing, type scale, radius - as CSS
-custom properties under one prefix, and that copy is authoritative. The front end
-mirrors them, and every component stylesheet reads them as `var(--<prefix>-<role>)`.
-A hard-coded hex, dimension, or font stack in a component stylesheet is a defect:
-add the missing token to the design system first.
+`@quinntyne/cornerstone` owns all UI, design tokens, styles, and reusable visual
+behaviors. Consume its npm release directly; do not copy or mirror its tokens
+or implement replacement controls in this repository. Missing components,
+tokens, drag-and-drop behavior, accessibility fixes, or raffle effects must be
+built and tested in Cornerstone, released to npm, and adopted by version update.
+Application code composes that UI and supplies event state and actions. Keep
+the accessible, responsive light theme. The former `design-system/` project is
+legacy implementation, not a required deliverable under the new scope.
 
 ## Implementation
 
-Implement with the **incremental implementation** skill from Addy Osmani's
-`agent-skills`. It is mandatory for any change touching more than one file, and it
-is not optional because the work looks small once you have read the requirement.
+Incremental implementation is mandatory for any change touching more than one
+file. Follow these steps, adapted from
+[Addy Osmani's incremental implementation skill](https://github.com/addyosmani/agent-skills/blob/main/skills/incremental-implementation/SKILL.md).
+Installing or invoking the skill is not required.
 
-    /agent-skills:incremental-implementation
-
-Install it once per machine:
-
-    /plugin marketplace add addyosmani/agent-skills
-    /plugin install agent-skills@addy-agent-skills
-
-What the skill requires of you:
-
-- Build in thin vertical slices. Implement one slice, test it, verify it, then
-  expand. Never implement a whole feature in one pass.
-- Leave the system working and testable at the end of every increment. An
-  increment that does not build is not an increment.
-- Stop and test before you have written ~100 lines. If you are tempted to write
-  more than that before running anything, the slice is too big - cut it.
-- Commit each verified increment, so the history reads as a sequence of working
-  states rather than one drop.
+1. Split the work into thin vertical slices, each completing one behavior. Keep
+   changes focused on the requirement and choose the simplest workable design.
+2. Begin each slice with a failing acceptance test tied to Given-When-Then
+   criteria, then implement the smallest complete behavior that passes it.
+   Stop and test before writing ~100 lines; split larger slices further.
+3. Verify each slice with the repository's applicable tests, build, type checks,
+   and lint checks; manually check behavior where needed. Fix failures before
+   continuing, leaving the system working and testable. Repeat successful checks
+   only after changes that could affect them.
+4. Review the diff for scope and simplicity. Keep increments independently
+   revertible; if unfinished functionality must be merged, hide it behind a
+   feature flag with a safe default.
+5. Commit each verified slice with a descriptive message, then build on it in the
+   next slice.
+6. Continue until every requirement is satisfied. Confirm the full test suite,
+   build, and end-to-end behavior pass before declaring the task complete.
 
 This pairs with ATDD below: the acceptance test defines the slice, and the slice
 is done when that test passes. It does not license shipping less than the whole
@@ -176,12 +174,10 @@ faithtech-toronto-ai-build-event/
 |   `-- tests/
 |-- frontend/
 |   `-- projects/
-|       |-- admin/ <-- admin app
-|       |-- client/ <-- client app
+|       |-- client/ <-- single app, including inline admin controls
 |       |-- api/
 |       |-- components/
 |       `-- domain/
-|-- design-system/
 |-- eng/
 |   `-- scripts/
 |-- e2e/

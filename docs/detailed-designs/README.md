@@ -1,124 +1,135 @@
-# FaithTech Toronto software design
+# FaithTech event companion — detailed design
 
-These designs refine the [L1 scope](../specs/L1.md) and [62 L2 requirements](../specs/L2.md). The requirements remain normative, including every acceptance criterion. Quoted requirement excerpts retain their original wording.
+> **MVP scope override:** `docs/specs/L1.md` and `docs/specs/L2.md` are authoritative. Security hardening, privacy enforcement, abuse protection, mutation auditing, and concurrency/race/idempotency/stale-version guarantees described in these designs are **NON-MVP** and do not block completion.
 
-Feature pages distinguish proposed components from inspected source behavior. The operator CLI designs identify existing provisioning, event, schedule, and access code alongside their proposed extensions. The standalone `design-system/` and static `docs/mocks/` provide design evidence; neither establishes production acceptance. Feature designs below share the following contracts.
+## Scope and design authority
 
-## Architecture decisions
+This design describes the dedicated September 9, 2026 Toronto build-event companion. The [L1](../specs/L1.md) and [L2](../specs/L2.md) specifications define behavior. The approved [Angular mock](../mocks/README.md) defines the visual and interaction reference. Exactly four screens exist: Countdown, Projects, Team selection, and Raffle. Administrator tools appear on those screens. PowerPoint remains independently operated.
 
-The API uses .NET 10, EF Core 10, SQL Server, and MediatR **12.5.0**. Microsoft.Extensions dependency injection, Options validation, Configuration, logging, and hosted services provide application composition. The deployment uses HTTPS and same-origin application/API hosting.
+The target uses a **fresh SQL Server database**. Existing accounts, individual entry codes, events, registrations, and migrations are not imported. This decision does not authorize deletion of an existing database. The documents describe proposed production behavior, not completed implementation or passing acceptance evidence.
 
-`backend/src/FaithTechTorontoAiBuildEvent.Domain` contains entities and domain policies without project or framework dependencies. `Application` contains feature commands, queries, handlers, validators, and infrastructure ports. `Infrastructure` implements SQL persistence, credentials, time, logo decoding, and notification delivery. `Api` composes these dependencies. Each type occupies a matching file and namespace; controllers reside in `FaithTechTorontoAiBuildEvent.Api.Controllers` and only bind, dispatch through MediatR, and return. A provisioning CLI resides under `backend/src` and uses the same application services. API acceptance tests reside in `backend/tests`.
+## Shared architecture and protocol
 
-Features use direct, feature-specific EF Core queries through application ports. A generic repository or separate microservice per subsystem adds no required behavior. SQL Server stores authoritative state. Redis transports SignalR notifications between API instances; it holds no sole copy of business state.
+One Angular `client` application composes `domain`, `api`, and presentational `components` sibling libraries in `frontend/projects/`. `api` owns interfaces, tokens, data contracts, HTTP adapters, SignalR connections, and conversion into readonly signals. Consumers inject tokens; concrete adapters are bound only at composition. Each interface, token, implementation, component class, template, and stylesheet has its own file. `components` composes published Cornerstone UI and has no application-service dependency. The mock workspace remains independent.
 
-`frontend/projects/admin` and `client` own routed pages, guards, and dialogs. Sibling `domain` components and stores inject `api` contracts through tokens. Sibling `components` contains presentational inputs/outputs and imports no other project. Every Angular component has separate TypeScript, HTML, and stylesheet files.
+The existing .NET `Api`, `Application`, `Domain`, `Infrastructure`, and `Provisioning` projects remain architectural homes under `backend/src`. Domain references no project. Application owns commands, queries, validators, handlers, and persistence interfaces; Infrastructure implements them. Controllers only bind, dispatch through MediatR **12.5.0**, and return typed outcomes. Cross-cutting authentication, authorization, validation, and exception translation execute through middleware or dispatch behaviors. Microsoft.Extensions supplies DI, Configuration, Options, and logging.
 
-Every consumed service has separate interface, token, and implementation files in `api`: for example `event-service.contract.ts` declares `IEventService`, `event-service.token.ts` exports `EVENT_SERVICE`, and `event.service.ts` declares `EventService`. Consumers call `inject(EVENT_SERVICE)` and never import implementations. Production composition binds HTTP adapters; Playwright composition binds mocks. HTTP, SignalR event conversion, and observable-to-signal conversion remain inside adapters. Domain state uses signals without HTTP dependencies. No frontend state container becomes an authorization boundary.
+`CompanionDbContext` is a proposed EF Core context with its own fresh migration history, separate from legacy `EventDbContext`. SQL Server stores a singleton `EventState`, participants, projects, teams, draws, sessions, operation receipts, authentication attempts, change records, and audit records. UTC timestamps come from `SYSUTCDATETIME()` inside transactions. SQL connections require encryption and server-certificate validation.
 
-## HTTP and persistence contracts
+The API serves the single Angular build and four route fallbacks from one HTTPS origin. Public API paths start `/api/event`; administrator paths `/api/admin`; owner-private paths `/api/participant`. Public, administrator, and participant SignalR endpoints are `/api/event/live`, `/api/admin/live`, and `/api/participant/live`. Distinct cookie schemes and path scopes prevent unrelated identity substitution. Administrator and participant identities may coexist in a browser; logout clears only the selected identity. Browser tabs on the same origin share production cookies, unlike the mock's illustrative tab roles.
 
-Participant routes begin `/api/events/{eventId}`; administrator routes begin `/api/admin/events/{eventId}`. Authentication routes are explicitly identified in their feature designs. All identifiers are opaque UUIDs; route identity never grants access. Responses contain only fields authorized for that actor. Date/time instants use ISO 8601 UTC; event-local displays use the saved timezone and explicit dates. Scores and raffle identity use stable participant IDs, never names.
+### Commands, versions, and retries
 
-Each mutating intent supplies an `Idempotency-Key` UUID. Command descriptions use `OperationId` for that bound header value; clients do not supply conflicting body identities. Platform-level operations such as event creation use a nullable event scope. Authentication uses completion-only metadata after credential verification, never reusable secret-bearing receipts. `OperationReceipt` has `ActorId`, `EventId`, `OperationId`, `Target`, `PayloadHash`, `Result`, and `CommittedAtUtc`. A unique actor/event/operation key prevents duplicate commits. A canonical payload includes the route, method, target IDs, normalized submitted values, and expected version. Reuse with different content returns `409 operation-key-reused`. Authenticated receipt lookup precedes temporal rejection, so an authorized identical retry returns its committed result after closure. A failed validation or authorization creates no success receipt.
+HTTP performs all mutations. SignalR pushes notifications and supplies no arbitrary group-join or data-mutation methods. `CommandEnvelope<T>` contains `operationId` (UUID), `expectedVersion` (decimal string), and `input` (typed payload). Every event-data mutation serializes on the singleton event row using a transaction-owned update lock held through commit. An event-wide increasing `bigint` version deliberately accepts conservative conflicts at this event's small scale. All SQL bigint versions travel as decimal strings, avoiding JavaScript number precision loss.
 
-Ordinary receipts contain safe response data or identifiers for an authorized projection. Secret-revealing credential issuance is the exception: the receipt records issuance identity and completion only. A lost one-time code response requires explicit code replacement; no endpoint or retry recovers the code. Passwords, entry codes, session secrets, and CSRF tokens never enter receipts or logs.
+The transaction checks current authority, looks up the actor-scoped operation receipt, compares its canonical input digest, then checks version and business rules. An exact authorized retry resolves the original durable outcome before checking a now-stale version. Reuse with changed input returns `409 operation-mismatch`. A new stale operation returns `409 stale-version` with an authorized current projection. Successful event mutations increment the version and atomically save state, receipt, audit metadata, and an `EventChange` row. A failed commit exposes no partial success.
 
-Edits of existing mutable resources send `If-Match` with an opaque base64 SQL `rowversion`; missing versions return `428`. Version mismatch returns `409 stale-version` with the currently authorized value and version. The client retains the proposed draft for deliberate reapplication. EF maps concurrency tokens as infrastructure shadow properties, preserving the dependency-free domain. SQL uniqueness and transaction isolation enforce invariants spanning rows. Shared event/phase guards serialize only operations that change their invariants; unrelated answer rows do not share a global edit version.
+Administrator transactions acquire the shared `CompanionCredential` application lock before the event lock and hold it through commit. Direct/CLI credential replacement acquires its exclusive counterpart. Public transactions need only the event lock. Input receipt digests use keyed HMAC rather than unkeyed hashes of potentially private fields. The `IRandomSource` abstraction used by domain shuffle policy belongs in Domain; its cryptographic adapter belongs in Infrastructure.
 
-`IEventStore` is the application transaction/query port implemented by `SqlEventStore` using `EventDbContext`. Its feature methods load authorized aggregates, check versions, and commit changes, receipts, audit records, and `OutboxMessage` rows together. Class diagrams show only each slice's contract members; shared interfaces combine these members, with concrete typed load/query methods rather than return-type-only overloads. Each feature describes additional unique keys and locks. A transaction returns success only after durable commit. Unique-key races map to the same conflict or original receipt as the corresponding serial execution.
+`CommandResult<T>` contains `operationId`, `committedVersion`, and the authorized result. Receipts retain stable IDs, outcome codes, and version, not copies of personal fields or cookie secrets. Replayed results resolve those IDs through current privacy rules; deleted subjects return a tombstone outcome. This preserves operation identity without reintroducing deleted personal data. Participant entry uses the separate protected receipt flow described in its feature design. Authentication and credential replacement use their own serialization and do not require an event version.
 
-`ProblemDetails` responses use stable `code`, `correlationId`, and field-error paths. Invalid JSON/syntax returns `400`, authentication failure `401`, forbidden authorized roles `403`, and concealed inaccessible resources `404`. Domain validation returns `422`, stale or conflicting state `409`, throttling `429` with positive `Retry-After`, and temporary infrastructure failure `503`. A timeout after an attempted commit is an unknown outcome: the UI reconciles with the same operation identity before offering a new intent.
+Failures use ProblemDetails with `code`, `correlationId`, optional field errors, and authorized current state for conflicts. Codes distinguish `400 validation`, `401 session-required`, `403 forbidden`, `409 stale-version/entry-closed/draw-active`, `429 throttled` with positive `Retry-After`, and `503 storage-unavailable`. Drafts survive ordinary rejection and require explicit reapply with a new operation ID/version. Session invalidation and Countdown profile closure clear private drafts. No mutation is silently queued or replayed after disconnect.
 
-Input handling trims surrounding whitespace, normalizes line endings to LF, and counts Unicode scalar values. Plain text remains literal text in every renderer. Common limits are names/options 1–200 characters, prose 5,000, messages 1–2,000, and HTTPS URLs 2,048. Tags contain at most 20 distinct normalized values across the three fields, each at most 40 characters. Optional fields permit empty values; draft exceptions follow L2-001 and L2-017. HTTPS URLs reject user information and are never fetched by the API. Accepted logo files decode as PNG, JPEG, or WebP, at most 2 MiB and 4,096 pixels per dimension; SVG and mismatched executable content fail validation.
+### Projections and realtime delivery
 
-## Time, closure, and connected updates
+`PublicEventSnapshot` contains version, server time, configured target/copy, current screen, projects, public team labels/members, unassigned public member labels, eligible count, and privacy-filtered draw history. It excludes email, introduction answers, internal sessions, and private roster fields. `ParticipantSnapshot` exposes only the authenticated owner's public label and saved optional fields. `AdministratorSnapshot` adds the full roster and permitted editing state. Public member labels pair an optional name with a stable participant label; identifiers alone grant no access.
 
-`IServerClock` obtains SQL Server UTC time. `QuizAdmissionBehavior` records `ReceivedAtUtc` durably at the API's authorized admission point, before queued answer processing. Its admission fence orders receipt against closure; final scores wait for all earlier admissions to resolve. The [quiz answer design](quizzes/answer-quiz/README.md) defines this protocol. Time-sensitive transactions sample current authoritative time for other actions. `EventSnapshot` includes server time, event endpoints, current stage ID/content, window states, visible activities, and authorized versions. Browser countdowns interpolate from the latest server sample using a monotonic timer, not the device wall clock.
+`EventChange` contains version, change kind, affected stable IDs, and commit time, never serialized personal payloads. Every API instance runs `EventChangePublisher`, reading committed changes at a proposed 250 ms interval with an independent cursor and pushing to its own connected clients using SignalR. Instances do not compete for or globally mark records delivered. This avoids a new broker at this scale and does not substitute browser polling for SignalR. Session watchers use the same interval for credential revision, revocation, and expiry. Durable records recover a crash after commit but before notification.
 
-`WindowClosure` stores event/window identity, effective closing instant, and closure reason. Before schedule edits or protected actions, `WindowPolicy` materializes every closure implied by the previously committed schedule and authoritative time. This works without a connected browser or timely background job. Once closed, quiz and selection windows remain closed despite later edits. Event completion likewise prevents participant link editing and timed activities from reopening; it does not add a time gate to profile, messaging, or safety actions. A hosted boundary worker records due closures and notifications; request-time checks remain authoritative if that worker is late. Administrator corrections are restricted to the explicit exceptions in each requirement.
+Notifications carry only version and affected projection kinds. Clients coalesce notifications and load authorized snapshots; every push remains free of private roster content. Snapshot capture is transactionally coherent. A client buffers observed versions while loading, rejects older snapshots, and reloads if its highest observed version is newer. Reconnect and visibility restoration reauthorize both private channels before loading private data. HTTP snapshot reads do not renew administrator activity. A reconnect never replays a finished animation.
 
-`OutboxMessage` contains an ID, event ID, audience, affected resource ID/version, creation time, and dispatch lease. It carries invalidation metadata, never private message bodies or profile fields. `OutboxDispatcher` leases committed rows, publishes through `EventHub`, and marks delivery attempts complete after successful publication. Expired leases retry; duplicate notifications are harmless. A failed transaction emits nothing. Notification delivery is at least once and is not a substitute for durable state.
+Connected session invalidation sends a content-free `SessionInvalidated`, clears private client state, and closes the private connection. Every privileged HTTP request still checks the database revision and expiry; a notification is not an authorization boundary. Private dispatch repeats authorization immediately before sending, and transport-origin checks reject cross-site connections. When storage cannot establish authority, private controls/data are cleared or withheld and synchronization is marked unavailable.
 
-`EventHub` assigns groups from validated server-side sessions: event-wide public data and participant-specific private audiences. It accepts no arbitrary client-selected group membership. Multiple API instances use the SignalR Redis backplane and load-balancer session affinity. Redis outage leaves SQL state intact and triggers reconnecting/stale UI; delivery resumes through the outbox. Clients refetch authorized resources after invalidation and on focus, pageshow, or reconnection. Out-of-order responses cannot overwrite a newer resource version; uncertain ordering triggers another authoritative read. A periodic five-second reconciliation read detects missed notifications; scheduled boundaries use server-sampled local timers plus immediate refetch. The two-second healthy connected deadline is measured, not inferred from the five-second safety poll.
+### Data invariants
 
-Reconnect performs session validation before private rendering, then obtains a complete authorized snapshot. It skips missed animations. The client renders within two seconds after successful synchronization; pending/failed synchronization remains visibly unavailable. A non-event activity retains its view and in-memory draft when the current stage changes, and announces the new stage with a navigation action. The main event page switches automatically.
+`EventState` contains `Id=1`, `Version`, `CurrentScreen`, `TeamsFormed`, and monotonic next participant/team label counters. A unique normalized-email index enforces one current identity per trimmed, case-insensitive full email. No dot/plus rewriting occurs. SQL Unicode columns allow up to twice the scalar limit in UTF-16 code units; Application validators count Unicode scalars before persistence. Required/optional blank semantics follow L2-040.
 
-## Authentication and privacy
+`Participant.TeamId` is nullable and references one team, preventing duplicate membership. `Team.ProjectId` is nullable; multiple teams may reference one project. Empty teams persist. Draws hold immutable IDs/times and candidate identities plus mutable public-label snapshots so renames and deletions can redact retained presentation. A unique non-null `RaffleDraw.WinnerParticipantId` index prevents repeat wins; deletion nulls it and redacts all matching snapshot labels without deleting the draw.
 
-Participant and administrator authentication use separate Secure, HttpOnly, SameSite cookies containing protected references to SQL session records. Anonymous `GET /api/events/{eventId}/antiforgery` and `GET /api/admin/antiforgery` issue same-origin antiforgery tokens and the corresponding antiforgery cookie. Request tokens stay in memory for unsafe-method headers, including authentication requests. Cookie-authenticated mutations reject missing/invalid antiforgery tokens. Secrets never appear in URLs, analytics, browser persistent storage, or logs. Database backups and the ASP.NET Data Protection key ring require protected operator storage.
+### Existing implementation and mock transition
 
-`SessionAuthorizationBehavior` validates active registration, session revocation, event scope, and ownership on every protected request, including receipt retrieval. SignalR connection establishment and client invocations perform the same validation. Participant sessions expire absolutely after 24 hours. Administrator sessions expire after 30 minutes of explicit user inactivity or eight hours absolutely; polling, hub traffic, and background refresh do not extend idle expiry. A dedicated interaction endpoint records authenticated deliberate activity. Deactivation and credential replacement revoke sessions transactionally and emit private invalidations. Sign-out revokes only the current session.
+| Existing artifact | Target treatment |
+|---|---|
+| `EventDbContext` and Identity-backed administrator accounts | Reference existing transaction patterns; introduce a fresh companion schema and revision-based shared credential |
+| `AuthenticationBudget` | Reuse database-backed locking approach; replace legacy thresholds with five/source and twenty/deployment failed checks per five minutes |
+| `OperationReceipt`, `ApiExceptionHandler`, readiness handlers | Adapt to new scope and privacy-preserving receipts; retain structured error/readiness responsibilities |
+| API `Program` and separate admin static build | Serve one app; add three scoped SignalR endpoints and remove legacy routes from the companion deployment |
+| Provisioning tool, `SecretInput`, `OperatorTargetProfileStore` | Retain useful protected-input/target patterns; replace legacy command scope and exit codes |
+| Mock `IEventService`, `MockEventService`, and `apply-command` | Split production services by capability; replace browser authority with HTTP, SignalR, and durable transactions |
+| Mock Countdown, Projects, Teams, and Raffle page components | Preserve composition and user flow; bind production service contracts through tokens |
+| Mock `@mock/components` and proposal tokens | Implement upstream in Cornerstone, publish, then adopt npm release; no production local substitute |
+| Relative mock clock, browser storage, reset/offline controls, `0042` | Rehearsal conveniences only; use configured UTC target, server sessions, and explicitly provisioned production credential |
 
-Private HTTP responses use `Cache-Control: no-store`. The client conceals private views during restored-tab validation and clears private signals and drafts on sign-out, known expiry, or revocation. History navigation and the back-forward cache follow the same guard. An offline browser cannot detect an unknown remote revocation; known local expiry still clears content. Sensitive recipient data is never included in a broadly broadcast notification.
+The run sheet supplies “RTR — Reconciliation Through Relationships” and its relationship, shared-learning, and facilitator-reviewed matching context. Initial provisioning stores that one brief project description with absent repository/demo links. Seed logic runs only during fresh initialization, never on every API start. No attendees or guest projects are inferred. Configuration supplies September 9, 2026, 17:00–21:00 America/Toronto, Stone Church — Davenport Community Campus, 45 Davenport Rd, Toronto; the countdown target is `2026-09-09T21:20:00Z`.
 
-Authentication failure counters use SQL-backed rolling windows under a short transaction lock. Limits are ten failed attempts per source in five minutes and five per submitted participant code or administrator account in five minutes. Keyed hashes represent attempted identities without storing secrets; nonexistent identities receive the same treatment. Trusted proxy configuration determines source addresses. Throttled attempts do not test credentials or extend the window. Chat limits count only committed new sends: 30 per sender per minute, excluding an identical committed retry.
+## Delivery and review
 
-## Verification and deployment
+This documentation work changes no application behavior and adds no tests. Future implementation uses ATDD: real API/SQL/SignalR integration, installed CLI and direct SQL verification, and Playwright with injected mock contracts and one page object per screen. Diagram rendering and document review validate these artifacts, not the proposed runtime.
 
-Each feature identifies acceptance scenarios for API integration tests and Playwright page objects. Tests state behavior; selectors reside in one page object per screen. No architecture or specification-parsing tests form part of the design. Mock-backed browser tests prove UI behavior; separate real-API integration, connected-client, restart, and load checks establish production claims.
+Each feature includes C4, typed structure, and behavior diagrams, with rendered PNGs adjacent to PlantUML sources. Exact requirement quotations retain the specs' original wording. New design prose uses the software-design-document house style.
 
-The UI matrix includes 320, 575, 576, 767, 768, 991, 992, 1199, 1200, and 1440 CSS-pixel widths; loading, empty, error, and populated states; keyboard use; and 200% zoom. Latest stable Chrome validation records the actual version, operating system, motion setting, and GPU/audio capability. The existing mock evidence does not transfer these claims to future Angular components.
+## Feature designs
 
-Deployment configuration supplies SQL, Redis for multiple instances, protected key storage, allowed origins, map-tile provider settings, and operator credentials through validated Options. Validated logo bytes reside in SQL beside event configuration. Startup fails with redacted actionable configuration errors. Private health endpoints expose SQL readiness and outbox lag to operators. Audit records contain actor/event/action/time/outcome and stable IDs, excluding credentials, emails, messages, biographies, tags, and report text. Logs use correlation IDs and parameter redaction.
+- [Enter by email and restore the private session](participants/enter-by-email/README.md)
+- [Maintain optional introduction information](participants/maintain-profile/README.md)
+- [Administer participants on Countdown](participants/administer-participants/README.md)
+- [Display countdown, welcome, and event information](event-flow/display-countdown/README.md)
+- [Advance the four screens under presenter control](event-flow/advance-screens/README.md)
+- [Maintain and display RTR project cards](projects-teams/maintain-projects/README.md)
+- [Form random teams once on first opening](projects-teams/form-teams-once/README.md)
+- [Move team members and assign projects](projects-teams/move-members-and-assign-projects/README.md)
+- [Draw and persist one raffle winner](raffle/draw-winner/README.md)
+- [Present synchronized name cycling and celebration](raffle/present-draw/README.md)
+- [Authenticate administrators within the companion](access/authenticate-administrators/README.md)
+- [Protect requests, private data, and abuse budgets](access/protect-requests-and-private-data/README.md)
+- [Replace the administrator passcode through SQL or CLI](access/replace-passcode/README.md)
+- [Adopt completed Cornerstone components and tokens](experience/adopt-cornerstone/README.md)
+- [Support responsive and accessible interaction](experience/support-accessible-interaction/README.md)
+- [Synchronize and recover authoritative event state](operations/synchronize-and-recover-state/README.md)
+- [Install and target the passcode-management CLI](operations/install-passcode-cli/README.md)
+- [Operate, measure, and restore the event companion](operations/operate-and-restore/README.md)
 
-Load acceptance uses 200 participants and two administrators, a two-minute warm-up and ten-minute measurement repeated ten times. Reads occur every five seconds, participant mutations every 30 seconds, and administrator mutations every minute, including a transition and raffle. Real-API p95 is at most one second, network failures at most 1%, and connected updates at most two seconds. A separate quiz burst submits 200 answers in one second. Reports retain environment, configuration, raw timings, and failure counts; these are acceptance targets, not measurements supplied by this design.
+## Requirement coverage
 
-SQL backups include all authoritative entities, receipts, and outbox rows. Operators restore into an isolated environment with outbound notifications disabled, verify identities and retained state, then enable traffic deliberately. Redis is rebuilt rather than restored as authoritative data. Schema migrations run once before application rollout; rollback uses a compatible application build or an explicitly rehearsed database restore. The operations feature defines the recovery procedure in detail.
+All 34 active L2 requirements have a primary design below. Related features also quote applicable cross-cutting requirements. L2-011 project assignment is detailed further in the team-move design. Accessibility and request protection apply to every feature.
 
-## Local Super admin CLI
-
-The seven operator feature designs cover L2-049 through L2-060. The installed command is `faithtech-admin`, packaged from the existing Provisioning project. It connects directly to an explicitly selected database with a separate operator identity. It does not use browser authentication or add a SQL HTTP endpoint. The API retains its existing role and event boundaries.
-
-The [target design](operations/connect-operator-target/README.md) defines protected profiles and a database-operator actor registry. The [operation protocol](operations/review-and-reconcile-operations/README.md) owns preview/apply, ActorKind-compatible receipt changes, atomic unit-of-work behavior, migrations, output, journals, and recovery. These operator rules refine the application-only GUID actor description earlier in this index; existing application actors remain distinct.
-
-The [event maintenance design](operations/manage-event-data/README.md) defines shared noncommitting mutation helpers used by API and operator transaction wrappers. [Seed import](operations/import-event-seed/README.md) commits event settings and schedule together. Validated writes reuse application validation and the proposed platform outbox; raw [SQL repairs](operations/execute-data-repair/README.md) preserve operator transaction control and do not promise application-invariant enforcement or automatic invalidation.
-
-The CLI's L2-060 performance scenario uses two ten-minute intervals after warm-up. Existing broader platform measurement designs remain separate. The documents define implementation and behavioral acceptance obligations; diagram rendering does not demonstrate a successful deployment, database mutation, or load test.
-
-## Technical sources
-
-.NET 10 is the selected supported LTS baseline ([Microsoft support policy](https://dotnet.microsoft.com/en-us/platform/support/policy)). SQL concurrency uses EF Core concurrency tokens and conflict handling ([EF Core concurrency](https://learn.microsoft.com/en-us/ef/core/saving/concurrency)); transactional persistence follows [EF Core transaction guidance](https://learn.microsoft.com/en-us/ef/core/saving/transactions), with MARS disabled for savepoint compatibility. SignalR deployment follows the [ASP.NET Core scale guidance](https://learn.microsoft.com/en-us/aspnet/core/signalr/scale?view=aspnetcore-10.0). Outbox durability and resynchronization are application design decisions supporting L2-044.
-
-Cookie authority is revalidated on each request using the framework's supported validation hooks ([cookie authentication](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-10.0)). Same-origin request-token handling follows [ASP.NET Core antiforgery guidance](https://learn.microsoft.com/en-us/aspnet/core/security/anti-request-forgery?view=aspnetcore-10.0). Redis fanout uses the [SignalR backplane](https://learn.microsoft.com/en-us/aspnet/core/signalr/redis-backplane?view=aspnetcore-10.0); durable replay and full-state reconciliation remain application responsibilities.
-
-## Feature index
-
-All 33 feature designs own primary coverage for the 60 L2 requirements. Each includes the three C4 levels, a typed structure diagram, and behavior sequences with rendered PNG siblings. Shared constraints apply across the tree. The [verification record](REVIEW.md) records scope and asset checks.
-
-| Subsystem | Feature design | Primary requirements |
+| L2 | Parent L1 | Primary feature |
 |---|---|---|
-| event-administration | [Configure events](event-administration/configure-events/README.md) | L2-001, L2-047 |
-| event-administration | [Manage the event roster](event-administration/manage-roster/README.md) | L2-002 |
-| access | [Enter an event](access/enter-event/README.md) | L2-003, L2-046 |
-| access | [Manage participant and administrator sessions](access/manage-sessions/README.md) | L2-004, L2-038 |
-| event-flow | [Follow the live event](event-flow/follow-live-event/README.md) | L2-005, L2-007 |
-| event-flow | [Configure the event schedule](event-flow/configure-schedule/README.md) | L2-006, L2-008 |
-| teams-projects | [Assign participants to teams](teams-projects/assign-teams/README.md) | L2-009, L2-010 |
-| teams-projects | [Choose an event project](teams-projects/choose-project/README.md) | L2-011, L2-012 |
-| community | [Share a participant profile](community/share-profile/README.md) | L2-013 |
-| community | [Find people and explain matches](community/find-people/README.md) | L2-014, L2-048 |
-| community | [Exchange private messages](community/exchange-messages/README.md) | L2-015 |
-| community | [Block, report and resolve conversation abuse](community/moderate-conversations/README.md) | L2-016 |
-| quizzes | [Configure a quiz lifecycle](quizzes/configure-quiz/README.md) | L2-017 |
-| quizzes | [Answer a quiz and read final results](quizzes/answer-quiz/README.md) | L2-018, L2-019 |
-| raffles | [Configure prizes and inspect eligibility](raffles/configure-prizes/README.md) | L2-020 |
-| raffles | [Draw and present a raffle winner](raffles/draw-winner/README.md) | L2-021, L2-022 |
-| showcase | [Schedule team demonstrations](showcase/schedule-demos/README.md) | L2-023 |
-| showcase | [Publish team build links and recap](showcase/publish-team-build/README.md) | L2-024, L2-025 |
-| companion-links | [Expose optional Liturgy links](companion-links/connect-liturgy/README.md) | L2-026, L2-027, L2-028 |
-| design-system | [Publish the standalone design gallery](design-system/publish-gallery/README.md) | L2-029, L2-030 |
-| design-system | [Match the recorded Cornerstone light reference](design-system/match-light-reference/README.md) | L2-031, L2-032, L2-033 |
-| browser-experience | [Use the responsive accessible client](browser-experience/use-accessible-client/README.md) | L2-034, L2-035, L2-036, L2-037 |
-| platform-security | [Protect event access and private state](platform-security/protect-access/README.md) | L2-039, L2-041 |
-| platform-security | [Validate input and enforce abuse limits](platform-security/validate-requests/README.md) | L2-040, L2-042 |
-| operations | [Operate and measure the event platform](operations/operate-event/README.md) | L2-043, L2-045 |
-| operations | [Recover committed state after interruption](operations/recover-state/README.md) | L2-044 |
-| operations | [Install and update the operator tool](operations/install-operator-tool/README.md) | L2-049 |
-| operations | [Connect to an explicit operator target](operations/connect-operator-target/README.md) | L2-050, L2-051 |
-| operations | [Manage event data through validated commands](operations/manage-event-data/README.md) | L2-052 |
-| operations | [Manage roster credentials and administrator access](operations/manage-operator-access/README.md) | L2-053 |
-| operations | [Manage administrator passwords](operations/manage-administrator-passwords/README.md) | L2-061-L2-062 |
-| operations | [Import an event seed without losing event history](operations/import-event-seed/README.md) | L2-054, L2-055 |
-| operations | [Execute explicitly reviewed SQL data repairs](operations/execute-data-repair/README.md) | L2-056 |
-| operations | [Review, apply and reconcile operator operations](operations/review-and-reconcile-operations/README.md) | L2-057, L2-058, L2-059, L2-060 |
+| L2-002 | L1-001 | [Administer participants on Countdown](participants/administer-participants/README.md) |
+| L2-003 | L1-002 | [Enter by email and restore the private session](participants/enter-by-email/README.md) |
+| L2-004 | L1-002 | [Enter by email and restore the private session](participants/enter-by-email/README.md) |
+| L2-005 | L1-003 | [Display countdown, welcome, and event information](event-flow/display-countdown/README.md) |
+| L2-007 | L1-004 | [Advance the four screens under presenter control](event-flow/advance-screens/README.md) |
+| L2-009 | L1-005 | [Move team members and assign projects](projects-teams/move-members-and-assign-projects/README.md) |
+| L2-010 | L1-005 | [Form random teams once on first opening](projects-teams/form-teams-once/README.md) |
+| L2-011 | L1-005 | [Maintain and display RTR project cards](projects-teams/maintain-projects/README.md) |
+| L2-012 | L1-005 | [Maintain and display RTR project cards](projects-teams/maintain-projects/README.md) |
+| L2-013 | L1-006 | [Maintain optional introduction information](participants/maintain-profile/README.md) |
+| L2-020 | L1-008 | [Draw and persist one raffle winner](raffle/draw-winner/README.md) |
+| L2-021 | L1-008 | [Draw and persist one raffle winner](raffle/draw-winner/README.md) |
+| L2-022 | L1-008 | [Present synchronized name cycling and celebration](raffle/present-draw/README.md) |
+| L2-029 | L1-011 | [Adopt completed Cornerstone components and tokens](experience/adopt-cornerstone/README.md) |
+| L2-030 | L1-011 | [Adopt completed Cornerstone components and tokens](experience/adopt-cornerstone/README.md) |
+| L2-032 | L1-011 | [Adopt completed Cornerstone components and tokens](experience/adopt-cornerstone/README.md) |
+| L2-033 | L1-011 | [Adopt completed Cornerstone components and tokens](experience/adopt-cornerstone/README.md) |
+| L2-034 | L1-012 | [Support responsive and accessible interaction](experience/support-accessible-interaction/README.md) |
+| L2-035 | L1-012 | [Support responsive and accessible interaction](experience/support-accessible-interaction/README.md) |
+| L2-036 | L1-012 | [Support responsive and accessible interaction](experience/support-accessible-interaction/README.md) |
+| L2-037 | L1-012 | [Support responsive and accessible interaction](experience/support-accessible-interaction/README.md) |
+| L2-038 | L1-013 | [Authenticate administrators within the companion](access/authenticate-administrators/README.md) |
+| L2-039 | L1-013 | [Protect requests, private data, and abuse budgets](access/protect-requests-and-private-data/README.md) |
+| L2-040 | L1-013 | [Protect requests, private data, and abuse budgets](access/protect-requests-and-private-data/README.md) |
+| L2-041 | L1-013 | [Protect requests, private data, and abuse budgets](access/protect-requests-and-private-data/README.md) |
+| L2-042 | L1-013 | [Protect requests, private data, and abuse budgets](access/protect-requests-and-private-data/README.md) |
+| L2-043 | L1-014 | [Operate, measure, and restore the event companion](operations/operate-and-restore/README.md) |
+| L2-044 | L1-014 | [Synchronize and recover authoritative event state](operations/synchronize-and-recover-state/README.md) |
+| L2-045 | L1-014 | [Operate, measure, and restore the event companion](operations/operate-and-restore/README.md) |
+| L2-049 | L1-015 | [Install and target the passcode-management CLI](operations/install-passcode-cli/README.md) |
+| L2-050 | L1-015 | [Install and target the passcode-management CLI](operations/install-passcode-cli/README.md) |
+| L2-051 | L1-013 | [Replace the administrator passcode through SQL or CLI](access/replace-passcode/README.md) |
+| L2-063 | L1-016 | [Replace the administrator passcode through SQL or CLI](access/replace-passcode/README.md) |
+| L2-064 | L1-016 | [Replace the administrator passcode through SQL or CLI](access/replace-passcode/README.md) |
+
+## Artifact verification
+
+See [the review record](REVIEW.md) for diagram rendering, link and requirement review, and the boundary between completed documentation and future implementation acceptance.

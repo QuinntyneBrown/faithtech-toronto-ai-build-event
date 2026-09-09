@@ -1,0 +1,18 @@
+<h1>Raffle</h1>
+@if (raffle.state(); as state) {
+  <cs-card>
+    <p>{{ state.eligibleCount }} eligible {{ state.eligibleCount === 1 ? "participant remains." : "participants remain." }}</p>
+    @if (state.eligibleCount === 0) { <p>No eligible participants are available for another draw.</p> }
+    <cs-raffle-stage [result]="stageResult()" [now]="now()" />
+    @if (administrator.active()) {
+      <button csButton type="button" (click)="draw()" [disabled]="!event.connected() || raffle.drawing() || state.eligibleCount === 0">DRAW NAME</button>
+    }
+    @if (raffle.error(); as error) { <p role="alert">{{ error }}</p> }
+  </cs-card>
+  @if (state.previousWinners.length) {
+    <cs-card>
+      <h2>Previous winners</h2>
+      <ol>@for (winner of state.previousWinners; track winner.drawId) { <li>{{ winner.winnerLabel }}</li> }</ol>
+    </cs-card>
+  }
+}

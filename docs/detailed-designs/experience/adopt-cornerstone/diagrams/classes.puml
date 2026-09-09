@@ -1,0 +1,42 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+class CountdownComponent {
+ +target: number
+ +now: number
+}
+class TeamBoardComponent {
+ +groups: BoardGroup[]
+ +members: BoardMember[]
+ +projects: BoardProject[]
+ +editable: boolean
+ +disabled: boolean
+ +memberMove: Output<MemberMove>
+ +projectAssignment: Output<ProjectAssignment>
+}
+class RaffleStageComponent {
+ +result: RaffleResult
+ +now: number
+ +StopEffects(): void
+}
+class ReviewDialogComponent {
+ +Open(): void
+ +Close(): void
+}
+class MemberMove {
+ +memberId: string
+ +destination: string
+}
+class ProjectAssignment {
+ +groupId: string
+ +projectId: string?
+}
+class RaffleResult {
+ +drawId: string
+ +winnerLabel: string
+ +revealAt: number
+}
+TeamBoardComponent ..> MemberMove : emits
+TeamBoardComponent ..> ProjectAssignment : emits
+RaffleStageComponent ..> RaffleResult : input only
+@enduml

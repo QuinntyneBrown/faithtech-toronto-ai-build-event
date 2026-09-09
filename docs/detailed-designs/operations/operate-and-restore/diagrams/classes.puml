@@ -1,0 +1,45 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+class ReadinessController {
+ +Get(): Task<ActionResult<ReadinessState>>
+}
+class GetReadinessHandler {
+ +Handle(query: GetReadinessQuery): Task<ReadinessState>
+}
+class GetReadinessQuery
+interface IReadinessStore {
+ +Check(): Task<ReadinessState>
+}
+class SqlReadinessStore {
+ +Check(): Task<ReadinessState>
+}
+class ReadinessState {
+ +bool Ready
+ +bool DatabaseAvailable
+ +bool SchemaCompatible
+ +string CorrelationId
+}
+class AuditRecord {
+ +Guid Id
+ +string Action
+ +Guid? SubjectId
+ +Guid? SessionReference
+ +DateTimeOffset OccurredAtUtc
+ +string Outcome
+}
+class RecoveryVerification <<evidence record>> {
+ +string IsolatedDatabase
+ +DateTimeOffset BackupAtUtc
+ +bool SessionsRevoked
+ +bool StateCoherent
+}
+ReadinessController ..> GetReadinessHandler
+GetReadinessHandler ..> GetReadinessQuery
+GetReadinessHandler ..> IReadinessStore
+SqlReadinessStore ..|> IReadinessStore
+IReadinessStore ..> ReadinessState
+RecoveryVerification ..> ReadinessState : records check
+
+@enduml

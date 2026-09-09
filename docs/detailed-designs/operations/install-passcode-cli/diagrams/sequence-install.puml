@@ -1,0 +1,30 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Package and install or update local source
+actor "Database operator" as actor
+box "Operator — installed .NET tool" #E0F2FE
+participant "Install-OperatorTool.ps1" as page
+participant "dotnet SDK / tool manager" as client
+end box
+actor -> page : Run Install-OperatorTool.ps1
+page -> page : Resolve source, SDK and unique local version
+page -> page : Build and pack into temporary package source L2-049
+alt Build or package fails
+ page --> actor : Failure; existing tool remains runnable
+else Package ready
+ page -> client : Inspect installed tool identity/version
+ alt Not installed
+  client -> client : dotnet tool install exact local package
+ else Installed
+  client -> client : dotnet tool update exact local package
+ end
+ client --> page : Installation result
+ page -> page : Run version/help outside checkout
+ page --> actor : Verified executable and version
+end
+@enduml

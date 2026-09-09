@@ -1,23 +1,45 @@
-# Design verification record
+# Detailed-design review record
 
-The [design index](README.md#feature-index) contains 33 feature designs with primary coverage for L2-001 through L2-060. Normative requirements and acceptance criteria remain in `docs/specs/`. The operator designs distinguish existing provisioning, persistence, and validation source from proposed CLI extensions; the platform and standalone gallery designs retain their recorded source provenance.
+## Reviewed scope
 
-| Review dimension | Result |
+Review date: September 9, 2026. The design set refines the current [L1](../specs/L1.md) and [L2](../specs/L2.md) specifications and the approved [Angular mock](../mocks/README.md). The [index](README.md) maps every active requirement to its primary feature.
+
+| Artifact | Result |
 |---|---|
-| Requirements and scope | The original 48 primary mappings are retained. Seven operator features add primary coverage for L2-049 through L2-060, with all 12 parent mappings and full normative excerpts checked against the source. Feature prose addresses dependent acceptance criteria and shared constraints. |
-| Boundary and concurrency rules | Copy isolation, permanent closure, membership/selection conflicts, private conversation pairs, quiz admission/finalization, raffle uniqueness, and retained build pairings have explicit persistence boundaries. |
-| Shared contracts | Namespace uses `FaithTechTorontoAiBuildEvent`; SQL Server, MediatR 12.5.0, token-based Angular consumption, sessions, antiforgery, receipts, and recovery are reconciled across features. |
-| Existing-source provenance | The CLI still has only migration and administrator-provisioning commands. Operator pages name existing stores, handlers, validators, receipts, and Identity behavior separately from proposed additions. Existing Cornerstone/gallery evidence does not imply production parity. |
-| Rendered documentation | 99 C4, 33 class, and 84 sequence sources have 216 PNG siblings. The new CLI set contains 21 C4, seven class, and 26 sequence diagrams: 54 sources and 54 valid PNGs. New feature and index links resolve. Contact sheets and targeted full-size inspections checked the CLI layouts. |
-| Operator boundaries | Named-target verification, session/database principal SID attribution, application/operator actor separation, protected secret bindings, one import transaction, and noncommitting shared mutation helpers are explicit. Raw SQL retains distinct batch, transaction, retry, and invalidation semantics. |
-| Recovery and delivery | Diagrams and prose distinguish stale intent, matched receipts, lost credential output, partial SQL commits, uncertain current batches, migration history, bounded cancellation, and committed data with failed result delivery. Receipt deletion or restoring older data invalidates absence-as-proof assumptions. |
+| Feature documents | 18 self-contained designs across 7 subsystems |
+| Active detailed requirements | All 34 represented, with exact source text and their L1 parent |
+| C4 views | 54 sources and rendered PNGs: context, container, component per feature |
+| Class views | 18 sources and rendered PNGs with typed members and relationships |
+| Sequence views | 35 sources and rendered PNGs covering primary and alternate behavior |
+| Total diagrams | 107 sources, 107 rendered PNGs |
+| Document shape | Each feature has Overview, Description, Requirements, and Diagrams |
 
-PlantUML 1.2025.4 checked diagram syntax before rendering. The installed software-design-document renderer produced the PNG assets with Java 21 and the bundled Graphviz renderer. Changed diagrams received another syntax/render check during contract review. `git diff --check` passed.
+## Verification performed
 
-The complete 216-source tree passed PlantUML syntax checking using explicit source-file arguments and rendered with `216 rendered, 0 failed`. A directory argument alone is not recursive for the syntax command. Independent syntax checks prevent a generated error image from being accepted merely because a PNG exists. The seven new README files have the required Overview, Description, Requirements, and Diagrams sections. An editorial check verified full requirement excerpts, parents, primary coverage, Markdown targets/anchors, C4 macro use, PNG decoding, and house-style prose outside normative quotations. Relative destinations inside quoted requirements are adjusted to resolve from the feature folder without changing their visible wording.
+PlantUML syntax checking completed successfully over the whole design tree. The installed software-design-document renderer completed with **107 rendered, 0 failed**, using `C:/tools/plantuml.jar`. Each image decodes and has a matching source. Feature image and relative-document links resolve. Requirement quotations match the current L2 definitions after Markdown table encoding, with unchanged identifiers and correct L1 links. C4 sources use offline standard-library includes and C4 macros.
 
-Implementation remains separate: the CLI command tree, protected target/preview stores, operator identity migration, publication behavior, shared transaction refactoring, and platform outbox integration are proposed work. The new designs do not assert that those capabilities, the September seed application, the Azure deployment, or the L2-060 load/restore scenarios have executed successfully.
+Visual review covered the diagram set using feature contact sheets, with direct inspection of the entry sequence and focused reinspection of revised security, recovery and synchronization diagrams. The review corrected SQL procedure placement, operator-versus-browser boundaries, query/mutation handler labels, and unused sequence lifelines. The CLI procedure resides in SQL Server and is independently callable from a normal SQL client; it does not call back into the CLI.
 
-The diagram set renders with the skill's `scripts/render_puml.py` against `docs/detailed-designs`, or with `java -jar plantuml.jar -tpng -charset UTF-8` against individual sources. The C4 includes resolve from the jar's offline standard library.
+The prose review preserves exact specification quotations, including their original use of “must”. New descriptive prose uses the skill's third-person register. Diagram class views show feature-relevant members, not complete implementation declarations. Existing types are identified as reuse candidates; proposed types and behavior do not imply completed code. HTTP and wire contracts are described by the feature text and shared protocol; diagrams supply structure and sequencing rather than an additional competing API definition.
 
-Verification is documentation validation, not application acceptance. Real API, Playwright, connected-client, load, and restore evidence remains part of implementing the described system. No new architecture or specification-parsing tests were added.
+The documentation review used temporary local rendering/contact-sheet tools outside the repository. No architecture tests, specification-parsing tests, application tests, or application implementation changes were added. No production API, SQL operation, CLI installation, SignalR load, browser accessibility journey, or restore exercise was executed as part of this documentation task.
+
+## Decisions carried into the designs
+
+- Fresh database initialization replaces data migration; existing databases are neither deleted nor imported by this task.
+- Exactly four public screens remain, with administrator controls in the same app and manual adjacent progression.
+- An event-wide version and serialized transactions favor a small, explicit concurrency model. Exact retries use actor-scoped receipts before stale-version checking.
+- Email alone never recovers private ownership. A protected pre-submission receipt covers response loss; clear/expiry/deletion revokes recovery authority.
+- SignalR sends content-free version/invalidation notifications; authorized coherent HTTP snapshots supply current state. Each instance observes the committed SQL change feed independently.
+- SQL and CLI share one atomic passcode operation. Credential locks, revision checks, and connected-session invalidation define the revocation boundary.
+- Four-digit verifier format, 250 ms server observation interval, and backup schedule are stated design choices. Runtime measurements remain necessary; the chosen interval alone does not prove the two-second target.
+- The mock's published Cornerstone version is an inspected baseline. Required missing UI is delivered upstream and adopted through an actual subsequent npm release; no unreleased version number or package completeness is claimed.
+- Random grouping and raffle selection use production cryptographic randomness with controllable integration fixtures. Presentation effects never select or repeat a result.
+
+## Remaining implementation evidence
+
+The documentation is complete; production acceptance remains future work. Required evidence includes real API/SQL/SignalR behavior, installed CLI and direct SQL replacement, published Cornerstone behavior, mocked-contract Playwright journeys, load measurements, and isolated backup restore. The operator design states how that evidence is collected without certifying the legacy implementation.
+
+Package release version, measured Chrome/OS version, deployment resources, and observed timing results are captured when implementation verification occurs. They are evidence fields, not invented current facts. No missing product decision is represented by a placeholder.
+
+The previous design tree was already removed from the working tree. This replacement documents the focused companion; unrelated pre-existing deletions remain outside its commits.

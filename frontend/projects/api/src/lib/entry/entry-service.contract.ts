@@ -1,7 +1,15 @@
-import { EntryHeader } from './entry-header';
-import { EntryResult } from './entry-result';
+import { Signal } from "@angular/core";
+
+export interface EntryConfirmation {
+  participantId: string;
+  publicLabel: string;
+}
 
 export interface IEntryService {
-  header(eventId: string): Promise<EntryHeader | null>;
-  authenticate(eventId: string, email: string, entryCode: string, returnTo?: string): Promise<EntryResult>;
+  readonly confirmation: Signal<EntryConfirmation | null>;
+  readonly loading: Signal<boolean>;
+  readonly error: Signal<string | null>;
+  enter(email: string, expectedVersion: string): void;
+  load(): void;
+  leave(): void;
 }

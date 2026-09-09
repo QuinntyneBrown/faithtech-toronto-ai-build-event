@@ -1,0 +1,14 @@
+@if (session.active()) {
+  <p>Administrator controls are enabled in this browser.</p>
+  <button csButton="ghost" type="button" (click)="session.signOut()">Sign out</button>
+} @else if (open()) {
+  <form (ngSubmit)="signIn()" aria-label="Administrator login">
+    <cs-field label="Administrator passcode" forId="administrator-passcode">
+      <input csInput id="administrator-passcode" name="passcode" inputmode="numeric" autocomplete="one-time-code" maxlength="4" required [ngModel]="passcode()" (ngModelChange)="passcode.set($event)">
+    </cs-field>
+    @if (session.error(); as error) { <p role="alert">{{ error }}</p> }
+    <button csButton type="submit" [disabled]="session.loading()">Sign in</button>
+  </form>
+} @else {
+  <button csButton="ghost" type="button" (click)="open.set(true)">Administrator login</button>
+}

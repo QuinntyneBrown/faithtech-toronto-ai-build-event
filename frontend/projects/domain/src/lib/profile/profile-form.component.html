@@ -1,0 +1,17 @@
+<section aria-label="Optional introduction">
+  <h3>A little about you</h3>
+  <p>Your name may appear with your participant label. Your email and answers remain private to you and the hosts.</p>
+  @if (skipped()) {
+    <p role="status">Optional details skipped. Your raffle entry is still saved.</p>
+    <button csButton="ghost" type="button" (click)="resume()">Add optional details</button>
+  } @else {
+    <form (ngSubmit)="save()">
+      <cs-field label="Name" forId="profile-name"><input csInput id="profile-name" name="name" maxlength="200" [ngModel]="name()" (ngModelChange)="name.set($event)"></cs-field>
+      <cs-field label="What you make" forId="profile-makes"><textarea csTextarea id="profile-makes" name="whatYouMake" maxlength="2000" [ngModel]="whatYouMake()" (ngModelChange)="whatYouMake.set($event)"></textarea></cs-field>
+      <cs-field label="What's on your heart" forId="profile-heart"><textarea csTextarea id="profile-heart" name="onYourHeart" maxlength="2000" [ngModel]="onYourHeart()" (ngModelChange)="onYourHeart.set($event)"></textarea></cs-field>
+      @if (profileService.error(); as error) { <p role="alert">{{ error }}</p> }
+      <button csButton type="submit" [disabled]="profileService.loading() || !event.connected()">Save my details</button>
+      <button csButton="ghost" type="button" (click)="skip()">Skip for now</button>
+    </form>
+  }
+</section>

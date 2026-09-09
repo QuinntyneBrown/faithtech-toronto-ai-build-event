@@ -1,0 +1,12 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+Person(operator, "Database operator", "Has existing database grants")
+Person(admin, "Administrator", "Holds browser session")
+System(companion, "FaithTech companion", "Checks current credential revision")
+System_Ext(client, "Normal SQL client", "Parameterized protected input")
+Rel(operator, client, "Sets passcode directly")
+Rel(operator, companion, "Uses installed passcode tool")
+Rel(admin, companion, "Logs in with latest code")
+Rel(client, companion, "Invokes supported database operation")
+@enduml

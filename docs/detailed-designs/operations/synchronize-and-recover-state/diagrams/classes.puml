@@ -1,0 +1,46 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+title Synchronize and recover authoritative event state — structure
+interface IEventService {
++connect(): Promise<void>
++synchronize(): Promise<void>
++readonly state: Signal<PublicEventSnapshot>
++readonly connection: Signal<ConnectionState>
+}
+class AppComponent
+AppComponent ..> IEventService : consumes contract
+class EventStateController
+class GetEventSnapshotHandler {
+  +Handle(request: GetEventSnapshotQuery): Task<PublicEventSnapshot>
+}
+class GetEventSnapshotQuery {
++ProjectionKind Projection
+}
+class EventChange {
++long Version
++string Kind
++List<Guid> SubjectIds
++DateTimeOffset CommittedAtUtc
+}
+EventStateController ..> GetEventSnapshotHandler : dispatches
+GetEventSnapshotHandler ..> GetEventSnapshotQuery : handles
+GetEventSnapshotHandler --> EventChange : uses
+class EventChangePublisher {
+ +long LocalCursor
+ +PublishCommittedChanges(): Task
+}
+class SessionInvalidationWatcher {
+ +CheckConnectedSessions(): Task
+}
+class EventService {
+ +string HighestObservedVersion
+ +Apply(snapshot: PublicEventSnapshot): void
+}
+EventService ..|> IEventService
+EventChangePublisher ..> EventChange
+EventChangePublisher ..> SessionInvalidationWatcher : authorization checks
+@enduml

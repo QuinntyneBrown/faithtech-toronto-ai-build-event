@@ -1,0 +1,43 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+title Draw and persist one raffle winner — structure
+interface IRaffleService {
++readonly raffle: Signal<RaffleSnapshot>
++draw(input: DrawInput): Promise<DrawResult>
+}
+class RafflePageComponent
+RafflePageComponent ..> IRaffleService : consumes contract
+class RaffleController
+class DrawWinnerHandler {
+  +Handle(request: DrawWinnerCommand): Task<DrawResult>
+}
+class DrawWinnerCommand {
++Guid OperationId
++long ExpectedVersion
+}
+class RaffleDraw {
++Guid Id
++Guid? WinnerParticipantId
++string WinnerLabel
++List<CandidateLabel> Candidates
++DateTimeOffset StartedAtUtc
++DateTimeOffset RevealAtUtc
++DateTimeOffset EffectsEndAtUtc
+}
+RaffleController ..> DrawWinnerHandler : dispatches
+DrawWinnerHandler ..> DrawWinnerCommand : handles
+DrawWinnerHandler --> RaffleDraw : uses
+interface IRandomSource {
+ +NextInt(exclusiveUpperBound: int): int
+}
+class CandidateLabel {
+ +Guid? ParticipantId
+ +string Label
+}
+RaffleDraw "1" *-- "*" CandidateLabel
+DrawWinnerHandler ..> IRandomSource : unbiased index
+@enduml

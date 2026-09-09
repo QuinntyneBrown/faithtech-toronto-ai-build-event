@@ -1,0 +1,199 @@
+<section class="page-heading">
+  <div>
+    <p class="eyebrow">01 / DISCOVER THE NEED</p>
+    <h1>Small builds.<br />Real possibilities.</h1>
+    <p class="lede">
+      Start with people, not features. These are invitations to make something
+      useful, together.
+    </p>
+  </div>
+  @if (event.admin()) {
+    <button
+      csButton
+      [disabled]="event.busy() || event.offline()"
+      (click)="edit()"
+    >
+      + Add project
+    </button>
+  }
+</section>
+<section class="cards" aria-label="Projects for tonight">
+  @for (project of event.state().projects; track project.id; let i = $index) {
+    <cs-card class="project-card">
+      <div class="project-top">
+        <cs-badge [tone]="project.id === 'rtr' ? 'lime' : 'neutral'">{{
+          project.id === "rtr" ? "RTR · CONTINUE THE WORK" : "BUILD TOGETHER"
+        }}</cs-badge
+        ><span class="project-number">0{{ i + 1 }}</span>
+      </div>
+      <h2>{{ project.title }}</h2>
+      <p class="description">{{ project.description }}</p>
+      <div class="project-bottom">
+        @if (project.repository || project.demo) {
+          <div class="actions">
+            @if (project.repository) {
+              <a
+                csButton="secondary"
+                [href]="project.repository"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Repository ↗</a
+              >
+            }
+            @if (project.demo) {
+              <a
+                csButton="ghost"
+                [href]="project.demo"
+                target="_blank"
+                rel="noopener noreferrer"
+                >View demo ↗</a
+              >
+            }
+          </div>
+        }
+        <p class="muted">{{ assigned(project.id) }}</p>
+        @if (event.admin()) {
+          <hr />
+          <div class="actions">
+            <button
+              csButton="secondary"
+              [disabled]="event.busy() || event.offline()"
+              (click)="edit(project)"
+            >
+              Edit project</button
+            ><button
+              csButton="ghost"
+              [disabled]="event.busy() || event.offline()"
+              (click)="event.dismiss(); deleting.set(project)"
+            >
+              Remove
+            </button>
+          </div>
+        }
+      </div>
+    </cs-card>
+  } @empty {
+    <cs-empty-state
+      variant="panel"
+      title="No projects added yet."
+      message="The hosts are getting things ready. Your next good idea has room to grow."
+      ><div csEmptyStateActions>
+        @if (event.admin()) {
+          <button
+            csButton
+            (click)="edit()"
+            [disabled]="event.offline() || event.busy()"
+          >
+            Add the first project
+          </button>
+        }
+      </div></cs-empty-state
+    >
+  }
+</section>
+<aside class="invitation">
+  <p class="eyebrow">A NOTE FOR TONIGHT</p>
+  <h3>Choose one small thing worth making.</h3>
+  <p>
+    You don’t need to solve everything. Listen to the pitch, find the need, and
+    let your team shape what comes next.
+  </p>
+</aside>
+<cs-review-dialog
+  title="Project details"
+  [open]="draft() !== null"
+  (closed)="draft.set(null)"
+>
+  @if (draft(); as p) {
+    <form ngNativeValidate (ngSubmit)="save()" class="form-stack">
+      <cs-field label="Project title" forId="project-title"
+        ><input
+          csInput
+          id="project-title"
+          name="title"
+          required
+          maxlength="200"
+          [ngModel]="p.title"
+          (ngModelChange)="change('title', $event)"
+      /></cs-field>
+      <cs-field
+        label="The invitation / description"
+        forId="project-description"
+      >
+        <textarea
+          csTextarea
+          id="project-description"
+          name="description"
+          required
+          maxlength="2000"
+          rows="5"
+          [ngModel]="p.description"
+          (ngModelChange)="change('description', $event)"
+        ></textarea>
+      </cs-field>
+      <cs-field label="Repository URL (optional)" forId="project-repository"
+        ><input
+          csInput
+          id="project-repository"
+          name="repository"
+          type="url"
+          maxlength="2048"
+          [ngModel]="p.repository"
+          (ngModelChange)="change('repository', $event)"
+          placeholder="https://"
+      /></cs-field>
+      <cs-field label="Demo URL (optional)" forId="project-demo"
+        ><input
+          csInput
+          id="project-demo"
+          name="demo"
+          type="url"
+          maxlength="2048"
+          [ngModel]="p.demo"
+          (ngModelChange)="change('demo', $event)"
+          placeholder="https://"
+      /></cs-field>
+      @if (event.error()) {
+        <cs-alert tone="error">{{ event.error() }}</cs-alert>
+      }
+      <div class="actions">
+        <button
+          csButton
+          type="submit"
+          [disabled]="event.busy() || event.offline()"
+        >
+          Save project</button
+        ><button csButton="ghost" type="button" (click)="draft.set(null)">
+          Cancel
+        </button>
+      </div>
+    </form>
+  }
+</cs-review-dialog>
+<cs-review-dialog
+  title="Remove this project?"
+  [open]="deleting() !== null"
+  (closed)="deleting.set(null)"
+>
+  @if (deleting(); as p) {
+    <p>
+      <strong>{{ p.title }}</strong> will be removed.
+    </p>
+    <p>
+      {{ assigned(p.id) }}. Assigned teams will keep their members and return to
+      “No project assigned”.
+    </p>
+  }
+  @if (event.error()) {
+    <cs-alert tone="error">{{ event.error() }}</cs-alert>
+  }
+  <div class="actions">
+    <button
+      csButton="danger"
+      [disabled]="event.busy() || event.offline()"
+      (click)="remove()"
+    >
+      Remove project</button
+    ><button csButton="ghost" (click)="deleting.set(null)">Keep project</button>
+  </div>
+</cs-review-dialog>

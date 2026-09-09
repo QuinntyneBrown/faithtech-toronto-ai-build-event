@@ -1,0 +1,16 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Maintain and display RTR project cards — components
+Container(client, "ProjectsPageComponent", "Companion Angular client", "Presents this capability")
+Container_Boundary(api, "Companion API") {
+Component(entry, "ProjectsController", "ASP.NET Core controller", "Binds inputs and dispatches")
+Component(handler, "SaveProjectHandler", "Application handler", "Present supplied project content and manage the saved catalogue")
+Component(entity, "Project", "Domain model", "Owns slice state")
+}
+ContainerDb(db, "Companion database", "SQL Server", "Durable state")
+Rel(client, entry, "Calls through IProjectService")
+Rel(entry, handler, "Dispatches")
+Rel(handler, entity, "Uses")
+Rel(handler, db, "Commits through application persistence contract")
+@enduml

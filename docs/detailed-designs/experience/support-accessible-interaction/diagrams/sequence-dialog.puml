@@ -1,0 +1,26 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Validate and dismiss an accessible edit dialog
+actor "Viewer or administrator using keyboard, touch, or assistive technology" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "AppComponent" as page
+end box
+actor -> page : Open edit dialog by keyboard
+page -> page : Cornerstone stores trigger; contains focus
+actor -> page : Submit invalid values
+page -> page : Associate errors; retain draft; focus first invalid field
+page --> actor : Announce field feedback
+actor -> page : Cancel / Escape
+page -> page : Close dialog without mutation
+alt Trigger still exists
+ page -> page : Restore trigger focus
+else Trigger removed by synchronized change
+ page -> page : Focus current screen heading
+end
+page --> actor : Usable keyboard position
+@enduml

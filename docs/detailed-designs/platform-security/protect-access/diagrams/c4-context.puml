@@ -1,9 +1,0 @@
-@startuml
-!include <C4/C4_Context>
-LAYOUT_WITH_LEGEND()
-title Context - Protect event access and private state
-Person(actor, "Participant and administrator", "protect access")
-System(system, "FaithTech event platform", "Enforce every resource boundary and keep credentials out of public state")
-Rel(actor, system, "Protect access", "HTTPS")
-
-@enduml

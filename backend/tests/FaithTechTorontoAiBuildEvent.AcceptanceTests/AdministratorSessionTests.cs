@@ -1,77 +1,143 @@
+// Acceptance Test
+// Traces to: L2-038, L2-041
+// Description: A provisioned shared four-digit passcode grants a private administrator session without a username.
+
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.Json;
-using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+using Xunit;
 
 namespace FaithTechTorontoAiBuildEvent.AcceptanceTests;
 
-public sealed class AdministratorSessionTests(EventApiFactory factory) : IClassFixture<EventApiFactory>
+public sealed class AdministratorSessionTests : IClassFixture<CountdownApiFactory>
 {
-    private async Task<HttpClient> SignIn(string username, string password)
+    private readonly CountdownApiFactory factory;
+
+    public AdministratorSessionTests(CountdownApiFactory factory)
     {
-        var client = factory.Browser();
-        await Antiforgery(client);
-        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsJsonAsync("/api/admin/session", new { username, password })).StatusCode);
-        await Antiforgery(client);
-        return client;
+        this.factory = factory;
     }
 
-    private static async Task Antiforgery(HttpClient client)
+    [Fact]
+    public async Task Exact_four_digit_provisioned_passcode_creates_administrator_session()
     {
-        var token = await client.GetFromJsonAsync<JsonElement>("/api/admin/antiforgery");
-        client.DefaultRequestHeaders.Remove("X-CSRF-TOKEN");
-        client.DefaultRequestHeaders.Add("X-CSRF-TOKEN", token.GetProperty("requestToken").GetString());
+        await factory.ClearAdministratorLoginAttemptsAsync();
+        await factory.ProvisionAdministratorPasscodeAsync("0042");
+        using var client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+
+        var response = await client.PostAsJsonAsync("/api/admin/session", new { passcode = "0042" });
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var cookie = response.Headers.GetValues("Set-Cookie").Single();
+        Assert.Contains("faithtech-admin=", cookie, StringComparison.Ordinal);
     }
 
-    [Fact, Trait("Requirement", "L2-038/AC3")]
-    public async Task Given_two_sessions_when_one_signs_out_then_only_that_session_is_revoked()
+    [Fact]
+    public async Task Invalid_or_non_four_digit_passcodes_do_not_create_session()
     {
-        var password = $"Valid9!{Guid.NewGuid():N}";
-        var username = await factory.ProvisionAdministrator(password);
-        using var first = await SignIn(username, password);
-        using var second = await SignIn(username, password);
-        Assert.Equal(HttpStatusCode.NoContent, (await first.DeleteAsync("/api/admin/session")).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await first.GetAsync("/api/admin/session")).StatusCode);
-        Assert.Equal(HttpStatusCode.OK, (await second.GetAsync("/api/admin/session")).StatusCode);
+        await factory.ClearAdministratorLoginAttemptsAsync();
+        await factory.ProvisionAdministratorPasscodeAsync("0042");
+        using var client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+
+        var response = await client.PostAsJsonAsync("/api/admin/session", new { passcode = "42" });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
-    [Theory, InlineData(31, 1), InlineData(1, 9), Trait("Requirement", "L2-038/AC5")]
-    public async Task Given_an_expired_session_when_reading_or_interacting_then_it_cannot_be_revived(int idleMinutes, int absoluteHours)
+    [Fact]
+    public async Task Sixth_failed_check_is_throttled_before_passcode_verification()
     {
-        var password = $"Valid9!{Guid.NewGuid():N}";
-        var username = await factory.ProvisionAdministrator(password);
-        using var client = await SignIn(username, password);
-        await AgeSession(client, idleMinutes, absoluteHours);
+        await factory.ClearAdministratorLoginAttemptsAsync();
+        await factory.ProvisionAdministratorPasscodeAsync("0042");
+        using var client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+
+        for (var attempt = 0; attempt < 5; attempt++)
+        {
+            var failed = await client.PostAsJsonAsync("/api/admin/session", new { passcode = "9999" });
+            Assert.Equal(HttpStatusCode.Unauthorized, failed.StatusCode);
+        }
+
+        var throttled = await client.PostAsJsonAsync("/api/admin/session", new { passcode = "0042" });
+
+        Assert.Equal((HttpStatusCode)429, throttled.StatusCode);
+        Assert.True(int.Parse(throttled.Headers.GetValues("Retry-After").Single()) > 0);
+    }
+
+    [Fact]
+    public async Task Twenty_failed_checks_across_sources_throttle_the_deployment()
+    {
+        await factory.ClearAdministratorLoginAttemptsAsync();
+        await factory.ProvisionAdministratorPasscodeAsync("0042");
+        await factory.RecordAdministratorLoginFailuresAsync(20);
+        using var client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+
+        var throttled = await client.PostAsJsonAsync("/api/admin/session", new { passcode = "0042" });
+
+        Assert.Equal((HttpStatusCode)429, throttled.StatusCode);
+        Assert.True(int.Parse(throttled.Headers.GetValues("Retry-After").Single()) > 0);
+    }
+
+    [Fact]
+    public async Task Successful_login_does_not_erase_prior_failed_checks()
+    {
+        await factory.ClearAdministratorLoginAttemptsAsync();
+        await factory.ProvisionAdministratorPasscodeAsync("0042");
+        using var client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+
+        for (var attempt = 0; attempt < 4; attempt++) Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync("/api/admin/session", new { passcode = "9999" })).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/api/admin/session", new { passcode = "0042" })).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync("/api/admin/session", new { passcode = "9999" })).StatusCode);
+
+        var throttled = await client.PostAsJsonAsync("/api/admin/session", new { passcode = "0042" });
+
+        Assert.Equal((HttpStatusCode)429, throttled.StatusCode);
+    }
+
+    [Fact]
+    public async Task Sign_out_revokes_the_administrator_session()
+    {
+        await factory.ClearAdministratorLoginAttemptsAsync();
+        await factory.ProvisionAdministratorPasscodeAsync("0042");
+        using var client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/api/admin/session", new { passcode = "0042" })).StatusCode);
+
+        Assert.Equal(HttpStatusCode.NoContent, (await client.DeleteAsync("/api/admin/session")).StatusCode);
+
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/admin/session")).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsync("/api/admin/session/interaction", null)).StatusCode);
     }
 
-    [Fact, Trait("Requirement", "L2-038/AC5")]
-    public async Task Given_background_reads_when_only_a_deliberate_interaction_occurs_then_only_interaction_renews_idle_expiry()
+    [Fact]
+    public async Task Explicit_interaction_renews_idle_expiry_but_background_reads_do_not()
     {
-        var password = $"Valid9!{Guid.NewGuid():N}";
-        var username = await factory.ProvisionAdministrator(password);
-        using var client = await SignIn(username, password);
-        await AgeSession(client, 20, 1);
-        var before = await client.GetFromJsonAsync<JsonElement>("/api/admin/session");
-        var repeated = await client.GetFromJsonAsync<JsonElement>("/api/admin/session");
-        Assert.Equal(before.GetProperty("idleExpiresAtUtc").GetString(), repeated.GetProperty("idleExpiresAtUtc").GetString());
+        await factory.ClearAdministratorLoginAttemptsAsync();
+        await factory.ProvisionAdministratorPasscodeAsync("0042");
+        using var client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/api/admin/session", new { passcode = "0042" })).StatusCode);
+        var initialInteraction = await factory.GetAdministratorLastInteractionAsync();
+
         Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsync("/api/admin/session/interaction", null)).StatusCode);
-        var after = await client.GetFromJsonAsync<JsonElement>("/api/admin/session");
-        Assert.True(after.GetProperty("idleExpiresAtUtc").GetDateTimeOffset() > before.GetProperty("idleExpiresAtUtc").GetDateTimeOffset());
-        Assert.Equal(before.GetProperty("absoluteExpiresAtUtc").GetString(), after.GetProperty("absoluteExpiresAtUtc").GetString());
+        Assert.Equal(initialInteraction, await factory.GetAdministratorLastInteractionAsync());
+
+        var oldInteraction = DateTimeOffset.UtcNow.AddMinutes(-29);
+        await factory.SetAdministratorLastInteractionAsync(oldInteraction);
+
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/admin/session")).StatusCode);
+        Assert.Equal(oldInteraction, await factory.GetAdministratorLastInteractionAsync());
+
+        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsync("/api/admin/session/interaction", null)).StatusCode);
+        Assert.True(await factory.GetAdministratorLastInteractionAsync() > oldInteraction);
     }
 
-    private async Task AgeSession(HttpClient client, int idleMinutes, int absoluteHours)
+    [Fact]
+    public async Task Explicit_interaction_cannot_revive_an_idle_expired_session()
     {
-        var current = await client.GetFromJsonAsync<JsonElement>("/api/admin/session");
-        var actor = current.GetProperty("actorId").GetGuid();
-        using var scope = factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<EventDbContext>();
-        await db.AdministratorSessions.Where(x => x.AdministratorId == actor).ExecuteUpdateAsync(set => set
-            .SetProperty(x => x.AuthenticatedAtUtc, DateTimeOffset.UtcNow.AddHours(-absoluteHours))
-            .SetProperty(x => x.LastInteractionAtUtc, DateTimeOffset.UtcNow.AddMinutes(-idleMinutes)));
+        await factory.ClearAdministratorLoginAttemptsAsync();
+        await factory.ProvisionAdministratorPasscodeAsync("0042");
+        using var client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost"), HandleCookies = true });
+        Assert.Equal(HttpStatusCode.OK, (await client.PostAsJsonAsync("/api/admin/session", new { passcode = "0042" })).StatusCode);
+        var expiredInteraction = DateTimeOffset.UtcNow.AddMinutes(-31);
+        await factory.SetAdministratorLastInteractionAsync(expiredInteraction);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsync("/api/admin/session/interaction", null)).StatusCode);
+        Assert.Equal(expiredInteraction, await factory.GetAdministratorLastInteractionAsync());
     }
 }

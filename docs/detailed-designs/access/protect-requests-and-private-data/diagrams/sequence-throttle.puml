@@ -1,0 +1,40 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Apply durable rolling attempt limits
+actor "Viewer, participant, or administrator" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "AppComponent" as page
+participant "ISessionService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "RequestBoundary" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "AuthorizeCompanionRequestBehavior" as handler
+participant "RequestAuthority" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+end box
+actor -> page : Attempt login or email entry
+page -> client : Submit
+client -> controller : HTTPS request
+controller -> handler : Dispatch with trusted source digest
+handler -> db : Lock applicable budget and read SQL UTC window
+alt Limit exhausted
+ db --> handler : Earliest release time
+ handler --> controller : 429 and positive Retry-After L2-042
+else Allowed
+ handler -> entity : Validate / check credentials as appropriate
+ handler -> db : Commit public attempt or failed-admin check
+ db --> handler : Durable budget result
+ handler --> controller : Continue permitted operation or invalid feedback
+end
+controller --> client : Outcome without secret details
+client --> page : Explain retry delay; no silent retry
+@enduml

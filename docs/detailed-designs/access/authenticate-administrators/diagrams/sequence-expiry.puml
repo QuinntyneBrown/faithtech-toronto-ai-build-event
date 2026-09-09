@@ -1,0 +1,42 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Revoke or expire administrator authority
+actor "Administrator" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "AppComponent" as page
+participant "ISessionService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "AdministratorSessionController" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "Session authorization / interaction handlers" as handler
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+participant "EventChangePublisher" as push
+end box
+actor -> page : Logout or later privileged action
+page -> client : Logout / command
+client -> controller : Cookie-authenticated request
+controller -> handler : Dispatch with session principal
+handler -> db : Check revision, revocation and SQL UTC expiry
+alt Valid explicit interaction
+ handler -> db : Monotonic activity update
+ db --> handler : Updated idle deadline
+ handler --> controller : Valid session
+ controller --> client : Updated expiry metadata
+else Logout / expired / replaced credential
+ handler -> db : Revoke where applicable
+ handler --> controller : Unauthorized / logout complete
+ push -> client : SessionInvalidated L2-038
+controller --> client : Safe session outcome
+client -> page : Clear privileged state and return to live
+page --> actor : Public viewing remains
+end
+@enduml

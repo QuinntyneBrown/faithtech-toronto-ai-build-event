@@ -1,4 +1,0 @@
-:host { display: block; }
-.access-layout { display: grid; gap: var(--cs-space-6); max-inline-size: 640px; margin: 0 auto; padding: var(--cs-space-8) var(--cs-space-5); }
-.eyebrow { color: var(--cs-ink-muted); text-transform: uppercase; letter-spacing: 0.05em; }
-.card { background: var(--cs-surface); border: var(--cs-line) solid var(--cs-border); border-radius: var(--cs-radius-md); padding: var(--cs-space-5); }

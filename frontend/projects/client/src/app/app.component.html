@@ -1,0 +1,24 @@
+<main>
+  @if (profile.notice(); as notice) { <p role="status">{{ notice }}</p> }
+  @if (event.connectionError(); as connectionError) {
+    <cs-card>
+      <p role="alert">{{ connectionError }}</p>
+      <button csButton="secondary" type="button" (click)="event.retryLiveUpdates()">Retry live updates</button>
+    </cs-card>
+  }
+  <event-administrator-login />
+  @if (administrator.active()) {
+    <cs-card>
+      <p>Live screen: {{ event.state()?.currentScreen }}</p>
+      <nav aria-label="Administrator screen navigation">
+        @for (screen of openedScreens(); track screen) {
+          <button csButton="ghost" type="button" (click)="navigateTo(screen)" [attr.aria-current]="route() === '/' + screen ? 'page' : null">{{ screen }}</button>
+        }
+        @if (route() !== liveRoute()) {
+          <button csButton="secondary" type="button" (click)="navigateTo(event.state()?.currentScreen ?? 'countdown')">Return to live</button>
+        }
+      </nav>
+    </cs-card>
+  }
+  <router-outlet />
+</main>

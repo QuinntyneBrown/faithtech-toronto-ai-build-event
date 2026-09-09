@@ -1,0 +1,41 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Authorize and validate a private mutation
+actor "Viewer, participant, or administrator" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "AppComponent" as page
+participant "ISessionService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "RequestBoundary" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "AuthorizeCompanionRequestBehavior" as handler
+participant "RequestAuthority" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+end box
+actor -> page : Submit authorized edit
+page -> client : Typed request; no client role claim
+client -> controller : HTTPS + scoped cookie + CSRF header
+controller -> controller : Enforce origin, content type and antiforgery
+controller -> handler : Dispatch authenticated request
+handler -> db : Shared credential lock then event lock if admin
+handler -> db : Recheck session revision, expiry and owner scope
+alt Authorized and valid input
+ handler -> entity : Select minimum permitted projection L2-039
+ handler -> db : Commit validated operation
+ db --> handler : Safe result
+ handler --> controller : Typed outcome
+else Invalid scope, syntax or origin
+ handler --> controller : Denied / field errors; no private data
+end
+controller --> client : Safe result / correlated ProblemDetails
+client --> page : Render literal fields or clear revoked data
+@enduml

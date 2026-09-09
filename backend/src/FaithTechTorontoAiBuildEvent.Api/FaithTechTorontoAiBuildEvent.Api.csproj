@@ -1,11 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
-  <PropertyGroup><StaticWebAssetsEnabled>false</StaticWebAssetsEnabled></PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../FaithTechTorontoAiBuildEvent.Infrastructure/FaithTechTorontoAiBuildEvent.Infrastructure.csproj" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+    <ProjectReference Include="..\FaithTechTorontoAiBuildEvent.Application\FaithTechTorontoAiBuildEvent.Application.csproj" />
+    <ProjectReference Include="..\FaithTechTorontoAiBuildEvent.Infrastructure\FaithTechTorontoAiBuildEvent.Infrastructure.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="../../../frontend/dist/admin/browser/**/*" Link="wwwroot/admin/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="../../../frontend/dist/client/browser/**/*" Link="wwwroot/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <PackageReference Include="MediatR" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\..\frontend\dist\client\browser\**\*">
+      <Link>wwwroot\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 </Project>

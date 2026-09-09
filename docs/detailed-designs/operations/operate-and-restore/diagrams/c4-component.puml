@@ -1,0 +1,21 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+System_Ext(operator, "Operator diagnostics and SQL tools", "No monitoring application screen")
+Container_Boundary(api, "Companion API") {
+Component(controller, "ReadinessController", "ASP.NET Core", "Dispatches readiness query")
+Component(handler, "GetReadinessHandler", "Application", "Assesses durable readiness")
+Component(store, "SqlReadinessStore", "Infrastructure", "Implements IReadinessStore")
+Component(logs, "Structured logging", "Microsoft.Extensions.Logging", "Redacted correlation and session attribution")
+}
+ContainerDb(db, "Companion database", "SQL Server", "Coherent event state and audit records")
+System_Ext(backup, "Protected backups", "Scheduled full backups and isolated restore")
+Rel(operator, controller, "GET health ready")
+Rel(controller, handler, "Dispatches")
+Rel(handler, store, "Uses IReadinessStore")
+Rel(store, db, "Checks schema / storage")
+Rel(handler, logs, "Records redacted failures")
+Rel(operator, db, "Performs isolated recovery")
+Rel(db, backup, "Backs up")
+
+@enduml

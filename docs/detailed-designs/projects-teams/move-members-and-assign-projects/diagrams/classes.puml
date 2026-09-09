@@ -1,0 +1,48 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+title Move team members and assign projects — structure
+interface ITeamService {
++move(input: MemberMove): Promise<TeamResult>
++assign(input: ProjectAssignment): Promise<TeamResult>
+}
+class TeamsPageComponent
+TeamsPageComponent ..> ITeamService : consumes contract
+class TeamsController
+class MoveTeamMemberHandler {
+  +Handle(request: MoveTeamMemberCommand): Task<TeamResult>
+}
+class MoveTeamMemberCommand {
++Guid ParticipantId
++DestinationKind Destination
++Guid? TeamId
++Guid OperationId
++long ExpectedVersion
+}
+class Team {
++Guid Id
++long PublicNumber
++Guid? ProjectId
++AssignProject(id: Guid?): void
+}
+TeamsController ..> MoveTeamMemberHandler : dispatches
+MoveTeamMemberHandler ..> MoveTeamMemberCommand : handles
+MoveTeamMemberHandler --> Team : uses
+class Participant {
+ +Guid Id
+ +Guid? TeamId
+ +MoveTo(teamId: Guid?): void
+}
+class AssignTeamProjectCommand {
+ +Guid TeamId
+ +Guid? ProjectId
+ +Guid OperationId
+ +long ExpectedVersion
+}
+Participant "*" --> "0..1" Team
+MoveTeamMemberHandler --> Participant : changes membership
+TeamsController ..> AssignTeamProjectCommand : dispatches
+@enduml

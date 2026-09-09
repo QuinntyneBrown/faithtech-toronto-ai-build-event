@@ -1,4 +1,0 @@
-:host { display: block; }
-nav { display: flex; flex-wrap: wrap; gap: var(--cs-space-4); padding: var(--cs-space-4) var(--cs-space-5); }
-nav a { color: var(--cs-ink); }
-main { padding: var(--cs-space-5); }

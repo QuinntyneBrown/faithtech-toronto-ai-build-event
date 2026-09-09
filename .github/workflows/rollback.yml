@@ -13,7 +13,6 @@ on:
         type: boolean
 concurrency:
   group: faithtech-production
-  queue: max
 permissions:
   contents: read
   actions: read
@@ -54,6 +53,5 @@ jobs:
       - name: Restore and verify the retained package
         shell: pwsh
         env:
-          SMOKE_USERNAME: ${{ secrets.SMOKE_USERNAME }}
-          SMOKE_PASSWORD: ${{ secrets.SMOKE_PASSWORD }}
+          SMOKE_PASSCODE: ${{ secrets.SMOKE_PASSCODE }}
         run: ./eng/scripts/deploy-release.ps1 -Rollback

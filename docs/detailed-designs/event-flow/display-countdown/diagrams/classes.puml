@@ -1,0 +1,33 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+title Display countdown, welcome, and event information — structure
+interface IEventService {
++readonly state: Signal<PublicEventSnapshot>
++readonly synchronized: Signal<boolean>
++synchronize(): Promise<void>
+}
+class CountdownPageComponent
+CountdownPageComponent ..> IEventService : consumes contract
+class EventStateController
+class GetEventSnapshotHandler {
+  +Handle(request: GetEventSnapshotQuery): Task<PublicEventSnapshot>
+}
+class GetEventSnapshotQuery {
++ProjectionKind Projection
+}
+class EventConfiguration {
++string Title
++string Welcome
++string Venue
++DateTimeOffset CountdownTargetUtc
++string TimeZoneId
+}
+EventStateController ..> GetEventSnapshotHandler : dispatches
+GetEventSnapshotHandler ..> GetEventSnapshotQuery : handles
+GetEventSnapshotHandler --> EventConfiguration : uses
+
+@enduml

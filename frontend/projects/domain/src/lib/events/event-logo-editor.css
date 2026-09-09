@@ -1,6 +1,0 @@
-:host { display: block; margin-top: var(--cs-space-5); }
-label { display: block; margin-bottom: var(--cs-space-2); }
-input { max-width: var(--cs-full); }
-img { display: block; max-width: var(--cs-full); max-height: var(--cs-map-height); margin-bottom: var(--cs-space-4); object-fit: contain; }
-[role="alert"] { color: var(--cs-error); }
-button { margin-top: var(--cs-space-3); }

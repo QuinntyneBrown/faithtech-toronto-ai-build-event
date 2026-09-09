@@ -8,7 +8,6 @@ permissions:
   contents: read
 concurrency:
   group: faithtech-${{ github.event_name == 'push' && 'production' || github.ref }}
-  queue: max
 jobs:
   release:
     runs-on: ubuntu-24.04
@@ -23,29 +22,22 @@ jobs:
       - uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
           global-json-file: global.json
-          cache: true
-          cache-dependency-path: 'backend/**/packages.lock.json'
-      - name: Install locked dependencies and audit
+      - name: Install dependencies
         run: |
           npm install --global npm@10.9.4
-          for project in frontend design-system; do
-            npm --prefix "$project" ci
-            npm --prefix "$project" audit --audit-level=high
-          done
-          dotnet restore backend/FaithTechTorontoAiBuildEvent.slnx --locked-mode
+          npm --prefix frontend ci
+          dotnet restore backend/FaithTechTorontoAiBuildEvent.sln
       - name: Build production applications
         run: |
           npm --prefix frontend run build
-          npm --prefix design-system run build
-          dotnet build backend/FaithTechTorontoAiBuildEvent.slnx -c Release --no-restore
+          dotnet build backend/FaithTechTorontoAiBuildEvent.sln -c Release --no-restore
       - name: Start disposable SQL Server
         run: |
           password="Ft9!$(openssl rand -hex 24)"
           echo "::add-mask::$password"
           echo "MSSQL_SA_PASSWORD=$password" >> "$GITHUB_ENV"
-          echo "FAITHTECH_TEST_SQL=Server=localhost,1433;User ID=sa;Password=$password;TrustServerCertificate=True;Encrypt=True" >> "$GITHUB_ENV"
           export MSSQL_SA_PASSWORD="$password"
-          docker run -d --name faithtech-ci-sql -p 127.0.0.1:1433:1433 -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD mcr.microsoft.com/mssql/server:2022-latest
+          docker run -d --name faithtech-ci-sql -p 127.0.0.1:1433:1433 -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD -e MSSQL_MEMORY_LIMIT_MB=2048 mcr.microsoft.com/mssql/server:2022-latest
           for attempt in {1..60}; do
             if docker exec -e SQLCMDPASSWORD="$password" faithtech-ci-sql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -C -Q 'SELECT 1' >/dev/null 2>&1; then exit 0; fi
             sleep 2
@@ -54,19 +46,20 @@ jobs:
       - name: API acceptance tests
         run: |
           dotnet pack backend/src/FaithTechTorontoAiBuildEvent.Provisioning -c Release --no-build --output artifacts/operator-test-package
-          dotnet tool install FaithTechTorontoAiBuildEvent.Provisioning --version 1.0.0 --tool-path "$RUNNER_TEMP/faithtech-operator" --add-source artifacts/operator-test-package --ignore-failed-sources
+          dotnet tool install FaithTechTorontoAiBuildEvent.Provisioning --version 0.1.0 --tool-path "$RUNNER_TEMP/faithtech-operator" --add-source artifacts/operator-test-package --ignore-failed-sources
           export FAITHTECH_TEST_TOOL="$RUNNER_TEMP/faithtech-operator/faithtech-admin"
-          dotnet test backend/FaithTechTorontoAiBuildEvent.slnx -c Release --no-build --logger trx --results-directory artifacts/test-results
-      - name: Recording and release-helper acceptance tests
+          dotnet test backend/FaithTechTorontoAiBuildEvent.sln -c Release --no-build --logger trx --results-directory artifacts/test-results
+      - name: Release-helper acceptance tests
         run: |
-          node --test e2e/demo/*.test.mjs
           node --test eng/scripts/*.test.mjs
       - name: Package immutable release
         shell: pwsh
         run: ./eng/scripts/package-release.ps1 -Revision '${{ github.sha }}'
       - name: Verify packaged application against disposable SQL
         shell: pwsh
-        run: ./eng/scripts/verify-package.ps1
+        run: |
+          $env:FAITHTECH_TEST_SQL = "Server=localhost,1433;User ID=sa;Password=$env:MSSQL_SA_PASSWORD;TrustServerCertificate=True;Encrypt=True"
+          ./eng/scripts/verify-package.ps1
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: release-${{ github.sha }}
@@ -101,35 +94,22 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: '**/package-lock.json'
-      - name: Install locked dependencies and audit
+      - name: Install locked dependencies
         run: |
           npm install --global npm@10.9.4
-          for project in frontend e2e design-system; do
-            npm --prefix "$project" ci
-            npm --prefix "$project" audit --audit-level=high
-          done
+          npm --prefix frontend ci
+          npm --prefix e2e ci
       - name: Install browser
         working-directory: e2e
         run: npx playwright install --with-deps chrome
-      - name: Build shared Angular libraries
-        working-directory: frontend
-        run: |
-          for project in api components domain; do
-            npx ng build "$project"
-          done
       - name: Application browser acceptance tests
         working-directory: e2e
         run: npx playwright test --shard=${{ matrix.shard }}/2 --reporter=list,html
-      - name: Design system acceptance tests
-        if: matrix.shard == 1
-        run: npm --prefix design-system test
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: browser-${{ matrix.shard }}-${{ github.run_id }}
-          path: |
-            e2e/playwright-report/
-            design-system/playwright-report/
+          path: e2e/playwright-report/
           retention-days: 90
   verify:
     if: always()
@@ -176,10 +156,7 @@ jobs:
       - name: Migrate, deploy, and verify
         shell: pwsh
         env:
-          MIGRATION_CONNECTION_STRING: ${{ secrets.MIGRATION_CONNECTION_STRING }}
-          PRODUCTION_DIGEST_KEY: ${{ secrets.PRODUCTION_DIGEST_KEY }}
-          SMOKE_USERNAME: ${{ secrets.SMOKE_USERNAME }}
-          SMOKE_PASSWORD: ${{ secrets.SMOKE_PASSWORD }}
+          SMOKE_PASSCODE: ${{ secrets.SMOKE_PASSCODE }}
         run: ./eng/scripts/deploy-release.ps1
       - name: Ensure temporary migration access is removed
         if: always() && steps.azure-login.outcome == 'success'

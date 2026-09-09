@@ -1,0 +1,22 @@
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+Container(client, "EventService and private service adapters", "Angular", "Signals, version reconciliation and reconnect")
+Container_Boundary(api, "Each Companion API instance") {
+Component(controller, "EventStateController / private endpoints", "ASP.NET Core", "Authorized coherent snapshots")
+Component(handler, "GetEventSnapshotHandler", "Application", "Minimum authorized projection")
+Component(publisher, "EventChangePublisher", "Infrastructure hosted service", "Independent 250 ms change-feed cursor")
+Component(watcher, "SessionInvalidationWatcher", "Infrastructure hosted service", "Checks current connected authority")
+Component(hubs, "EventHub / AdministratorHub / ParticipantHub", "SignalR", "Content-free scoped notifications")
+}
+ContainerDb(db, "Companion database", "SQL Server", "State, EventChange and sessions shared across instances")
+Rel(client, controller, "Loads snapshots", "HTTPS")
+Rel(controller, handler, "Dispatches")
+Rel(handler, db, "Reads coherent authorized state")
+Rel(publisher, db, "Reads committed markers after local cursor")
+Rel(watcher, db, "Reads revision and session expiry")
+Rel(publisher, hubs, "Pushes EventChanged to local connections")
+Rel(watcher, hubs, "Invalidates and closes private sessions")
+Rel(hubs, client, "Notifies", "SignalR")
+
+@enduml

@@ -32,7 +32,7 @@ try {
     $connection['Server'] = "tcp:$($resources.sqlHostname.value),1433"; $connection['Database'] = 'FaithTech'
     $connection['User ID'] = 'faithtech_runtime'; $connection['Password'] = Get-DeploymentSecret 'sql-runtime'
     $connection['Encrypt'] = 'True'; $connection['TrustServerCertificate'] = 'False'; $connection['MultipleActiveResultSets'] = 'False'
-    $settings = @{ASPNETCORE_ENVIRONMENT = 'Production'; ConnectionStrings__EventDatabase = $connection.ConnectionString;
+    $settings = @{ASPNETCORE_ENVIRONMENT = 'Production'; ConnectionStrings__Companion = $connection.ConnectionString;
         Security__DigestKey = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes((Get-DeploymentSecret 'digest')));
         AllowedHosts = $resources.hostname.value; SCM_DO_BUILD_DURING_DEPLOYMENT = 'false'; WEBSITE_RUN_FROM_PACKAGE = '1';
         WEBSITE_LOAD_CERTIFICATES = $thumbprint; Hosting__KeyDirectory = '/home/data/faithtech-keys';

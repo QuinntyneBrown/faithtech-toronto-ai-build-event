@@ -1,9 +1,0 @@
-@startuml
-!include <C4/C4_Context>
-LAYOUT_WITH_LEGEND()
-title Context - Publish team build links and recap
-Person(actor, "Participant and administrator", "publish team build")
-System(system, "FaithTech event platform", "Retain pairing-specific links and project one recap entry per team")
-Rel(actor, system, "Publish team build", "HTTPS")
-
-@enduml

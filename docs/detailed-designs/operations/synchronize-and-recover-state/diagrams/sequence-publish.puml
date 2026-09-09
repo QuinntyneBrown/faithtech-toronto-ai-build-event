@@ -1,0 +1,42 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Publish durable state changes to each instance's clients
+actor "Connected or reconnecting viewer" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "AppComponent" as page
+participant "IEventService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "EventStateController" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "Mutation handler / GetEventSnapshotHandler" as handler
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+participant "EventChangePublisher" as push
+end box
+handler -> db : Commit state, receipt and EventChange L2-044
+ db --> handler : Durable version
+loop Each instance every 250 ms
+ push -> db : Read versions beyond local cursor
+ db --> push : Committed markers; no personal fields
+ push -> db : Revalidate local private sessions
+ db --> push : Valid scopes and invalidations
+ push -> client : EventChanged(highest version) / SessionInvalidated
+ push -> push : Advance local cursor after send attempt completes
+end
+client -> controller : Fetch required authorized snapshot
+controller -> handler : Dispatch projection query
+handler -> db : Coherent snapshot transaction
+ db --> handler : Current version and permitted state
+handler --> controller : Snapshot
+controller --> client : Authorized projection
+client -> page : Apply only newer state
+page --> actor : Current screen/content
+@enduml

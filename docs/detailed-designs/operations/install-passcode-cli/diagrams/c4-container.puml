@@ -1,0 +1,14 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Install and target the passcode-management CLI — containers
+Person(actor, "Database operator")
+System_Boundary(system, "FaithTech event companion") {
+Container(client, "Passcode CLI", ".NET tool", "OperatorRootCommand")
+Container(api, "Companion API", "ASP.NET Core", "HTTP commands, queries and SignalR")
+ContainerDb(db, "Companion database", "SQL Server", "Authoritative persisted state")
+}
+Rel(actor, client, "Uses")
+Rel(client, db, "Encrypted SQL")
+Rel(api, db, "Reads / commits", "EF Core / encrypted SQL")
+@enduml

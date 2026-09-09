@@ -1,0 +1,15 @@
+@startuml
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Administer participants on Countdown — containers
+Person(actor, "Administrator")
+System_Boundary(system, "FaithTech event companion") {
+Container(client, "Companion Angular client", "Angular", "ParticipantManagerComponent")
+Container(api, "Companion API", "ASP.NET Core", "HTTP commands, queries and SignalR")
+ContainerDb(db, "Companion database", "SQL Server", "Authoritative persisted state")
+}
+Rel(actor, client, "Uses")
+Rel(client, api, "JSON / HTTPS")
+Rel(api, client, "Pushes authorized changes", "SignalR / HTTPS")
+Rel(api, db, "Reads / commits", "EF Core / encrypted SQL")
+@enduml

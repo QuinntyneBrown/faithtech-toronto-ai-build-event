@@ -1,0 +1,85 @@
+<section class="page-heading">
+  <div>
+    <p class="eyebrow">03 / REJOICE</p>
+    <h1>Everyone brought<br />something good.</h1>
+    <p class="lede">
+      Before we go, one more reason to celebrate the people who made tonight
+      possible.
+    </p>
+  </div>
+  <cs-badge tone="lime"
+    >{{ eligible() }} {{ eligible() === 1 ? "PERSON" : "PEOPLE" }} IN THE
+    DRAW</cs-badge
+  >
+</section>
+<cs-raffle-stage
+  [result]="latest()"
+  [now]="now()"
+  [forceFallback]="fallback()"
+/>
+<div class="draw-controls">
+  @if (event.admin()) {
+    <button
+      csButton
+      size="large"
+      [disabled]="!eligible() || active() || event.busy() || event.offline()"
+      (click)="event.dispatch({ type: 'draw' })"
+    >
+      {{ active() ? "CELEBRATING…" : "DRAW NAME" }}
+      <span aria-hidden="true">↗</span>
+    </button>
+    <p class="muted">
+      {{
+        !eligible()
+          ? "No eligible participants remain. Thanks for sharing the evening."
+          : "One click. One winner. A moment for the whole room."
+      }}
+    </p>
+  } @else {
+    <p class="muted">
+      {{
+        active()
+          ? "A little anticipation. A shared celebration."
+          : "Your host will start the next draw."
+      }}
+    </p>
+  }
+</div>
+@if (history().length) {
+  <section class="history">
+    <div class="section-heading">
+      <h2>Tonight's lucky people</h2>
+      <cs-badge
+        >{{ history().length }}
+        {{ history().length === 1 ? "WINNER" : "WINNERS" }}</cs-badge
+      >
+    </div>
+    <div class="cards">
+      @for (draw of history(); track draw.id; let i = $index) {
+        <cs-card
+          ><p class="eyebrow">
+            DRAW {{ event.state().draws.indexOf(draw) + 1 }}
+          </p>
+          <h3>{{ draw.label.split(" · ")[0] }}</h3>
+          <p class="muted">{{ draw.label.split(" · ")[1] || "" }}</p></cs-card
+        >
+      }
+    </div>
+  </section>
+}
+<p class="closing">Build well. Stay connected. Rejoice.</p>
+@if (event.admin()) {
+  <div class="render-preview">
+    <button
+      csButton="ghost"
+      [attr.aria-pressed]="fallback()"
+      (click)="fallback.set(!fallback())"
+    >
+      {{
+        fallback()
+          ? "Use WebGPU when available"
+          : "Preview lightweight particle fallback"
+      }}</button
+    ><span class="muted">Design preview · this tab only</span>
+  </div>
+}

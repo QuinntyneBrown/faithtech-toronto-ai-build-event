@@ -1,12 +1,14 @@
 using FaithTechTorontoAiBuildEvent.Application.Operations;
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+
 namespace FaithTechTorontoAiBuildEvent.Api.Controllers;
-[ApiController, Route("api/admin/readiness"), Authorize(Roles = "Administrator")]
+
+[ApiController]
+[Route("api/health")]
 public sealed class ReadinessController(ISender sender) : ControllerBase
 {
-    [HttpGet]
-    public async Task<ReadinessState> Read(CancellationToken cancellationToken) =>
-        await sender.Send(new GetReadinessQuery(), cancellationToken);
+    [HttpGet("ready")]
+    public async Task<IActionResult> Get(CancellationToken cancellationToken)
+        => await sender.Send(new GetReadinessQuery(), cancellationToken) ? Ok() : StatusCode(StatusCodes.Status503ServiceUnavailable);
 }

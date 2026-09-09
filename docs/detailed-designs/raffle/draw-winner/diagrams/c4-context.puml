@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Draw and persist one raffle winner — context
+Person(actor, "Administrator", "Select uniformly and preserve a single final outcome")
+System(companion, "FaithTech event companion", "Draw and persist one raffle winner")
+Rel(actor, companion, "Uses")
+@enduml

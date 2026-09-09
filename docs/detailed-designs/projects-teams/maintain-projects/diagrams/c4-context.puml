@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Maintain and display RTR project cards — context
+Person(actor, "Viewer or administrator", "Present supplied project content and manage the saved catalogue")
+System(companion, "FaithTech event companion", "Maintain and display RTR project cards")
+Rel(actor, companion, "Uses")
+@enduml

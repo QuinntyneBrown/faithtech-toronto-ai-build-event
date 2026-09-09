@@ -1,0 +1,41 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+class SetAdminPasscodeCommand {
+ +Execute(input: ReplacePasscodeInput): Task<int>
+}
+interface IPasscodeService {
+ +Replace(input: ReplacePasscodeInput): Task<PasscodeReplacementResult>
+}
+class SqlPasscodeService {
+ +Replace(input: ReplacePasscodeInput): Task<PasscodeReplacementResult>
+}
+class ReplacePasscodeInput {
+ +string Passcode
+ +string ExplicitTarget
+}
+class AdministratorCredential {
+ +int Id
+ +byte[] Salt
+ +byte[] Verifier
+ +int FormatVersion
+ +long Revision
+ +DateTimeOffset ChangedAtUtc
+}
+class AdministratorSession {
+ +Guid Id
+ +long CredentialRevision
+ +bool Revoked
+}
+class ReplaceAdminPasscodeProcedure <<T-SQL>> {
+ +Execute(passcode: nvarchar(max)): RevisionAndTime
+}
+SetAdminPasscodeCommand ..> IPasscodeService
+SqlPasscodeService ..|> IPasscodeService
+SqlPasscodeService ..> ReplacePasscodeInput
+SqlPasscodeService ..> ReplaceAdminPasscodeProcedure : encrypted RPC
+ReplaceAdminPasscodeProcedure --> AdministratorCredential : atomic replacement
+ReplaceAdminPasscodeProcedure --> AdministratorSession : revokes
+AdministratorSession ..> AdministratorCredential : revision check
+@enduml

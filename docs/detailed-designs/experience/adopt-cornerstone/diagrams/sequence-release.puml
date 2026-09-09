@@ -1,0 +1,26 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+autonumber
+actor Maintainer
+box "Frontend — Cornerstone workspace" #E0F2FE
+participant "Proposed components / tokens" as package
+participant "Examples and behavior coverage" as examples
+end box
+box "Distribution — npm" #FFF4E5
+participant Registry
+end box
+box "Frontend — Companion workspace" #E0F2FE
+participant "Composition and lockfile" as app
+end box
+Maintainer -> package : Implement missing mock proposals L2-033
+package -> examples : Exercise exported contracts and failure states
+examples --> Maintainer : Behavioral verification evidence
+Maintainer -> Registry : Publish compatible release
+Registry --> Maintainer : Actual released version
+Maintainer -> app : Pin release and remove local proposals
+app -> Registry : Install from clean checkout
+Registry --> app : Released package
+app --> Maintainer : Four-screen acceptance and provenance evidence
+note over app : No Cornerstone source checkout required
+@enduml

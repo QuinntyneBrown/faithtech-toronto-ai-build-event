@@ -1,0 +1,8 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title Form random teams once on first opening — context
+Person(actor, "Administrator", "Partition the current roster into random groups of three")
+System(companion, "FaithTech event companion", "Form random teams once on first opening")
+Rel(actor, companion, "Uses")
+@enduml

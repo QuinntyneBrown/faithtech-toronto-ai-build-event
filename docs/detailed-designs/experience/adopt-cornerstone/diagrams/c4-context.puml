@@ -1,0 +1,13 @@
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+Person(maintainer, "Cornerstone maintainer")
+Person(developer, "Companion developer")
+System(cornerstone, "Cornerstone", "Reusable UI and tokens")
+System(app, "FaithTech companion", "Four-screen composition")
+System_Ext(npm, "npm registry", "Released packages")
+Rel(maintainer, cornerstone, "Implements missing behavior")
+Rel(cornerstone, npm, "Publishes")
+Rel(developer, app, "Adopts release")
+Rel(app, npm, "Installs pinned package")
+@enduml

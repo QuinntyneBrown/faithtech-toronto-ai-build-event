@@ -1,0 +1,8 @@
+<cs-dialog-shell>
+  <h2 csDialogTitle>{{ data.title }}</h2>
+  <p csDialogDescription>{{ data.message }}</p>
+  <div csDialogActions>
+    <button csButton="secondary" type="button" (click)="close('cancel')">{{ data.cancelLabel ?? "Cancel" }}</button>
+    <button [csButton]="data.tone === 'danger' ? 'danger' : 'primary'" type="button" (click)="close('confirm')">{{ data.confirmLabel ?? "Confirm" }}</button>
+  </div>
+</cs-dialog-shell>

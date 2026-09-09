@@ -12,15 +12,15 @@ for (const firstStatus of [503, 401]) {
       request.resume();
       let status = 200;
       let body = '<base href="/">';
-      if (request.url === '/api/admin/antiforgery') body = JSON.stringify({ requestToken: 'synthetic' });
-      else if (request.url === '/api/admin/session' && request.method === 'POST') {
-        status = ++attempts === 1 ? firstStatus : 204;
-        authenticated = status === 204;
+      if (request.url === '/api/admin/session' && request.method === 'POST') {
+        status = ++attempts === 1 ? firstStatus : 200;
+        authenticated = status === 200;
       } else if (request.url === '/api/admin/session' && request.method === 'DELETE') {
         authenticated = false; status = 204;
-      } else if (request.url === '/api/admin/readiness') {
+      } else if (request.url === '/api/admin/session') {
         status = authenticated ? 200 : 401;
-        body = JSON.stringify({ ready: true, revision, instance: 'synthetic' });
+      } else if (request.url === '/api/health/ready' || request.url === '/api/health/live') {
+        status = 200;
       } else if (request.url.includes('missing')) status = 404;
       response.writeHead(status, { 'Content-Type': 'text/html' });
       response.end(body);
@@ -29,7 +29,7 @@ for (const firstStatus of [503, 401]) {
     try {
       const child = spawn('pwsh', ['-NoProfile', '-File', 'eng/scripts/smoke-release.ps1',
         '-Url', `http://127.0.0.1:${server.address().port}`, '-Revision', revision],
-      { env: { ...process.env, SMOKE_USERNAME: 'synthetic', SMOKE_PASSWORD: 'synthetic' }, timeout: 20000 });
+      { env: { ...process.env, SMOKE_PASSCODE: '0042' }, timeout: 20000 });
       let error = '';
       child.stdout.resume();
       child.stderr.on('data', chunk => { error += chunk; });

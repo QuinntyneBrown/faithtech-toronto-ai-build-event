@@ -1,23 +1,29 @@
-using FaithTechTorontoAiBuildEvent.Domain.Access;
+using FaithTechTorontoAiBuildEvent.Application.Participants;
 using MediatR;
 
 namespace FaithTechTorontoAiBuildEvent.Application.Access;
 
-public sealed class AuthenticateAdministratorHandler(IAdministratorStore store, IRequestSource source)
-    : IRequestHandler<AuthenticateAdministratorCommand, AdministratorSession?>
+public sealed class AuthenticateAdministratorHandler(
+    IAdministratorSessionStore sessionStore,
+    IAdministratorLoginAttemptStore loginAttempts,
+    IEntryReceiptSecretService secretService,
+    ISourceDigestService sourceDigestService)
+    : IRequestHandler<AuthenticateAdministratorCommand, AdministratorAuthenticationResult>
 {
-    public async Task<AdministratorSession?> Handle(AuthenticateAdministratorCommand request, CancellationToken cancellationToken)
+    public async Task<AdministratorAuthenticationResult> Handle(AuthenticateAdministratorCommand request, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrEmpty(request.Password) ||
-            request.Username.Length > 256 || request.Password.Length > 1024) return null;
-        var administratorId = await store.VerifyCredentials(request.Username, request.Password, source.Address, cancellationToken);
-        if (administratorId is null) return null;
-        var now = await store.GetUtcNow(cancellationToken);
-        var session = new AdministratorSession
+        var source = sourceDigestService.Digest(request.Source);
+        var retryAfter = await loginAttempts.GetRetryAfterAsync(source, DateTimeOffset.UtcNow, cancellationToken);
+        if (retryAfter is not null) throw new AdministratorAuthenticationThrottledException(retryAfter.Value);
+        if (request.Passcode.Length != 4 || request.Passcode.Any(character => character is < '0' or > '9'))
         {
-            AdministratorId = administratorId.Value, AuthenticatedAtUtc = now, LastInteractionAtUtc = now
-        };
-        await store.SaveSession(session, cancellationToken);
-        return session;
+            await loginAttempts.RecordFailureAsync(source, DateTimeOffset.UtcNow, cancellationToken);
+            return new AdministratorAuthenticationResult(false, null);
+        }
+
+        var sessionSecret = secretService.CreateSecret();
+        var result = await sessionStore.AuthenticateAsync(request.Passcode, sessionSecret, DateTimeOffset.UtcNow, cancellationToken);
+        if (!result.Authenticated) await loginAttempts.RecordFailureAsync(source, DateTimeOffset.UtcNow, cancellationToken);
+        return result;
     }
 }

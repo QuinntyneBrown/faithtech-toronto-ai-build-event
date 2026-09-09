@@ -1,71 +1,56 @@
-import { inject, Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
-import { IRosterService } from './roster-service.contract';
-import { RegistrationInput } from './registration-input';
-import { RosterEntry } from './roster-entry';
-import { RosterIssuance } from './roster-issuance';
-import { RosterFailure } from './roster-failure';
+import { HttpClient } from "@angular/common/http";
+import { Injectable, inject, signal } from "@angular/core";
+import { AdministratorParticipant, IRosterService } from "./roster-service.contract";
+import { EVENT_SERVICE } from "../event/event-service.token";
+import { AdministratorParticipantInput } from "./administrator-participant-input";
 
 @Injectable()
 export class RosterService implements IRosterService {
-  private readonly http = inject(HttpClient);
-  async list(eventId: string): Promise<RosterEntry[]> {
-    try { return await firstValueFrom(this.http.get<RosterEntry[]>(`/api/admin/events/${encodeURIComponent(eventId)}/roster`)); }
-    catch (error) { throw new RosterFailure(error instanceof HttpErrorResponse ? error.status : 0); }
+  readonly participants = signal<AdministratorParticipant[]>([]);
+  readonly loading = signal(false);
+  readonly error = signal<string | null>(null);
+  private readonly event = inject(EVENT_SERVICE);
+
+  constructor(private readonly http: HttpClient) {}
+
+  load(): void {
+    this.loading.set(true);
+    this.error.set(null);
+    this.http.get<AdministratorParticipant[]>("/api/admin/participants").subscribe({
+      next: participants => { this.participants.set(participants); this.loading.set(false); },
+      error: () => { this.error.set("We could not load the participant roster."); this.loading.set(false); }
+    });
   }
-  async add(eventId: string, input: RegistrationInput, operationId: string): Promise<RosterIssuance> {
-    try {
-      const token = await firstValueFrom(this.http.get<{ requestToken: string }>('/api/admin/antiforgery'));
-      return await firstValueFrom(this.http.post<RosterIssuance>(`/api/admin/events/${encodeURIComponent(eventId)}/roster`, input,
-        { headers: { 'X-CSRF-TOKEN': token.requestToken, 'Idempotency-Key': operationId } }));
-    } catch (error) {
-      if (error instanceof HttpErrorResponse) throw new RosterFailure(error.status, error.error?.code, error.error?.errors);
-      throw new RosterFailure(0);
-    }
+
+  add(email: string, expectedVersion: string): void {
+    this.loading.set(true);
+    this.error.set(null);
+    this.http.post<AdministratorParticipant>("/api/admin/participants", { operationId: crypto.randomUUID(), expectedVersion, email }).subscribe({
+      next: () => { this.loading.set(false); this.load(); this.event.load(); },
+      error: () => { this.loading.set(false); this.error.set("The participant could not be added. Check the email and refresh before trying again."); }
+    });
   }
-  async rename(eventId: string, registrationId: string, displayName: string, version: string, operationId: string): Promise<RosterEntry> {
-    try {
-      const token = await firstValueFrom(this.http.get<{ requestToken: string }>('/api/admin/antiforgery'));
-      return await firstValueFrom(this.http.put<RosterEntry>(
-        `/api/admin/events/${encodeURIComponent(eventId)}/roster/${encodeURIComponent(registrationId)}/name`, { displayName },
-        { headers: { 'X-CSRF-TOKEN': token.requestToken, 'Idempotency-Key': operationId, 'If-Match': `"${version}"` } }));
-    } catch (error) {
-      if (error instanceof HttpErrorResponse) throw new RosterFailure(error.status, error.error?.code, error.error?.errors);
-      throw new RosterFailure(0);
-    }
+
+  update(participantId: string, input: AdministratorParticipantInput, expectedVersion: string): void {
+    this.mutate(
+      this.http.put<AdministratorParticipant>(`/api/admin/participants/${participantId}`, { operationId: crypto.randomUUID(), expectedVersion, input }),
+      "The participant could not be updated. Refresh before trying again."
+    );
   }
-  async deactivate(eventId: string, registrationId: string, version: string, operationId: string): Promise<RosterEntry> {
-    try {
-      const token = await firstValueFrom(this.http.get<{ requestToken: string }>('/api/admin/antiforgery'));
-      return await firstValueFrom(this.http.post<RosterEntry>(
-        `/api/admin/events/${encodeURIComponent(eventId)}/roster/${encodeURIComponent(registrationId)}/deactivate`, null,
-        { headers: { 'X-CSRF-TOKEN': token.requestToken, 'Idempotency-Key': operationId, 'If-Match': `"${version}"` } }));
-    } catch (error) {
-      if (error instanceof HttpErrorResponse) throw new RosterFailure(error.status, error.error?.code, error.error?.errors);
-      throw new RosterFailure(0);
-    }
+
+  remove(participantId: string, expectedVersion: string): void {
+    this.mutate(
+      this.http.delete<void>(`/api/admin/participants/${participantId}`, { body: { operationId: crypto.randomUUID(), expectedVersion } }),
+      "The participant could not be removed. Refresh before trying again."
+    );
   }
-  async replaceCode(eventId: string, registrationId: string, version: string, operationId: string): Promise<RosterIssuance> {
-    try {
-      const token = await firstValueFrom(this.http.get<{ requestToken: string }>('/api/admin/antiforgery'));
-      return await firstValueFrom(this.http.post<RosterIssuance>(
-        `/api/admin/events/${encodeURIComponent(eventId)}/roster/${encodeURIComponent(registrationId)}/code`, { clearEmailBinding: false },
-        { headers: { 'X-CSRF-TOKEN': token.requestToken, 'Idempotency-Key': operationId, 'If-Match': `"${version}"` } }));
-    } catch (error) {
-      if (error instanceof HttpErrorResponse) throw new RosterFailure(error.status, error.error?.code, error.error?.errors);
-      throw new RosterFailure(0);
-    }
-  }
-  async reactivate(eventId: string, registrationId: string, version: string, operationId: string): Promise<RosterEntry> {
-    try {
-      const token = await firstValueFrom(this.http.get<{ requestToken: string }>('/api/admin/antiforgery'));
-      return await firstValueFrom(this.http.post<RosterEntry>(
-        `/api/admin/events/${encodeURIComponent(eventId)}/roster/${encodeURIComponent(registrationId)}/reactivate`, null,
-        { headers: { 'X-CSRF-TOKEN': token.requestToken, 'Idempotency-Key': operationId, 'If-Match': `"${version}"` } }));
-    } catch (error) {
-      if (error instanceof HttpErrorResponse) throw new RosterFailure(error.status, error.error?.code, error.error?.errors);
-      throw new RosterFailure(0);
-    }
+
+  private mutate(request: ReturnType<HttpClient["post"]>, message: string): void {
+    this.loading.set(true);
+    this.error.set(null);
+    request.subscribe({
+      next: () => { this.loading.set(false); this.load(); this.event.load(); },
+      error: () => { this.loading.set(false); this.error.set(message); }
+    });
   }
 }
