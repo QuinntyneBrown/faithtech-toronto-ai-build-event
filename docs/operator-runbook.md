@@ -28,6 +28,7 @@ This runbook is for the September 9, 2026 FaithTech Toronto AI Build Event compa
 ## During the event
 
 - Keep a full database backup every 15 minutes and immediately after close. Record each completion or failure.
+- Administrator login permits five failed checks from one source address, and twenty failed checks across the deployment, in a rolling five-minute window. A throttled login reports a retry time; wait for it rather than repeatedly submitting a passcode.
 - Use the inline administrator controls on the active public screen to advance Countdown, Projects, Teams, and Raffle. A visible live-update warning means no mutation should be attempted until it reconnects and refreshes.
 - Add/edit/delete participants only from Countdown. Deletion removes personal fields and invalidates that participant's browser session; it never redraws a completed raffle.
 - If an administrator passcode needs rotation, run the explicit CLI command above or call `dbo.ReplaceAdminPasscode` through a parameterized, protected SQL RPC. Both paths invalidate existing administrator sessions, including when the same four digits are deliberately supplied.
