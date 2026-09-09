@@ -1,0 +1,41 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title View and save project content
+actor "Viewer or administrator" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "ProjectsPageComponent" as page
+participant "IProjectService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "ProjectsController" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "SaveProjectHandler" as handler
+participant "Project" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+participant "EventChangePublisher" as push
+end box
+actor -> page : View cards / submit project edit
+page -> client : Save typed project input
+client -> controller : POST / PUT project + envelope
+controller -> handler : Dispatch after authorization
+handler -> db : Lock event; check session / receipt / version
+handler -> entity : Validate literal text and HTTPS URLs L2-040
+alt Valid
+ handler -> db : Commit project and event change
+ db --> handler : Saved project ID and version
+ handler --> controller : ProjectResult
+else Invalid or conflicting
+ handler --> controller : Field errors / current authorized state
+end
+controller --> client : Outcome
+client --> page : Refresh cards or retain draft
+page --> actor : Saved card or actionable feedback
+@enduml

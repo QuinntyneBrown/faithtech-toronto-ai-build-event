@@ -1,0 +1,43 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+title Maintain and display RTR project cards — structure
+interface IProjectService {
++readonly projects: Signal<readonly ProjectCard[]>
++save(input: ProjectInput): Promise<ProjectResult>
++remove(id: string): Promise<ProjectResult>
+}
+class ProjectsPageComponent
+ProjectsPageComponent ..> IProjectService : consumes contract
+class ProjectsController
+class SaveProjectHandler {
+  +Handle(request: SaveProjectCommand): Task<ProjectResult>
+}
+class SaveProjectCommand {
++Guid? ProjectId
++string Title
++string Description
++Uri? RepositoryUrl
++Uri? DemoUrl
++Guid OperationId
++long ExpectedVersion
+}
+class Project {
++Guid Id
++string Title
++string Description
++Uri? RepositoryUrl
++Uri? DemoUrl
+}
+ProjectsController ..> SaveProjectHandler : dispatches
+SaveProjectHandler ..> SaveProjectCommand : handles
+SaveProjectHandler --> Project : uses
+class Team {
+ +Guid Id
+ +Guid? ProjectId
+}
+Team "*" --> "0..1" Project : assigned
+@enduml

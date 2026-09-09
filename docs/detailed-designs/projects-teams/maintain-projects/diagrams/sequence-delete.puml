@@ -1,0 +1,41 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ArrowColor #344054
+skinparam roundcorner 8
+autonumber
+title Remove an assigned project
+actor "Viewer or administrator" as actor
+box "Frontend — Companion Angular application" #E0F2FE
+participant "ProjectsPageComponent" as page
+participant "IProjectService" as client
+end box
+box "Backend — Companion API" #D1FADF
+participant "ProjectsController" as controller
+end box
+box "Backend — Application and Domain" #ECFDF3
+participant "SaveProjectHandler" as handler
+participant "Project" as entity
+end box
+box "Backend — Infrastructure" #FFF4E5
+database "Companion SQL database" as db
+participant "EventChangePublisher" as push
+end box
+actor -> page : Confirm project and affected team labels
+page -> client : Remove project at observed version
+client -> controller : DELETE project + envelope
+controller -> handler : Dispatch DeleteProjectCommand
+handler -> db : Lock event; check authority / receipt / version
+alt Current confirmed version
+ handler -> db : Clear all Team.ProjectId references; delete project
+ handler -> db : Commit receipt, audit and change
+ db --> handler : Durable removal
+ handler --> controller : Removed
+else Changed assignments or catalogue
+ handler --> controller : Conflict; require renewed confirmation
+end
+controller --> client : Outcome
+client --> page : Updated cards/assignments or conflict
+page --> actor : Memberships unchanged
+@enduml
