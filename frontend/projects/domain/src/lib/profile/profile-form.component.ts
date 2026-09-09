@@ -17,6 +17,7 @@ export class ProfileFormComponent {
   readonly name = signal("");
   readonly whatYouMake = signal("");
   readonly onYourHeart = signal("");
+  readonly skipped = signal(false);
 
   constructor() {
     this.profileService.load();
@@ -36,5 +37,13 @@ export class ProfileFormComponent {
       whatYouMake: this.whatYouMake() || null,
       onYourHeart: this.onYourHeart() || null
     }, this.eventVersion());
+  }
+
+  skip(): void {
+    this.skipped.set(true);
+  }
+
+  resume(): void {
+    this.skipped.set(false);
   }
 }
