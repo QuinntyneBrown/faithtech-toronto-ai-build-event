@@ -15,12 +15,12 @@ import { ParticipantRosterComponent } from "../roster/participant-roster.compone
 })
 export class CountdownComponent {
   readonly event = inject(EVENT_SERVICE);
-  readonly now = signal(Date.now());
+  readonly now = signal(this.event.serverNow());
   readonly Date = Date;
 
   constructor() {
     this.event.load();
-    const timer = window.setInterval(() => this.now.set(Date.now()), 250);
+    const timer = window.setInterval(() => this.now.set(this.event.serverNow()), 250);
     inject(DestroyRef).onDestroy(() => window.clearInterval(timer));
   }
 }

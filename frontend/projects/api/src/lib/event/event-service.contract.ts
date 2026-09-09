@@ -7,4 +7,5 @@ export interface IEventService {
   readonly error: Signal<string | null>;
   readonly connected: Signal<boolean>;
   load(): void;
+  serverNow(): number;
 }

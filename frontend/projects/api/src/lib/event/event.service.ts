@@ -3,6 +3,7 @@ import { DestroyRef, Injectable, inject, signal } from "@angular/core";
 import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr";
 import { IEventService } from "./event-service.contract";
 import { PublicEventState } from "./public-event-state";
+import { ServerTimeResponse } from "./server-time-response";
 
 @Injectable()
 export class EventService implements IEventService {
@@ -10,6 +11,7 @@ export class EventService implements IEventService {
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   readonly connected = signal(false);
+  private readonly serverOffsetMilliseconds = signal(0);
   private readonly destroyRef = inject(DestroyRef);
   private readonly connection: HubConnection;
 
@@ -35,10 +37,28 @@ export class EventService implements IEventService {
       next: state => {
         this.state.set(state);
         this.loading.set(false);
+        this.refreshServerTime();
       },
       error: () => {
         this.error.set("We could not load the event. Please try again.");
         this.loading.set(false);
+      }
+    });
+  }
+
+  serverNow(): number {
+    return Date.now() + this.serverOffsetMilliseconds();
+  }
+
+  private refreshServerTime(): void {
+    const requestStartedAt = Date.now();
+    this.http.get<ServerTimeResponse>("/api/event/time").subscribe({
+      next: response => {
+        const requestCompletedAt = Date.now();
+        const serverTime = Date.parse(response.serverTimeUtc);
+        if (!Number.isNaN(serverTime)) {
+          this.serverOffsetMilliseconds.set(serverTime - ((requestStartedAt + requestCompletedAt) / 2));
+        }
       }
     });
   }
