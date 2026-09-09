@@ -1,5 +1,7 @@
 # FaithTech event companion — detailed design
 
+> **MVP scope override:** `docs/specs/L1.md` and `docs/specs/L2.md` are authoritative. Security hardening, privacy enforcement, abuse protection, mutation auditing, and concurrency/race/idempotency/stale-version guarantees described in these designs are **NON-MVP** and do not block completion.
+
 ## Scope and design authority
 
 This design describes the dedicated September 9, 2026 Toronto build-event companion. The [L1](../specs/L1.md) and [L2](../specs/L2.md) specifications define behavior. The approved [Angular mock](../mocks/README.md) defines the visual and interaction reference. Exactly four screens exist: Countdown, Projects, Team selection, and Raffle. Administrator tools appear on those screens. PowerPoint remains independently operated.
