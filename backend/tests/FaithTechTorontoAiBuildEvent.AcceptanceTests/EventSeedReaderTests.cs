@@ -7,6 +7,17 @@ namespace FaithTechTorontoAiBuildEvent.AcceptanceTests;
 
 public sealed class EventSeedReaderTests
 {
+    [Fact]
+    public void Given_a_partial_update_when_merged_then_omitted_fields_and_explicit_null_differ()
+    {
+        var current = new Application.Events.EventInput("Keep", "Venue", "Address", null, null, null, null, null);
+        var seed = EventSeedReader.Read(Encoding.UTF8.GetBytes("{\"event\":{\"address\":null}}"));
+        var merged = EventSeedMerge.Merge(seed, current, new(null, null, null, [], null, null), false);
+        Assert.Equal("Keep", merged.Event.Title);
+        Assert.Null(merged.Event.Address);
+        Assert.Throws<InputValidationException>(() => EventSeedMerge.Merge(seed, current, merged.Schedule, true));
+    }
+
     [Theory]
     [InlineData("{\"event\":{},\"event\":{}}")]
     [InlineData("{\"event\":{\"title\":\"a\",\"title\":\"b\"}}")]
