@@ -10,6 +10,8 @@ public sealed class CompanionDbContext(DbContextOptions<CompanionDbContext> opti
     public DbSet<DomainEventState> EventStates => Set<DomainEventState>();
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<EntryReceipt> EntryReceipts => Set<EntryReceipt>();
+    public DbSet<Participant> Participants => Set<Participant>();
+    public DbSet<ParticipantSession> ParticipantSessions => Set<ParticipantSession>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -34,6 +36,22 @@ public sealed class CompanionDbContext(DbContextOptions<CompanionDbContext> opti
             builder.HasKey(receipt => receipt.Id);
             builder.Property(receipt => receipt.SecretDigest).HasMaxLength(32).IsRequired();
             builder.HasIndex(receipt => receipt.ExpiresAtUtc);
+        });
+
+        modelBuilder.Entity<Participant>(builder =>
+        {
+            builder.HasKey(participant => participant.Id);
+            builder.Property(participant => participant.Email).HasMaxLength(508).IsRequired();
+            builder.Property(participant => participant.NormalizedEmail).HasMaxLength(508).IsRequired();
+            builder.Property(participant => participant.PublicLabel).HasMaxLength(64).IsRequired();
+            builder.HasIndex(participant => participant.NormalizedEmail).IsUnique();
+        });
+
+        modelBuilder.Entity<ParticipantSession>(builder =>
+        {
+            builder.HasKey(session => session.Id);
+            builder.Property(session => session.SecretDigest).HasMaxLength(32).IsRequired();
+            builder.HasIndex(session => session.ExpiresAtUtc);
         });
     }
 }

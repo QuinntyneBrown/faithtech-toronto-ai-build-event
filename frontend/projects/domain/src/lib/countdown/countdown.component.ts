@@ -2,10 +2,11 @@ import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from "
 import { CardComponent, CountdownComponent as CsCountdownComponent } from "@quinntyne/cornerstone";
 import { EVENT_SERVICE } from "@faithtech/api";
 import { EventHeaderComponent } from "@faithtech/components";
+import { EntryFormComponent } from "../entry/entry-form.component";
 
 @Component({
   selector: "event-countdown",
-  imports: [CardComponent, CsCountdownComponent, EventHeaderComponent],
+  imports: [CardComponent, CsCountdownComponent, EventHeaderComponent, EntryFormComponent],
   templateUrl: "./countdown.component.html",
   styleUrl: "./countdown.component.scss",
   changeDetection: ChangeDetectionStrategy.OnPush

@@ -2,3 +2,6 @@ export * from "./lib/event/event-service.contract";
 export * from "./lib/event/event-service.token";
 export * from "./lib/event/event.service";
 export * from "./lib/event/public-event-state";
+export * from "./lib/entry/entry-service.contract";
+export * from "./lib/entry/entry-service.token";
+export * from "./lib/entry/entry.service";

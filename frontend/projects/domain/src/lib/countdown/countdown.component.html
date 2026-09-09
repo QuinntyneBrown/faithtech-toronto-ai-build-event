@@ -10,4 +10,5 @@
     <p>{{ state.venue }}</p>
     <cs-countdown [target]="Date.parse(state.countdownTargetUtc)" [now]="now()" ariaLabel="Time until welcome" />
   </cs-card>
+  <event-entry-form [eventVersion]="state.version" />
 }
