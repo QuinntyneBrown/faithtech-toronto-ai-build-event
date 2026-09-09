@@ -9,6 +9,7 @@ export class EventService implements IEventService {
   readonly state = signal<PublicEventState | null>(null);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
+  readonly connected = signal(false);
   private readonly destroyRef = inject(DestroyRef);
   private readonly connection: HubConnection;
 
@@ -20,7 +21,10 @@ export class EventService implements IEventService {
         this.load();
       }
     });
-    this.connection.start().catch(() => this.error.set("Live updates are unavailable; refresh to see the latest event state."));
+    this.connection.onreconnecting(() => this.connected.set(false));
+    this.connection.onreconnected(() => { this.connected.set(true); this.load(); });
+    this.connection.onclose(() => this.connected.set(false));
+    this.connection.start().then(() => this.connected.set(true)).catch(() => this.error.set("Live updates are unavailable; refresh to see the latest event state."));
     this.destroyRef.onDestroy(() => { void this.connection.stop(); });
   }
 

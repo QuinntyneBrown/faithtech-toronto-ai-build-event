@@ -4,7 +4,7 @@
     <p>{{ state.eligibleCount }} eligible {{ state.eligibleCount === 1 ? "participant remains." : "participants remain." }}</p>
     <cs-raffle-stage [result]="stageResult()" [now]="now()" />
     @if (administrator.active()) {
-      <button csButton type="button" (click)="draw()" [disabled]="raffle.drawing() || state.eligibleCount === 0">DRAW NAME</button>
+      <button csButton type="button" (click)="draw()" [disabled]="!event.connected() || raffle.drawing() || state.eligibleCount === 0">DRAW NAME</button>
     }
     @if (raffle.error(); as error) { <p role="alert">{{ error }}</p> }
   </cs-card>
