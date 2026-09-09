@@ -13,6 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
+using FaithTechTorontoAiBuildEvent.Application.Access;
 
 namespace FaithTechTorontoAiBuildEvent.AcceptanceTests;
 
@@ -65,5 +66,12 @@ public sealed class CountdownApiFactory : WebApplicationFactory<Program>
             services.RemoveAll<IDbContextOptionsConfiguration<CompanionDbContext>>();
             services.AddDbContext<CompanionDbContext>(options => options.UseInMemoryDatabase(databaseName));
         });
+    }
+
+    public async Task ProvisionAdministratorPasscodeAsync(string passcode)
+    {
+        using var scope = Services.CreateScope();
+        var provisioner = scope.ServiceProvider.GetRequiredService<IAdministratorCredentialProvisioner>();
+        await provisioner.ProvisionAsync(passcode, CancellationToken.None);
     }
 }

@@ -5,6 +5,8 @@ using FaithTechTorontoAiBuildEvent.Infrastructure.EventState;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Operations;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Persistence;
 using FaithTechTorontoAiBuildEvent.Infrastructure.Participants;
+using FaithTechTorontoAiBuildEvent.Infrastructure.Access;
+using FaithTechTorontoAiBuildEvent.Application.Access;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,6 +28,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IParticipantSessionStore, SqlParticipantSessionStore>();
         services.AddScoped<IProfileStore, SqlProfileStore>();
         services.AddSingleton<IEntryReceiptSecretService, EntryReceiptSecretService>();
+        services.AddSingleton<PasscodeVerifier>();
+        services.AddScoped<IAdministratorCredentialProvisioner, SqlAdministratorCredentialProvisioner>();
+        services.AddScoped<IAdministratorSessionStore, SqlAdministratorSessionStore>();
         services.AddHostedService<EventStateInitializer>();
         return services;
     }

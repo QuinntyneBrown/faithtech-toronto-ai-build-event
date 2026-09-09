@@ -1,5 +1,6 @@
 using FaithTechTorontoAiBuildEvent.Domain.Projects;
 using FaithTechTorontoAiBuildEvent.Domain.Participants;
+using FaithTechTorontoAiBuildEvent.Domain.Access;
 using Microsoft.EntityFrameworkCore;
 using DomainEventState = FaithTechTorontoAiBuildEvent.Domain.EventFlow.EventState;
 
@@ -12,6 +13,8 @@ public sealed class CompanionDbContext(DbContextOptions<CompanionDbContext> opti
     public DbSet<EntryReceipt> EntryReceipts => Set<EntryReceipt>();
     public DbSet<Participant> Participants => Set<Participant>();
     public DbSet<ParticipantSession> ParticipantSessions => Set<ParticipantSession>();
+    public DbSet<CompanionCredential> CompanionCredentials => Set<CompanionCredential>();
+    public DbSet<AdministratorSession> AdministratorSessions => Set<AdministratorSession>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -52,6 +55,20 @@ public sealed class CompanionDbContext(DbContextOptions<CompanionDbContext> opti
             builder.HasKey(session => session.Id);
             builder.Property(session => session.SecretDigest).HasMaxLength(32).IsRequired();
             builder.HasIndex(session => session.ExpiresAtUtc);
+        });
+
+        modelBuilder.Entity<CompanionCredential>(builder =>
+        {
+            builder.HasKey(credential => credential.Id);
+            builder.Property(credential => credential.Salt).HasMaxLength(32).IsRequired();
+            builder.Property(credential => credential.Verifier).HasMaxLength(64).IsRequired();
+        });
+
+        modelBuilder.Entity<AdministratorSession>(builder =>
+        {
+            builder.HasKey(session => session.Id);
+            builder.Property(session => session.SecretDigest).HasMaxLength(32).IsRequired();
+            builder.HasIndex(session => session.CreatedAtUtc);
         });
     }
 }
